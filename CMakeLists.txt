@@ -1,0 +1,73 @@
+project(FaceDetector C CXX)
+cmake_minimum_required(VERSION 2.4)
+cmake_policy(SET CMP0003 NEW)
+
+set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
+
+if(CMAKE_COMPILER_IS_GNUCXX)
+	set(CMAKE_CXX_FLAGS_RELEASE "-std=c++0x -march=native -O2 -Wall -DNDEBUG")
+	set(CMAKE_CXX_FLAGS_DEBUG   "-std=c++0x -march=native -O2 -g3 -ggdb -Wall -Wextra -DDEBUG")
+endif(CMAKE_COMPILER_IS_GNUCXX)
+
+# ak kompilujeme s debug
+if(CMAKE_BUILD_TYPE MATCHES Debug)
+	message(STATUS "Configured to compile including full debug information in the executables")
+	add_definitions(-DQT_DEBUG)
+else(CMAKE_BUILD_TYPE MATCHES Debug)
+	message(STATUS "Configured to compile including debug information in the executables")
+	set(CMAKE_BUILD_TYPE Release)
+	add_definitions(-DQT_NO_DEBUG)
+endif(CMAKE_BUILD_TYPE MATCHES Debug)
+
+#configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/src/config.h)
+
+find_package(Qt4 4.5 COMPONENTS QtCore QtGui QtXml REQUIRED)
+
+set(QT_USE_XML 1)
+
+include(${QT_USE_FILE})
+
+include_directories(
+	"${PROJECT_BINARY_DIR}"
+	"${CMAKE_CURRENT_SOURCE_DIR}"
+	"${CMAKE_CURRENT_BINARY_DIR}"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src"
+	"${CMAKE_CURRENT_BINARY_DIR}/src"
+)
+
+set(facedetect_SRCS
+	src/main.cpp
+)
+
+set(facedetect_HDRS
+)
+
+set(facedetect_MOC_HDRS
+)
+
+set(facedetect_UIS
+)
+
+set(facedetect_QRCS
+)
+
+qt4_wrap_cpp(facedetect_MOC_SRCS ${facedetect_MOC_HDRS})
+qt4_wrap_ui(facedetect_UI_SRCS ${facedetect_UIS})
+qt4_add_resources(facedetect_QRC_SRCS ${facedetect_QRCS})
+
+add_executable(
+	facedetect
+	${facedetect_SRCS}
+	${facedetect_HDRS}
+	${facedetect_MOC_HDRS}
+	${facedetect_MOC_SRCS}
+	${facedetect_UIS}
+	${facedetect_UI_SRCS}
+	${facedetect_QRCS}
+	${facedetect_QRC_SRCS}
+)
+
+target_link_libraries(facedetect
+	${QT_LIBRARIES}
+)
+
