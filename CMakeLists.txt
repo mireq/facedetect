@@ -21,7 +21,9 @@ endif(CMAKE_BUILD_TYPE MATCHES Debug)
 
 #configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/src/config.h)
 
-find_package(Qt4 4.5 COMPONENTS QtCore QtGui QtXml REQUIRED)
+find_package(Qt4 4.5 COMPONENTS QtCore QtDeclarative QtGui QtXml REQUIRED)
+find_package(BZip2 REQUIRED)
+
 
 set(QT_USE_XML 1)
 
@@ -33,22 +35,32 @@ include_directories(
 	"${CMAKE_CURRENT_BINARY_DIR}"
 	"${CMAKE_CURRENT_SOURCE_DIR}/src"
 	"${CMAKE_CURRENT_BINARY_DIR}/src"
+	${QT_INCLUDES}
+	${BZIP2_INCLUDE_DIR}
 )
 
 set(facedetect_SRCS
 	src/main.cpp
+	src/core/FaceBrowserModel.cpp
+	src/core/FaceImageProvider.cpp
+	src/libfacedetect/FaceFileReader.cpp
+	src/qml/main.qml
 )
 
 set(facedetect_HDRS
+	src/core/FaceImageProvider.h
+	src/libfacedetect/FaceFileReader.h
 )
 
 set(facedetect_MOC_HDRS
+	src/core/FaceBrowserModel.h
 )
 
 set(facedetect_UIS
 )
 
 set(facedetect_QRCS
+	src/qml/qml.qrc
 )
 
 qt4_wrap_cpp(facedetect_MOC_SRCS ${facedetect_MOC_HDRS})
@@ -69,5 +81,6 @@ add_executable(
 
 target_link_libraries(facedetect
 	${QT_LIBRARIES}
+	${BZIP2_LIBRARIES}
 )
 
