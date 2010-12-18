@@ -7,6 +7,9 @@
  * =====================================================================
  */
 
+#ifndef FACEFILEREADER_ZDL9FS1Y
+#define FACEFILEREADER_ZDL9FS1Y
+
 #include <QString>
 #include <QImage>
 #include <QUrl>
@@ -30,9 +33,10 @@ public:
 	QImage readImage() const;
 	QUrl imageUrl() const;
 	QVector<FaceFileReader::FaceData> faceData() const;
-	static QImage readImage(const QString &fileName, const QLatin1String &format);
+	static void setDataDir(const QString &dataDir);
 
 private:
+	QImage readImage(const QString &fileName, const QLatin1String &format) const;
 	enum ReadState {
 		NoState,
 		RecordingsState,
@@ -47,6 +51,10 @@ private:
 	QString m_url;
 	QLatin1String m_format;
 	QVector<FaceData> m_faceData;
+	static QString sm_dataDir;
 }; /* -----  end of class FaceFileReader  ----- */
 
 } /* end of namespace FaceDetect */
+
+#endif /* end of include guard: FACEFILEREADER_ZDL9FS1Y */
+

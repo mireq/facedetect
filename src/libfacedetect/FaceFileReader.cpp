@@ -21,8 +21,10 @@ using std::fclose;
 
 namespace FaceDetect {
 
+QString FaceFileReader::sm_dataDir;
 
 FaceFileReader::FaceFileReader():
+	m_prefix(sm_dataDir),
 	m_format("PPM")
 {
 }
@@ -193,10 +195,10 @@ QImage FaceFileReader::readImage() const
 	return readImage(m_prefix + m_url, m_format);
 }
 
-QImage FaceFileReader::readImage(const QString &fileName, const QLatin1String &format)
+QImage FaceFileReader::readImage(const QString &fileName, const QLatin1String &format) const
 {
 	QImage ret;
-	FILE *inputFile;
+FILE *inputFile;
 	inputFile = fopen(fileName.toUtf8().constData(), "r");
 	if (!inputFile) {
 		qWarning() << QString("Could not open file: %1").arg(fileName);
@@ -237,6 +239,11 @@ QImage FaceFileReader::readImage(const QString &fileName, const QLatin1String &f
 QVector<FaceFileReader::FaceData> FaceFileReader::faceData() const
 {
 	return m_faceData;
+}
+
+void FaceFileReader::setDataDir(const QString &dataDir)
+{
+	sm_dataDir = dataDir;
 }
 
 QUrl FaceFileReader::imageUrl() const

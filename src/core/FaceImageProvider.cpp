@@ -13,6 +13,7 @@
 
 using FaceDetect::FaceFileReader;
 
+
 FaceImageProvider::FaceImageProvider():
 	QDeclarativeImageProvider(QDeclarativeImageProvider::Image)
 {
@@ -25,7 +26,6 @@ FaceImageProvider::~FaceImageProvider()
 QImage FaceImageProvider::requestImage(const QString &id, QSize *size, const QSize & /*requestedSize*/)
 {
 	FaceFileReader reader;
-	reader.setSearchPrefix("/home/mirec/Documents/Skola/diplomka/resources/colorferet/dvd1/");
 	reader.readFile(id);
 	QImage image = reader.readImage();
 	*size = image.size();

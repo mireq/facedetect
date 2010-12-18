@@ -19,14 +19,12 @@ Q_OBJECT
 public:
 	FaceBrowserModel(QObject *parent = 0);
 	~FaceBrowserModel();
-	void setSearchPrefix(const QString &prefix);
 	void addDefinitionFile(const QString &fileName);
 	int rowCount(const QModelIndex &parent = QModelIndex()) const;
 	QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
 
 private:
 	QVector<QString> m_files;
-	QString m_searchPrefix;
 }; /* -----  end of class FaceBrowserModel  ----- */
 
 #endif /* end of include guard: FACEBROWSERMODEL_XWF44CQJ */

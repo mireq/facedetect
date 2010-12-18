@@ -23,7 +23,8 @@ endif(CMAKE_BUILD_TYPE MATCHES Debug)
 
 find_package(Qt4 4.5 COMPONENTS QtCore QtDeclarative QtGui QtXml REQUIRED)
 find_package(BZip2 REQUIRED)
-
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(LAPACKPP REQUIRED lapackpp)
 
 set(QT_USE_XML 1)
 
@@ -37,18 +38,21 @@ include_directories(
 	"${CMAKE_CURRENT_BINARY_DIR}/src"
 	${QT_INCLUDES}
 	${BZIP2_INCLUDE_DIR}
+	${LAPACKPP_INCLUDE_DIRS}
 )
 
 set(facedetect_SRCS
 	src/main.cpp
 	src/core/FaceBrowserModel.cpp
 	src/core/FaceImageProvider.cpp
+	src/libfacedetect/Align.cpp
 	src/libfacedetect/FaceFileReader.cpp
 	src/qml/main.qml
 )
 
 set(facedetect_HDRS
 	src/core/FaceImageProvider.h
+	src/libfacedetect/Align.h
 	src/libfacedetect/FaceFileReader.h
 )
 
@@ -82,5 +86,6 @@ add_executable(
 target_link_libraries(facedetect
 	${QT_LIBRARIES}
 	${BZIP2_LIBRARIES}
+	${LAPACKPP_LIBRARIES}
 )
 

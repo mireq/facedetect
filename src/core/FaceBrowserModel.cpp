@@ -18,12 +18,6 @@ FaceBrowserModel::FaceBrowserModel(QObject *parent):
 FaceBrowserModel::~FaceBrowserModel()
 {
 }
-
-void FaceBrowserModel::setSearchPrefix(const QString &prefix)
-{
-	m_searchPrefix = prefix;
-}
-
 void FaceBrowserModel::addDefinitionFile(const QString &fileName)
 {
 	beginInsertRows(QModelIndex(), m_files.count(), m_files.count());
