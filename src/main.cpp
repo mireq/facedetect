@@ -7,51 +7,52 @@
  * =====================================================================
  */
 
+/*
 #include <QApplication>
 #include <QDeclarativeContext>
 #include <QDeclarativeEngine>
 #include <QDeclarativeView>
 #include "core/FaceBrowserModel.h"
+#include "core/FaceFileScanner.h"
 #include "core/FaceImageProvider.h"
 #include "libfacedetect/Align.h"
 #include "libfacedetect/FaceFileReader.h"
+
+#include <iostream>
+#include <QDebug>
 
 int main(int argc, char *argv[])
 {
 	QApplication app(argc, argv);
 	QDeclarativeView view;
-	FaceBrowserModel *model = new FaceBrowserModel;
-
-	// Naplnenie modelu
-	QStringList files;
-	files << "/home/mirec/Documents/Skola/diplomka/resources/colorferet/dvd1/data/ground_truths/xml/00001/00001_930831_fa_a.xml";
-	files << "/home/mirec/Documents/Skola/diplomka/resources/colorferet/dvd1/data/ground_truths/xml/00001/00001_930831_fb_a.xml";
-	files << "/home/mirec/Documents/Skola/diplomka/resources/colorferet/dvd1/data/ground_truths/xml/00002/00002_930831_fa.xml";
-	files << "/home/mirec/Documents/Skola/diplomka/resources/colorferet/dvd1/data/ground_truths/xml/00002/00002_930831_fb.xml";
-	files << "/home/mirec/Documents/Skola/diplomka/resources/colorferet/dvd1/data/ground_truths/xml/00002/00002_940128_fa.xml";
-	files << "/home/mirec/Documents/Skola/diplomka/resources/colorferet/dvd1/data/ground_truths/xml/00002/00002_940128_fb.xml";
-	files << "/home/mirec/Documents/Skola/diplomka/resources/colorferet/dvd1/data/ground_truths/xml/00002/00002_940422_fa.xml";
-	files << "/home/mirec/Documents/Skola/diplomka/resources/colorferet/dvd1/data/ground_truths/xml/00002/00002_940422_fb.xml";
-	files << "/home/mirec/Documents/Skola/diplomka/resources/colorferet/dvd1/data/ground_truths/xml/00002/00002_940928_fa.xml";
-	files << "/home/mirec/Documents/Skola/diplomka/resources/colorferet/dvd1/data/ground_truths/xml/00002/00002_940928_fb.xml";
-	foreach (const QString &file, files) {
-		model->addDefinitionFile(file);
-	}
-
+	view.setResizeMode(QDeclarativeView::SizeRootObjectToView);
 	QDeclarativeContext *rootContext = view.rootContext();
 	QDeclarativeEngine *engine = view.engine();
 	FaceDetect::FaceFileReader::setDataDir("/home/mirec/Documents/Skola/diplomka/resources/colorferet/dvd1/");
 	engine->addImageProvider(QLatin1String("faceimage"), new FaceImageProvider);
-	rootContext->setContextProperty("facesModel", model);
+
+	FaceBrowserModel model;
+	rootContext->setContextProperty("facesModel", &model);
 	view.setSource(QUrl("qrc:/qml/main.qml"));
 
-	FaceDetect::Align aligner;
-	foreach (const QString &file, files) {
-		aligner.scanImage(file);
-	}
+	FaceFileScanner scanner;
+	scanner.setScanPath("/home/mirec/Documents/Skola/diplomka/resources/colorferet/dvd1/data/ground_truths/xml/");
+	QObject::connect(&scanner, SIGNAL(fileScanned(QString)), &model, SLOT(addDefinitionFile(QString)));
+	scanner.start();
 
 	view.show();
+	return app.exec();
+}
+*/
 
+#include <QApplication>
+#include "qml/QmlWin.h"
+
+int main(int argc, char *argv[])
+{
+	QApplication app(argc, argv);
+	QmlWin win;
+	win.show();
 	return app.exec();
 }
 

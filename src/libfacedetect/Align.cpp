@@ -21,17 +21,15 @@ namespace FaceDetect {
 Align::Align():
 	m_faceFeaturesSum(sm_faceFeaturesCount * 2),
 	m_avgFaceFeatures(sm_faceFeaturesCount * 2),
+	m_topLine(4),
 	m_imgCount(0),
-	m_avgDirty(false)
+	m_avgDirty(false),
+	m_normalized(false)
 {
 	for (int i = 0; i < m_faceFeaturesSum.rows(); ++i) {
 		m_faceFeaturesSum(i) = 0;
 		m_avgFaceFeatures(i) = 0;
 	}
-}
-
-Align::~Align()
-{
 }
 
 void Align::scanImage(const QString &definitionFile)
@@ -40,7 +38,11 @@ void Align::scanImage(const QString &definitionFile)
 	if (!reader.readFile(definitionFile)) {
 		return;
 	}
+	scanImage(reader);
+}
 
+void Align::scanImage(const FaceFileReader &reader)
+{
 	QVector<FaceFileReader::FaceData> faces = reader.faceData();
 	foreach (const FaceFileReader::FaceData &face, faces) {
 		// Kointrola, či sú všetky požadované body zadané
@@ -54,36 +56,39 @@ void Align::scanImage(const QString &definitionFile)
 		}
 		else {
 			m_avgDirty = true;
-			LaGenMatDouble aMatrix(sm_faceFeaturesCount * 2, 4);
+			m_normalized = false;
 			LaColVectorDouble featVector = getControlPointsVector(face);
-			for (int row = 0; row < sm_faceFeaturesCount * 2; ++row) {
-				aMatrix(row, 0) = featVector(row);
-				aMatrix(row, 1) = ((row & 0x01) == 0) ? (featVector(row + 1)) : (-featVector(row - 1));
-				aMatrix(row, 2) = ((row & 0x01) == 0) ? 1 : 0;
-				aMatrix(row, 3) = ((row & 0x01) == 0) ? 0 : 1;
-			}
-			LaGenMatDouble nMatrix(4, 4);
-			Blas_Mat_Mat_Mult(aMatrix, aMatrix, nMatrix, true);
-
-			LaVectorLongInt pivots(4);
-			LUFactorizeIP(nMatrix, pivots);
-			LaLUInverseIP(nMatrix, pivots);
-
-			LaGenMatDouble varCovMatrix(4, 1);
-			Blas_Mat_Mat_Mult(aMatrix, m_avgFaceFeatures, varCovMatrix, true);
-			LaColVectorDouble tVector(4);
-			Blas_Mat_Mat_Mult(nMatrix, varCovMatrix, tVector);
-
+			LaGenMatDouble aMatrix(sm_faceFeaturesCount * 2, 4);
+			fillFeaturesMatrix(featVector, aMatrix);
+			LaColVectorDouble tVector = getTransformVector(aMatrix);
 			LaColVectorDouble newFeatures(sm_faceFeaturesCount * 2);
 			Blas_Mat_Mat_Mult(aMatrix, tVector, newFeatures);
 			for (int i = 0; i < m_faceFeaturesSum.rows(); ++i) {
 				m_faceFeaturesSum(i) += newFeatures(i);
 			}
+			calcAvg();
 		}
 	}
 }
 
-bool Align::checkControlPoints(const FaceFileReader::FaceData &data)
+QTransform Align::getTransform(const FaceFileReader::FaceData &face) const
+{
+	calcAvg();
+	normalize();
+	// Kointrola, či sú všetky požadované body zadané
+	if (!checkControlPoints(face)) {
+		return QTransform();
+	}
+	LaColVectorDouble featVector = getControlPointsVector(face);
+	LaGenMatDouble aMatrix(sm_faceFeaturesCount * 2, 4);
+	fillFeaturesMatrix(featVector, aMatrix);
+	LaColVectorDouble tVector = getTransformVector(aMatrix);
+	LaColVectorDouble newFeatures(sm_faceFeaturesCount * 2);
+	Blas_Mat_Mat_Mult(aMatrix, tVector, newFeatures);
+	return QTransform(tVector(0), tVector(1), -tVector(1), tVector(0), tVector(2), tVector(3));
+}
+
+bool Align::checkControlPoints(const FaceFileReader::FaceData &data) const
 {
 	if (data.leftEye != QPoint() && data.rightEye != QPoint() && data.nose != QPoint() && data.mouth != QPoint()) {
 		return true;
@@ -93,7 +98,7 @@ bool Align::checkControlPoints(const FaceFileReader::FaceData &data)
 	}
 }
 
-LaColVectorDouble Align::getControlPointsVector(const FaceFileReader::FaceData &data)
+LaColVectorDouble Align::getControlPointsVector(const FaceFileReader::FaceData &data) const
 {
 	LaColVectorDouble ret(sm_faceFeaturesCount * 2);
 	ret(0) = data.leftEye.x();
@@ -107,13 +112,87 @@ LaColVectorDouble Align::getControlPointsVector(const FaceFileReader::FaceData &
 	return ret;
 }
 
-void Align::calcAvg()
+LaColVectorDouble Align::getTransformVector(const LaGenMatDouble &aMatrix) const
+{
+	LaGenMatDouble nMatrix(4, 4);
+	Blas_Mat_Mat_Mult(aMatrix, aMatrix, nMatrix, true);
+
+	LaVectorLongInt pivots(4);
+	LUFactorizeIP(nMatrix, pivots);
+	LaLUInverseIP(nMatrix, pivots);
+
+	LaGenMatDouble varCovMatrix(4, 1);
+	Blas_Mat_Mat_Mult(aMatrix, m_avgFaceFeatures, varCovMatrix, true);
+	LaColVectorDouble tVector(4);
+	Blas_Mat_Mat_Mult(nMatrix, varCovMatrix, tVector);
+	return tVector;
+}
+
+LaColVectorDouble Align::transform(const LaColVectorDouble &input, const LaColVectorDouble &transVector) const
+{
+	LaColVectorDouble ret(input.rows());
+	LaGenMatDouble aMatrix(input.rows(), 4);
+	fillFeaturesMatrix(input, aMatrix);
+	Blas_Mat_Mat_Mult(aMatrix, transVector, ret);
+	return ret;
+}
+
+void Align::fillFeaturesMatrix(const LaColVectorDouble &input, LaGenMatDouble &aMatrix) const
+{
+	for (int row = 0; row < input.rows(); ++row) {
+		aMatrix(row, 0) = input(row);
+		aMatrix(row, 1) = ((row & 0x01) == 0) ? (-input(row + 1)) : (input(row - 1));
+		aMatrix(row, 2) = ((row & 0x01) == 0) ? 1 : 0;
+		aMatrix(row, 3) = ((row & 0x01) == 0) ? 0 : 1;
+	}
+}
+
+void Align::calcAvg() const
 {
 	if (m_avgDirty) {
 		for (int i = 0; i < m_faceFeaturesSum.rows(); ++i) {
 			m_avgFaceFeatures(i) = m_faceFeaturesSum(i) / double(m_imgCount);
 		}
 		m_avgDirty = false;
+	}
+}
+
+void Align::normalize() const
+{
+	if (!m_normalized) {
+		// Výpočet vrchnej čiary pre orezávanie fotografií
+		double tX = 0;
+		double tY = 0;
+		for (int i = 0; i < 4; ++i) {
+			tX += m_avgFaceFeatures(i*2);
+			tY += m_avgFaceFeatures(i*2 + 1);
+		}
+		tX /= 4.0;
+		tY /= 4.0;
+		double diffX = 0;
+		double diffY = 0;
+		diffX = (m_avgFaceFeatures(0) - tX) * 1.5;
+		diffY = (m_avgFaceFeatures(1) - tY) * 1.5;
+		m_topLine(0) = tX + diffX;
+		m_topLine(1) = tY + diffY;
+		diffX = (m_avgFaceFeatures(2) - tX) * 1.5;
+		diffY = (m_avgFaceFeatures(3) - tY) * 1.5;
+		m_topLine(2) = tX + diffX;
+		m_topLine(3) = tY + diffY;
+
+		// Prepočet vlastností po normalizácii
+		LaColVectorDouble transformedLine(4);
+		transformedLine(0) = sm_lineSize;
+		transformedLine(1) = 0;
+		transformedLine(2) = 0;
+		transformedLine(3) = 0;
+		LaGenMatDouble aMatrix(4, 4);
+		fillFeaturesMatrix(m_topLine, aMatrix);
+		LaColVectorDouble tVector(4);
+		LaLinearSolve(aMatrix, tVector, transformedLine);
+		m_avgFaceFeatures = transform(m_avgFaceFeatures, tVector);
+
+		m_normalized = true;
 	}
 }
 

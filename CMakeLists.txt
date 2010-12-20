@@ -44,10 +44,12 @@ include_directories(
 set(facedetect_SRCS
 	src/main.cpp
 	src/core/FaceBrowserModel.cpp
+	src/core/FaceFileScanner.cpp
 	src/core/FaceImageProvider.cpp
+	src/core/FileScanner.cpp
 	src/libfacedetect/Align.cpp
 	src/libfacedetect/FaceFileReader.cpp
-	src/qml/main.qml
+	src/qml/QmlWin.cpp
 )
 
 set(facedetect_HDRS
@@ -58,6 +60,9 @@ set(facedetect_HDRS
 
 set(facedetect_MOC_HDRS
 	src/core/FaceBrowserModel.h
+	src/core/FaceFileScanner.h
+	src/core/FileScanner.h
+	src/qml/QmlWin.h
 )
 
 set(facedetect_UIS

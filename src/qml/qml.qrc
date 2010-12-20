@@ -1,5 +1,22 @@
 <RCC>
   <qresource prefix="/qml">
+    <file>FaceDelegate.qml</file>
+    <file>LoadingIndicator.qml</file>
+    <file>ProgressBar.qml</file>
+    <file>PushButton.qml</file>
     <file>main.qml</file>
+    <file>img/button.png</file>
+    <file>img/button.sci</file>
+    <file>img/button-down.png</file>
+    <file>img/button-down.sci</file>
+    <file>img/imgbackground.png</file>
+    <file>img/imgbackground.sci</file>
+    <file>img/innerbg.png</file>
+    <file>img/innerbg.sci</file>
+    <file>img/loading.png</file>
+    <file>img/progress-inner.png</file>
+    <file>img/progress-inner.sci</file>
+    <file>img/progress-outer.png</file>
+    <file>img/progress-outer.sci</file>
   </qresource>
 </RCC>

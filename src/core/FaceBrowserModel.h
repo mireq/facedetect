@@ -17,11 +17,12 @@ class FaceBrowserModel: public QAbstractListModel
 {
 Q_OBJECT
 public:
-	FaceBrowserModel(QObject *parent = 0);
-	~FaceBrowserModel();
-	void addDefinitionFile(const QString &fileName);
+	explicit FaceBrowserModel(QObject *parent = 0);
 	int rowCount(const QModelIndex &parent = QModelIndex()) const;
 	QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
+
+public slots:
+	void addDefinitionFile(const QString &fileName);
 
 private:
 	QVector<QString> m_files;

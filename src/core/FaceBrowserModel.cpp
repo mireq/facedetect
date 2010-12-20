@@ -15,16 +15,6 @@ FaceBrowserModel::FaceBrowserModel(QObject *parent):
 {
 }
 
-FaceBrowserModel::~FaceBrowserModel()
-{
-}
-void FaceBrowserModel::addDefinitionFile(const QString &fileName)
-{
-	beginInsertRows(QModelIndex(), m_files.count(), m_files.count());
-	m_files.append(fileName);
-	endInsertRows();
-}
-
 int FaceBrowserModel::rowCount(const QModelIndex &parent) const
 {
 	if (parent.isValid()) {
@@ -49,5 +39,12 @@ QVariant FaceBrowserModel::data(const QModelIndex &index, int role) const
 		default:
 			return QVariant();
 	}
+}
+
+void FaceBrowserModel::addDefinitionFile(const QString &fileName)
+{
+	beginInsertRows(QModelIndex(), m_files.count(), m_files.count());
+	m_files.append(fileName);
+	endInsertRows();
 }
 
