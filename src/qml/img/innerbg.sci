@@ -1,6 +1,6 @@
-border.left: 7
-border.right: 7
-border.bottom: 7
-border.top: 7
+border.left: 15
+border.right: 15
+border.bottom: 15
+border.top: 15
 source: innerbg.png
 

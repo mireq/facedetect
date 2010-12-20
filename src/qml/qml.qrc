@@ -1,6 +1,9 @@
 <RCC>
   <qresource prefix="/qml">
+    <file>ControlPointsDisplay.qml</file>
     <file>FaceDelegate.qml</file>
+    <file>FaceMetadata.qml</file>
+    <file>InfoListItem.qml</file>
     <file>LoadingIndicator.qml</file>
     <file>ProgressBar.qml</file>
     <file>PushButton.qml</file>
@@ -14,6 +17,7 @@
     <file>img/innerbg.png</file>
     <file>img/innerbg.sci</file>
     <file>img/loading.png</file>
+    <file>img/pointer.png</file>
     <file>img/progress-inner.png</file>
     <file>img/progress-inner.sci</file>
     <file>img/progress-outer.png</file>

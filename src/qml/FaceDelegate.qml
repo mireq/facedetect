@@ -12,6 +12,7 @@ import QtQuick 1.0
 Item {
 	id: faceDelegate
 	property int size: 192
+	property variant facesModel: model
 	width: size
 	height: size
 	state: faceImageWrapper.state
@@ -30,7 +31,6 @@ Item {
 
 	Item {
 		id: faceImageWrapper
-		//anchors.fill: parent
 		x: 10
 		y: 10
 		width: faceDelegate.size - 20
@@ -41,7 +41,7 @@ Item {
 			state: "grid"
 			Image {
 				id: faceImage
-				source: model.display
+				source: model.image
 				asynchronous: true
 				fillMode: Image.PreserveAspectFit
 				anchors.fill: parent
@@ -61,7 +61,16 @@ Item {
 				else if (faceImage.status == Image.Ready) {
 					faceImageWrapper.state = "zoom";
 					main.state = "zoom"
+					controlPointsDisplay.leftEyeX = model.faceData[0].leftEyeX;
+					controlPointsDisplay.leftEyeY = model.faceData[0].leftEyeY;
+					controlPointsDisplay.rightEyeX = model.faceData[0].rightEyeX;
+					controlPointsDisplay.rightEyeY = model.faceData[0].rightEyeY;
+					controlPointsDisplay.noseX = model.faceData[0].noseX;
+					controlPointsDisplay.noseY = model.faceData[0].noseY;
+					controlPointsDisplay.mouthX = model.faceData[0].mouthX;
+					controlPointsDisplay.mouthY = model.faceData[0].mouthY;
 				}
+				GridView.view.currentIndex = index;
 			}
 		}
 		states: [
@@ -72,6 +81,7 @@ Item {
 			State {
 				name: "zoom"; when: faceImageWrapper.state == "zoom"
 				ParentChange { target: faceImageWrapper; parent: faceDetectorForeground; x: 0; y: 0; width: faceDetectorForeground.width; height: faceDetectorForeground.height }
+				ParentChange { target: controlPointsDisplay; parent: faceImage }
 			}
 		]
 		transitions: [

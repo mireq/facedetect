@@ -18,28 +18,15 @@ Item {
 		delegate: FaceDelegate{}
 		cellWidth: 192
 		cellHeight: 192
+		onCurrentItemChanged: {
+			faceDetailsInfo.state = "closed";
+			definitionFileInfo.state = "closed";
+		}
 	}
 	Rectangle {
 		id: foregroundDim
 		anchors.fill: parent
 		color: "transparent"
-		/*
-		states: [
-			State {
-				name: "hidden"; when: foregroundDim.state == "hidden"
-				PropertyChanges { target: foregroundDim; color: "transparent" }
-			},
-			State {
-				name: "visible"; when: foregroundDim.state == "visible"
-				PropertyChanges { target: foregroundDim; color: "#ee000000" }
-			}
-		]
-		transitions: [
-			Transition {
-				ColorAnimation { duration: 250 }
-			}
-		]
-		*/
 		MouseArea {
 			id: foregroundDimArea
 			anchors.fill: parent
@@ -51,6 +38,49 @@ Item {
 		anchors.fill: parent
 		anchors.rightMargin: parent.width / 2
 		anchors.topMargin: 72
+		ControlPointsDisplay {
+			id: controlPointsDisplay
+			anchors.fill: parent
+			opacity: 0
+		}
+	}
+	Rectangle {
+		id: imageDetails
+		anchors.fill: parent
+		anchors.leftMargin: parent.width / 2
+		anchors.topMargin: 72
+		color: "#444444"
+		ListView {
+			id: imageDetailsView
+			anchors.fill: parent
+			anchors.leftMargin: 10
+			anchors.rightMargin: 10
+			model: VisualItemModel {
+				InfoListItem {
+					id: faceDetailsInfo
+					title: "Podrobnosti"
+					width: imageDetailsView.width
+					FaceMetadata {
+						metadata: facesView.currentItem == null ? null : facesView.currentItem.facesModel.faceData
+					}
+				}
+				InfoListItem {
+					id: definitionFileInfo
+					title: "Definičný súbor"
+					width: imageDetailsView.width
+					Text {
+						text: facesView.currentItem == null ? "" : facesView.currentItem.facesModel.definitionFile
+						color: "white"
+						textFormat: Text.PlainText
+					}
+				}
+			}
+		}
+		BorderImage {
+			anchors.fill: parent
+			source: "img/innerbg.sci"
+		}
+		transform: Translate { id: imageDetailsTranslate; x: imageDetails.width }
 	}
 	Rectangle {
 		id: topBar
@@ -80,6 +110,9 @@ Item {
 
 		BorderImage {
 			anchors.fill: parent
+			anchors.leftMargin: -15
+			anchors.topMargin: -15
+			anchors.rightMargin: -15
 			source: "img/innerbg.sci"
 		}
 		Item {
@@ -186,11 +219,14 @@ Item {
 			name: "grid"; when: main.state == "grid"
 			PropertyChanges { target: foregroundDim; color: "transparent" }
 			PropertyChanges { target: foregroundDimArea; enabled: false }
+			PropertyChanges { target: controlPointsDisplay; opacity: 0 }
 		},
 		State {
 			name: "zoom"; when: main.state == "zoom"
 			PropertyChanges { target: foregroundDim; color: "#ee000000" }
 			PropertyChanges { target: foregroundDimArea; enabled: true }
+			PropertyChanges { target: controlPointsDisplay; opacity: 1 }
+			PropertyChanges { target: imageDetailsTranslate; x: 0 }
 		}
 	]
 	transitions: [

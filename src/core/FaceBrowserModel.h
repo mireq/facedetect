@@ -12,6 +12,7 @@
 
 #include <QAbstractListModel>
 #include <QVector>
+#include "libfacedetect/FaceFileReader.h"
 
 class FaceBrowserModel: public QAbstractListModel
 {
@@ -25,6 +26,12 @@ public slots:
 	void addDefinitionFile(const QString &fileName);
 
 private:
+	enum DataRole {
+		ImageRole = Qt::UserRole + 1,
+		FaceDataRole,
+		DefinitionFileRole
+	};
+
 	QVector<QString> m_files;
 }; /* -----  end of class FaceBrowserModel  ----- */
 
