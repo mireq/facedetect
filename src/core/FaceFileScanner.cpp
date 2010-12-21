@@ -13,9 +13,6 @@
 
 using FaceDetect::FaceFileReader;
 
-#include <QDebug>
-#include <unistd.h>
-
 FaceFileScanner::FaceFileScanner(QObject *parent):
 	FileScanner(parent)
 {

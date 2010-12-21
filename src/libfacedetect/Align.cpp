@@ -76,9 +76,7 @@ void Align::scanImage(const FaceFileReader &reader)
 			}
 			calcAvg();
 		}
-		if (m_collectStatistics) {
 			m_faceData.append(face);
-		}
 	}
 }
 
@@ -105,6 +103,9 @@ QTransform Align::getTransform(const FaceFileReader::FaceData &face) const
 
 QImage Align::getStatisticsImage() const
 {
+	if (m_imgCount < 2) {
+		return QImage(QSize(1, 1), QImage::Format_ARGB32);
+	}
 	normalize();
 	LaGenMatDouble imgMatrix(128, 128);
 	for (int x = 0; x < 128; ++x) {
@@ -148,6 +149,17 @@ QImage Align::getStatisticsImage() const
 		}
 	}
 
+	QLinearGradient imgGradient(QPoint(0, 0), QPoint(256, 0));
+	imgGradient.setColorAt(0.0, Qt::darkCyan);
+	imgGradient.setColorAt(0.05, Qt::cyan);
+	imgGradient.setColorAt(0.1, Qt::green);
+	imgGradient.setColorAt(0.2, Qt::yellow);
+	imgGradient.setColorAt(1.0, Qt::red);
+	QImage gradImg(QSize(256, 1), QImage::Format_ARGB32);
+	QPainter gradPainter(&gradImg);
+	gradPainter.setPen(Qt::NoPen);
+	gradPainter.fillRect(QRect(0, 0, 256, 1), imgGradient);
+
 	QImage image(QSize(128, 128), QImage::Format_ARGB32);
 	QPainter painter(&image);
 	painter.setPen(Qt::NoPen);
@@ -155,8 +167,8 @@ QImage Align::getStatisticsImage() const
 	painter.end();
 	for (int x = 0; x < 128; ++x) {
 		for (int y = 0; y < 128; ++y) {
-			int value = 255 - qMin(int(imgMatrix(y, x)), 255);
-			image.setPixel(x, y, qRgb(value, value, value));
+			int value = qMin(int(imgMatrix(y, x)), 255);
+			image.setPixel(x, y, gradImg.pixel(value, 0));
 		}
 	}
 	return image;

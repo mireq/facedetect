@@ -5,6 +5,7 @@ Item {
 	width: 1024
 	height: 768
 	state: "grid"
+	property double scanningProgress: faceScanner.progress
 
 	Rectangle {
 		anchors.fill: parent
@@ -105,13 +106,46 @@ Item {
 			anchors.top: parent.top
 			anchors.bottom: parent.bottom
 			anchors.left: parent.left
-			width: parent.width / 2
+			width: parent.width / 2 - 10
+			Text {
+				anchors.horizontalCenter: statisticsImage.horizontalCenter
+				anchors.bottom: statisticsImage.top
+				text: "Rozdelenie kontrolných bodov"
+				color: "#444444"
+				elide: Text.ElideRight
+				font.pixelSize: 20; font.bold: true;
+				style: Text.Raised; styleColor: "#80ffffff"
+			}
 			Image {
 				id: statisticsImage
-				anchors.fill: parent
-				anchors.margins: 10
+				property int index: 0
+				anchors.centerIn: parent
+				width: Math.min(parent.width, parent.height) - 50
+				height: width
 				asynchronous: true
 				fillMode: Image.PreserveAspectFit
+				source: "image://faceimage/statimage/" + index
+			}
+		}
+		ListView {
+			id: databaseDetailsView
+			anchors.top: parent.top
+			anchors.bottom: parent.bottom
+			anchors.right: parent.right
+			width: parent.width / 2
+			model: VisualItemModel {
+				InfoListItem {
+					title: "Štatistiky skenovania súborov"
+					width: databaseDetails.width
+					color: "#444444"
+					styleColor: "#80ffffff"
+					Column {
+						Text { text: "Preskenovaných adresárov: " + faceScanner.scannedDirs; font.pixelSize: 14 }
+						Text { text: "Preskenovaných súborov: " + faceScanner.scannedFiles; font.pixelSize: 14 }
+						Text { text: "Celkovo adresárov: " + faceScanner.totalDirs; font.pixelSize: 14 }
+						Text { text: "Celkovo súborov: " + faceScanner.totalFiles; font.pixelSize: 14 }
+					}
+				}
 			}
 		}
 	}
@@ -290,7 +324,7 @@ Item {
 			PropertyChanges { target: backButton; opacity: 1 }
 			PropertyChanges { target: facesViewTranslate; x: -facesView.width }
 			PropertyChanges { target: databaseDetailsTranslate; x: 0 }
-			PropertyChanges { target: statisticsImage; source: "image://faceimage/statimage/" }
+			//PropertyChanges { target: statisticsImage; source: "image://faceimage/statimage/" }
 		}
 	]
 	transitions: [
@@ -299,4 +333,14 @@ Item {
 			ColorAnimation { duration: 250 }
 		}
 	]
+	onStateChanged: {
+		if (state == "info") {
+			statisticsImage.index++;
+		}
+	}
+	onScanningProgressChanged: {
+		if (state == "info") {
+			statisticsImage.index++;
+		}
+	}
 }

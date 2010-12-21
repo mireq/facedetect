@@ -13,9 +13,12 @@ Item {
 	id: listItemContainer
 	default property alias content: contentsItem.children
 	property string title
+	property alias color: infoListLabel.color
+	property alias styleColor: infoListLabel.styleColor
 	state: "closed"
 	height: contentsItem.height + 50
 	Text {
+		id: infoListLabel
 		anchors.left: listItemContainer.left
 		anchors.right: listItemContainer.right
 		anchors.bottom: contentsItem.top

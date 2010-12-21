@@ -47,6 +47,10 @@ Item {
 				PropertyChanges { target: scaleTransform; xScale: transformScale; yScale: transformScale }
 				PropertyChanges { target: translateTransform; x: transformTranslateX; y: transformTranslateY }
 				PropertyChanges { target: transformAnimation; opacity: 0.5 }
+			},
+			State {
+				name: "closed"; when: !transformationContainer.open
+				ParentChange { target: transformAnimation; parent: main; x: faceDetectorForeground.x + 10; y: faceDetectorForeground.y + 10; width: faceDetectorForeground.width - 20; height: faceDetectorForeground.height - 20 }
 			}
 		]
 		transitions: [
@@ -64,7 +68,7 @@ Item {
 							properties: "angle"; duration: 1000; direction: RotationAnimation.Shortest
 						}
 						NumberAnimation {
-							properties: "opacity"; duration: 200
+							properties: "opacity"; duration: 50
 						}
 					}
 					NumberAnimation {
