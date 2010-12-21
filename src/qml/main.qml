@@ -21,7 +21,9 @@ Item {
 		onCurrentItemChanged: {
 			faceDetailsInfo.state = "closed";
 			definitionFileInfo.state = "closed";
+			transformationInfo.state = "closed";
 		}
+		transform: Translate { id: facesViewTranslate }
 	}
 	Rectangle {
 		id: foregroundDim
@@ -74,6 +76,18 @@ Item {
 						textFormat: Text.PlainText
 					}
 				}
+				InfoListItem {
+					id: transformationInfo
+					title: "Transformácia"
+					width: imageDetailsView.width
+					TransformationDelegate {
+						source: facesView.currentItem == null ? "" : facesView.currentItem.facesModel.image
+						transformRotate: facesView.currentItem == null ? 0.0 : facesView.currentItem.facesModel.transformRotate
+						transformScale: facesView.currentItem == null ? 0.0 : facesView.currentItem.facesModel.transformScale
+						transformTranslateX: facesView.currentItem == null ? 0.0 : facesView.currentItem.facesModel.transformTranslateX
+						transformTranslateY: facesView.currentItem == null ? 0.0 : facesView.currentItem.facesModel.transformTranslateY
+					}
+				}
 			}
 		}
 		BorderImage {
@@ -81,6 +95,25 @@ Item {
 			source: "img/innerbg.sci"
 		}
 		transform: Translate { id: imageDetailsTranslate; x: imageDetails.width }
+	}
+	Item {
+		id: databaseDetails
+		anchors.fill: parent
+		anchors.topMargin: 72
+		transform: Translate { id: databaseDetailsTranslate; x: databaseDetails.width }
+		Item {
+			anchors.top: parent.top
+			anchors.bottom: parent.bottom
+			anchors.left: parent.left
+			width: parent.width / 2
+			Image {
+				id: statisticsImage
+				anchors.fill: parent
+				anchors.margins: 10
+				asynchronous: true
+				fillMode: Image.PreserveAspectFit
+			}
+		}
 	}
 	Rectangle {
 		id: topBar
@@ -132,6 +165,22 @@ Item {
 				}
 				transform: Translate { id: cancelButtonTranslate; y: -backBtnRect.height }
 			}
+			PushButton {
+				id: backButton
+				text: "Späť"
+				anchors.fill: parent
+				anchors.margins: 5
+				opacity: 0
+				onClicked: {
+					if (facesView.currentItem != null) {
+						facesView.currentItem.hide();
+					}
+					if (main.state == "info") {
+						main.state = "grid";
+					}
+				}
+				transform: Translate { id: backButtonTranslate; y: -backBtnRect.height }
+			}
 		}
 		Item {
 			id: infoBtnRect
@@ -146,6 +195,10 @@ Item {
 				anchors.margins: 5
 				opacity: 0
 				onClicked: {
+					if (facesView.currentItem != null) {
+						facesView.currentItem.hide();
+					}
+					main.state = "info";
 				}
 				transform: Translate { id: infoButtonTranslate; y: -infoBtnRect.height }
 			}
@@ -203,8 +256,6 @@ Item {
 			},
 			State {
 				name: "idle"; when: topBar.state == "idle"
-				PropertyChanges { target: infoButtonTranslate; y: 0 }
-				PropertyChanges { target: infoButton; opacity: 1 }
 				PropertyChanges { target: scanningProgress; opacity: 0 }
 			}
 		]
@@ -220,6 +271,8 @@ Item {
 			PropertyChanges { target: foregroundDim; color: "transparent" }
 			PropertyChanges { target: foregroundDimArea; enabled: false }
 			PropertyChanges { target: controlPointsDisplay; opacity: 0 }
+			PropertyChanges { target: infoButtonTranslate; y: 0 }
+			PropertyChanges { target: infoButton; opacity: 1 }
 		},
 		State {
 			name: "zoom"; when: main.state == "zoom"
@@ -227,6 +280,17 @@ Item {
 			PropertyChanges { target: foregroundDimArea; enabled: true }
 			PropertyChanges { target: controlPointsDisplay; opacity: 1 }
 			PropertyChanges { target: imageDetailsTranslate; x: 0 }
+			PropertyChanges { target: statusRect; state: "zoom" }
+			PropertyChanges { target: backButtonTranslate; y: 0 }
+			PropertyChanges { target: backButton; opacity: 1 }
+		},
+		State {
+			name: "info"; when: main.state == "info"
+			PropertyChanges { target: backButtonTranslate; y: 0 }
+			PropertyChanges { target: backButton; opacity: 1 }
+			PropertyChanges { target: facesViewTranslate; x: -facesView.width }
+			PropertyChanges { target: databaseDetailsTranslate; x: 0 }
+			PropertyChanges { target: statisticsImage; source: "image://faceimage/statimage/" }
 		}
 	]
 	transitions: [

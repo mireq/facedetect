@@ -16,9 +16,9 @@
 #include "libfacedetect/FaceFileReader.h"
 #include "QmlWin.h"
 
-using FaceDetect::FaceFileReader;
-
 #include <QDebug>
+
+using FaceDetect::FaceFileReader;
 
 QmlWin::QmlWin(QWidget *parent):
 	QDeclarativeView(parent)
@@ -33,9 +33,11 @@ QmlWin::QmlWin(QWidget *parent):
 			FaceFileReader::setDataDir(datadir);
 		}
 	}
-	engine()->addImageProvider(QLatin1String("faceimage"), new FaceImageProvider);
+	FaceImageProvider *imageProvider = new FaceImageProvider;
+	engine()->addImageProvider(QLatin1String("faceimage"), imageProvider);
 
 	FaceBrowserModel *model = new FaceBrowserModel(this);
+	imageProvider->bindFacesModel(model);
 	m_scanner = new FaceFileScanner(this);
 	rootContext()->setContextProperty("facesModel", model);
 	rootContext()->setContextProperty("faceScanner", m_scanner);

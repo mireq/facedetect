@@ -7,10 +7,10 @@
  * =====================================================================
  */
 
+#include <QPainter>
 #include <lapackpp/blas3pp.h>
 #include <lapackpp/laslv.h>
 #include <lapackpp/lavli.h>
-
 #include "Align.h"
 
 #include <iostream>
@@ -21,15 +21,23 @@ namespace FaceDetect {
 Align::Align():
 	m_faceFeaturesSum(sm_faceFeaturesCount * 2),
 	m_avgFaceFeatures(sm_faceFeaturesCount * 2),
+	m_normalizedFaceFeatures(sm_faceFeaturesCount * 2),
 	m_topLine(4),
 	m_imgCount(0),
 	m_avgDirty(false),
-	m_normalized(false)
+	m_normalized(false),
+	m_collectStatistics(false)
 {
 	for (int i = 0; i < m_faceFeaturesSum.rows(); ++i) {
 		m_faceFeaturesSum(i) = 0;
 		m_avgFaceFeatures(i) = 0;
+		m_normalizedFaceFeatures(i) = 0;
 	}
+}
+
+void Align::setCollectStatistics(bool statistics)
+{
+	m_collectStatistics = statistics;
 }
 
 void Align::scanImage(const QString &definitionFile)
@@ -60,7 +68,7 @@ void Align::scanImage(const FaceFileReader &reader)
 			LaColVectorDouble featVector = getControlPointsVector(face);
 			LaGenMatDouble aMatrix(sm_faceFeaturesCount * 2, 4);
 			fillFeaturesMatrix(featVector, aMatrix);
-			LaColVectorDouble tVector = getTransformVector(aMatrix);
+			LaColVectorDouble tVector = getTransformVector(aMatrix, false);
 			LaColVectorDouble newFeatures(sm_faceFeaturesCount * 2);
 			Blas_Mat_Mat_Mult(aMatrix, tVector, newFeatures);
 			for (int i = 0; i < m_faceFeaturesSum.rows(); ++i) {
@@ -68,13 +76,20 @@ void Align::scanImage(const FaceFileReader &reader)
 			}
 			calcAvg();
 		}
+		if (m_collectStatistics) {
+			m_faceData.append(face);
+		}
 	}
+}
+
+std::size_t Align::imgCount() const
+{
+	return m_imgCount;
 }
 
 QTransform Align::getTransform(const FaceFileReader::FaceData &face) const
 {
 	calcAvg();
-	normalize();
 	// Kointrola, či sú všetky požadované body zadané
 	if (!checkControlPoints(face)) {
 		return QTransform();
@@ -82,10 +97,69 @@ QTransform Align::getTransform(const FaceFileReader::FaceData &face) const
 	LaColVectorDouble featVector = getControlPointsVector(face);
 	LaGenMatDouble aMatrix(sm_faceFeaturesCount * 2, 4);
 	fillFeaturesMatrix(featVector, aMatrix);
-	LaColVectorDouble tVector = getTransformVector(aMatrix);
+	LaColVectorDouble tVector = getTransformVector(aMatrix, true);
 	LaColVectorDouble newFeatures(sm_faceFeaturesCount * 2);
 	Blas_Mat_Mat_Mult(aMatrix, tVector, newFeatures);
 	return QTransform(tVector(0), tVector(1), -tVector(1), tVector(0), tVector(2), tVector(3));
+}
+
+QImage Align::getStatisticsImage() const
+{
+	normalize();
+	LaGenMatDouble imgMatrix(128, 128);
+	for (int x = 0; x < 128; ++x) {
+		for (int y = 0; y < 128; ++y) {
+			imgMatrix(y, x) = 0;
+		}
+	}
+	foreach (const FaceFileReader::FaceData &data, m_faceData) {
+		QTransform transform = getTransform(data);
+		QPoint point;
+		point = transform.map(data.leftEye);
+		if (checkPointRange(point)) {
+			imgMatrix(point.y(), point.x())++;
+		}
+		point = transform.map(data.rightEye);
+		if (checkPointRange(point)) {
+			imgMatrix(point.y(), point.x())++;
+		}
+		point = transform.map(data.nose);
+		if (checkPointRange(point)) {
+			imgMatrix(point.y(), point.x())++;
+		}
+		point = transform.map(data.mouth);
+		if (checkPointRange(point)) {
+			imgMatrix(point.y(), point.x())++;
+		}
+	}
+	double max = 0;
+	for (int x = 0; x < 128; ++x) {
+		for (int y = 0; y < 128; ++y) {
+			if (imgMatrix(y, x) > max) {
+				max = imgMatrix(y, x);
+			}
+		}
+	}
+	if (max != 0) {
+		for (int x = 0; x < 128; ++x) {
+			for (int y = 0; y < 128; ++y) {
+				imgMatrix(y, x) = (imgMatrix(y, x) / max) * 256.0;
+			}
+		}
+	}
+
+	QImage image(QSize(128, 128), QImage::Format_ARGB32);
+	QPainter painter(&image);
+	painter.setPen(Qt::NoPen);
+	painter.fillRect(QRect(0, 0, 128, 128), Qt::white);
+	painter.end();
+	for (int x = 0; x < 128; ++x) {
+		for (int y = 0; y < 128; ++y) {
+			int value = 255 - qMin(int(imgMatrix(y, x)), 255);
+			image.setPixel(x, y, qRgb(value, value, value));
+		}
+	}
+	return image;
 }
 
 bool Align::checkControlPoints(const FaceFileReader::FaceData &data) const
@@ -112,8 +186,11 @@ LaColVectorDouble Align::getControlPointsVector(const FaceFileReader::FaceData &
 	return ret;
 }
 
-LaColVectorDouble Align::getTransformVector(const LaGenMatDouble &aMatrix) const
+LaColVectorDouble Align::getTransformVector(const LaGenMatDouble &aMatrix, bool normalized) const
 {
+	if (normalized) {
+		normalize();
+	}
 	LaGenMatDouble nMatrix(4, 4);
 	Blas_Mat_Mat_Mult(aMatrix, aMatrix, nMatrix, true);
 
@@ -122,7 +199,12 @@ LaColVectorDouble Align::getTransformVector(const LaGenMatDouble &aMatrix) const
 	LaLUInverseIP(nMatrix, pivots);
 
 	LaGenMatDouble varCovMatrix(4, 1);
-	Blas_Mat_Mat_Mult(aMatrix, m_avgFaceFeatures, varCovMatrix, true);
+	if (normalized) {
+		Blas_Mat_Mat_Mult(aMatrix, m_normalizedFaceFeatures, varCovMatrix, true);
+	}
+	else {
+		Blas_Mat_Mat_Mult(aMatrix, m_avgFaceFeatures, varCovMatrix, true);
+	}
 	LaColVectorDouble tVector(4);
 	Blas_Mat_Mat_Mult(nMatrix, varCovMatrix, tVector);
 	return tVector;
@@ -190,10 +272,21 @@ void Align::normalize() const
 		fillFeaturesMatrix(m_topLine, aMatrix);
 		LaColVectorDouble tVector(4);
 		LaLinearSolve(aMatrix, tVector, transformedLine);
-		m_avgFaceFeatures = transform(m_avgFaceFeatures, tVector);
+		m_normalizedFaceFeatures = transform(m_avgFaceFeatures, tVector);
 
 		m_normalized = true;
 	}
+}
+
+bool Align::checkPointRange(const QPoint &point) const
+{
+	if (point.x() < 0 || point.y() < 0) {
+		return false;
+	}
+	if (point.x() >= 128 || point.y() >= 128) {
+		return false;
+	}
+	return true;
 }
 
 } /* end of namespace FaceDetect */

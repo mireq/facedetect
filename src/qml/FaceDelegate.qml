@@ -29,19 +29,24 @@ Item {
 		source: "img/imgbackground.sci"
 	}
 
+	function hide() {
+		faceImageWrapper.state = "grid";
+		main.state = "grid"
+	}
+
 	Item {
 		id: faceImageWrapper
 		x: 10
 		y: 10
 		width: faceDelegate.size - 20
 		height: faceDelegate.size - 20
+		state: "grid"
 		Item {
 			anchors.fill: parent
 			anchors.margins: 10
-			state: "grid"
 			Image {
 				id: faceImage
-				source: model.image
+				source: "image://faceimage/original/" + model.image
 				asynchronous: true
 				fillMode: Image.PreserveAspectFit
 				anchors.fill: parent
@@ -55,8 +60,7 @@ Item {
 			anchors.fill: parent
 			onClicked: {
 				if (faceImageWrapper.state == "zoom") {
-					faceImageWrapper.state = "grid";
-					main.state = "grid"
+					hide();
 				}
 				else if (faceImage.status == Image.Ready) {
 					faceImageWrapper.state = "zoom";

@@ -11,6 +11,7 @@
 #define FACEIMAGEPROVIDER_N9V13OYL
 
 #include <QDeclarativeImageProvider>
+class FaceBrowserModel;
 
 class FaceImageProvider: public QDeclarativeImageProvider
 {
@@ -18,6 +19,10 @@ public:
 	FaceImageProvider();
 	~FaceImageProvider();
 	QImage requestImage(const QString &id, QSize *size, const QSize &requestedSize);
+	void bindFacesModel(FaceBrowserModel *model);
+
+private:
+	FaceBrowserModel *m_facesModel;
 }; /* -----  end of class FaceImageProvider  ----- */
 
 #endif /* end of include guard: FACEIMAGEPROVIDER_N9V13OYL */
