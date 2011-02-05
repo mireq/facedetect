@@ -12,8 +12,6 @@
 #include "FaceBrowserModel.h"
 #include "FaceImageProvider.h"
 
-#include <QDebug>
-
 using FaceDetect::FaceFileReader;
 
 FaceImageProvider::FaceImageProvider():

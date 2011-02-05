@@ -15,6 +15,7 @@
 class FileScanner: public QThread
 {
 Q_OBJECT
+Q_PROPERTY(QString scanPath READ scanPath WRITE setScanPath NOTIFY scanPathChanged)
 Q_PROPERTY(double progress READ progress NOTIFY progressChanged)
 Q_PROPERTY(bool scanning READ isScanning NOTIFY scanningChanged)
 Q_PROPERTY(long scannedDirs READ scannedDirs NOTIFY progressChanged)
@@ -24,6 +25,7 @@ Q_PROPERTY(long totalFiles READ totalDirs NOTIFY progressChanged)
 public:
 	explicit FileScanner(QObject *parent = 0);
 	void setScanPath(const QString &path);
+	QString scanPath() const;
 	double progress() const;
 	bool isScanning() const;
 	long scannedDirs() const;
@@ -38,6 +40,7 @@ public slots:
 signals:
 	void progressChanged(double progress);
 	void scanningChanged(bool scanning);
+	void scanPathChanged(const QString &newPath);
 
 protected:
 	void run();

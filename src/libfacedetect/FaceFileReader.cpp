@@ -7,7 +7,9 @@
  * =====================================================================
  */
 
+#include <QDebug>
 #include <QFile>
+#include <QFileInfo>
 #include <QXmlStreamReader>
 #include <cstdio>
 #include <bzlib.h>
@@ -16,8 +18,6 @@
 using std::FILE;
 using std::fopen;
 using std::fclose;
-
-#include <QDebug>
 
 namespace FaceDetect {
 
@@ -198,7 +198,24 @@ QImage FaceFileReader::readImage() const
 QImage FaceFileReader::readImage(const QString &fileName, const QLatin1String &format) const
 {
 	QImage ret;
-FILE *inputFile;
+
+	QFileInfo fileInfo(fileName);
+	if (fileInfo.suffix() == "bz2") {
+		fileInfo.setFile(fileName.left(fileName.size() - 8) + ".png");
+		if (fileInfo.exists()) {
+			if (ret.load(fileInfo.absoluteFilePath(), "PNG")) {
+				return ret;
+			}
+		}
+		fileInfo.setFile(fileName.left(fileName.size() - 4));
+		if (fileInfo.exists()) {
+			if (ret.load(fileInfo.absoluteFilePath(), format.latin1())) {
+				return ret;
+			}
+		}
+	}
+
+	FILE *inputFile;
 	inputFile = fopen(fileName.toUtf8().constData(), "r");
 	if (!inputFile) {
 		qWarning() << QString("Could not open file: %1").arg(fileName);

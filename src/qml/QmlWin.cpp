@@ -10,19 +10,24 @@
 #include <QApplication>
 #include <QDeclarativeContext>
 #include <QDeclarativeEngine>
+#include <QGLWidget>
 #include "core/FaceBrowserModel.h"
 #include "core/FaceFileScanner.h"
 #include "core/FaceImageProvider.h"
 #include "libfacedetect/FaceFileReader.h"
 #include "QmlWin.h"
 
-#include <QDebug>
-
 using FaceDetect::FaceFileReader;
 
 QmlWin::QmlWin(QWidget *parent):
 	QDeclarativeView(parent)
 {
+	// Nastavenie OpenGL
+	setAttribute(Qt::WA_OpaquePaintEvent);
+	setAttribute(Qt::WA_NoSystemBackground);
+	setViewport(new QGLWidget());
+	setViewportUpdateMode(QGraphicsView::FullViewportUpdate);
+
 	setResizeMode(QDeclarativeView::SizeRootObjectToView);
 	QStringList arguments = qApp->arguments();
 	int datadirIdx;
@@ -45,7 +50,6 @@ QmlWin::QmlWin(QWidget *parent):
 
 	m_scanner->setScanPath(datadir + "/data/ground_truths/xml/");
 	QObject::connect(m_scanner, SIGNAL(fileScanned(QString)), model, SLOT(addDefinitionFile(QString)));
-	m_scanner->start();
 }
 
 QmlWin::~QmlWin()

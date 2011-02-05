@@ -4,7 +4,7 @@ Item {
 	id: main
 	width: 1024
 	height: 768
-	state: "grid"
+	state: "start"
 	property double scanningProgress: faceScanner.progress
 
 	Rectangle {
@@ -13,8 +13,9 @@ Item {
 	}
 	GridView {
 		id: facesView
+		anchors { left: parent.left; top: parent.top; bottom: parent.bottom; right: parent.right }
+		anchors.topMargin: topBar.height
 		anchors.fill: parent
-		anchors.topMargin: 72
 		model: facesModel
 		delegate: FaceDelegate{}
 		cellWidth: 192
@@ -29,7 +30,7 @@ Item {
 	Rectangle {
 		id: foregroundDim
 		anchors.fill: parent
-		color: "transparent"
+		color: "#ee808080"
 		MouseArea {
 			id: foregroundDimArea
 			anchors.fill: parent
@@ -38,9 +39,8 @@ Item {
 	}
 	Item {
 		id: faceDetectorForeground
-		anchors.fill: parent
+		anchors { left: parent.left; top: topBar.bottom; bottom: parent.bottom; right: parent.right }
 		anchors.rightMargin: parent.width / 2
-		anchors.topMargin: 72
 		ControlPointsDisplay {
 			id: controlPointsDisplay
 			anchors.fill: parent
@@ -49,9 +49,8 @@ Item {
 	}
 	Rectangle {
 		id: imageDetails
-		anchors.fill: parent
+		anchors { left: parent.left; top: topBar.bottom; bottom: parent.bottom; right: parent.right }
 		anchors.leftMargin: parent.width / 2
-		anchors.topMargin: 72
 		color: "#444444"
 		ListView {
 			id: imageDetailsView
@@ -99,8 +98,7 @@ Item {
 	}
 	Item {
 		id: databaseDetails
-		anchors.fill: parent
-		anchors.topMargin: 72
+		anchors { left: parent.left; top: topBar.bottom; bottom: parent.bottom; right: parent.right }
 		transform: Translate { id: databaseDetailsTranslate; x: databaseDetails.width }
 		Item {
 			anchors.top: parent.top
@@ -140,10 +138,10 @@ Item {
 					color: "#444444"
 					styleColor: "#80ffffff"
 					Column {
-						Text { text: "Preskenovaných adresárov: " + faceScanner.scannedDirs; font.pixelSize: 14 }
-						Text { text: "Preskenovaných súborov: " + faceScanner.scannedFiles; font.pixelSize: 14 }
-						Text { text: "Celkovo adresárov: " + faceScanner.totalDirs; font.pixelSize: 14 }
-						Text { text: "Celkovo súborov: " + faceScanner.totalFiles; font.pixelSize: 14 }
+						Text { text: "Preskenovaných adresárov: " + faceScanner.scannedDirs; font.pixelSize: 14; color: "#333333" }
+						Text { text: "Preskenovaných súborov: " + faceScanner.scannedFiles; font.pixelSize: 14; color: "#333333" }
+						Text { text: "Celkovo adresárov: " + faceScanner.totalDirs; font.pixelSize: 14; color: "#333333" }
+						Text { text: "Celkovo súborov: " + faceScanner.totalFiles; font.pixelSize: 14; color: "#333333" }
 					}
 				}
 			}
@@ -299,7 +297,18 @@ Item {
 			}
 		]
 	}
+	StartPanel {
+		id: startPanel
+		anchors.fill: parent
+		opacity: 0
+	}
 	states: [
+		State {
+			name: "start"; when: main.state == "start"
+			PropertyChanges { target: foregroundDim; color: "#ee808080" }
+			PropertyChanges { target: topBar; anchors.topMargin: -72; anchors.bottomMargin: -72 }
+			PropertyChanges { target: startPanel; opacity: 1 }
+		},
 		State {
 			name: "grid"; when: main.state == "grid"
 			PropertyChanges { target: foregroundDim; color: "transparent" }
@@ -324,7 +333,6 @@ Item {
 			PropertyChanges { target: backButton; opacity: 1 }
 			PropertyChanges { target: facesViewTranslate; x: -facesView.width }
 			PropertyChanges { target: databaseDetailsTranslate; x: 0 }
-			//PropertyChanges { target: statisticsImage; source: "image://faceimage/statimage/" }
 		}
 	]
 	transitions: [

@@ -21,7 +21,7 @@ endif(CMAKE_BUILD_TYPE MATCHES Debug)
 
 #configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/src/config.h)
 
-find_package(Qt4 4.5 COMPONENTS QtCore QtDeclarative QtGui QtXml REQUIRED)
+find_package(Qt4 4.5 COMPONENTS QtCore QtDeclarative QtGui QtOpengl QtXml REQUIRED)
 find_package(BZip2 REQUIRED)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(LAPACKPP REQUIRED lapackpp)

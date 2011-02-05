@@ -25,7 +25,15 @@ FileScanner::FileScanner(QObject *parent):
 
 void FileScanner::setScanPath(const QString &path)
 {
-	m_scanPath = path;
+	if (m_scanPath != path) {
+		m_scanPath = path;
+		emit scanPathChanged(m_scanPath);
+	}
+}
+
+QString FileScanner::scanPath() const
+{
+	return m_scanPath;
 }
 
 double FileScanner::progress() const
