@@ -1,19 +1,18 @@
 /*
  * =====================================================================
  *        Version:  1.0
- *        Created:  07.12.2010 00:35:07
+ *        Created:  19.12.2010 14:38:20
  *         Author:  Miroslav Bendík
  *        Company:  LinuxOS.sk
  * =====================================================================
  */
 
 #include <QDebug>
-#include <QFile>
 #include <QFileInfo>
+#include <QStringList>
 #include <QXmlStreamReader>
-#include <cstdio>
 #include <bzlib.h>
-#include "FaceFileReader.h"
+#include "FaceFileScanner.h"
 
 using std::FILE;
 using std::fopen;
@@ -21,31 +20,160 @@ using std::fclose;
 
 namespace FaceDetect {
 
-QString FaceFileReader::sm_dataDir;
-
-FaceFileReader::FaceFileReader():
-	m_prefix(sm_dataDir),
-	m_format("PPM")
+FaceFileScanner::ImageInfo::ImageInfo():
+	m_valid(false)
 {
 }
 
-FaceFileReader::~FaceFileReader()
+FaceFileScanner::ImageInfo::~ImageInfo()
 {
 }
 
-void FaceFileReader::setSearchPrefix(const QString &prefix)
+bool FaceFileScanner::ImageInfo::isValid() const
 {
-	m_prefix = prefix;
+	return m_valid;
 }
 
-bool FaceFileReader::readFile(const QString &fileName)
+QUrl FaceFileScanner::ImageInfo::url() const
 {
-	m_definitionFile = fileName;
-	QFile definitionFile(fileName);
-	if (!definitionFile.open(QIODevice::ReadOnly)) {
-		return false;
+	return m_url;
+}
+
+QUrl FaceFileScanner::ImageInfo::definitionUrl() const
+{
+	return m_definitionUrl;
+}
+
+FaceFileScanner::FaceDataIterator FaceFileScanner::ImageInfo::faceBegin() const
+{
+	return m_faceData.begin();
+}
+
+FaceFileScanner::FaceDataIterator FaceFileScanner::ImageInfo::faceEnd() const
+{
+	return m_faceData.end();
+}
+
+QImage FaceFileScanner::ImageInfo::getImage() const
+{
+	const char *format = "PNG";
+	QImage ret;
+	QString fileName = m_url.toLocalFile();
+	QFileInfo fileInfo(fileName);
+
+	if (fileInfo.suffix() == "png") {
+		if (ret.load(fileInfo.absoluteFilePath(), format)) {
+			return ret;
+		}
 	}
 
+	FILE *inputFile;
+	inputFile = fopen(fileName.toUtf8().constData(), "r");
+	if (!inputFile) {
+		qWarning() << QString("Could not open file: %1").arg(fileName);
+		return ret;
+	}
+
+	int bzError;
+	BZFILE *bzFile;
+	bzFile = BZ2_bzReadOpen(&bzError, inputFile, 0, 0, NULL, 0);
+	if (bzError != BZ_OK) {
+		BZ2_bzReadClose(&bzError, bzFile);
+		fclose(inputFile);
+		return ret;
+	}
+
+	bzError = BZ_OK;
+	int nBuf;
+	char buf[65536];
+	QByteArray imageData;
+	while (bzError == BZ_OK) {
+		nBuf = BZ2_bzRead(&bzError, bzFile, buf, sizeof(buf));
+		imageData.append(buf, nBuf);
+	}
+	fclose(inputFile);
+	if (bzError != BZ_STREAM_END) {
+		qWarning() << QString("Could not read file: %1").arg(fileName);
+	}
+	else {
+		if (!ret.loadFromData(imageData, "PPM")) {
+			qWarning() << QString("Bad image format of file: %1").arg(fileName);
+		}
+	}
+	BZ2_bzReadClose(&bzError, bzFile);
+
+	return ret;
+}
+
+void FaceFileScanner::ImageInfo::setUrl(const QUrl &url)
+{
+	if (m_url == url) {
+		return;
+	}
+	m_url = url;
+	QFileInfo fileInfo(m_url.toLocalFile());
+	m_valid = fileInfo.isReadable();
+}
+
+void FaceFileScanner::ImageInfo::setDefinitionUrl(const QUrl &url)
+{
+	m_definitionUrl = url;
+}
+
+void FaceFileScanner::ImageInfo::setFaceData(const QVector<FaceData> &faceData)
+{
+	m_faceData = faceData;
+}
+
+FaceFileScanner::FaceFileScanner(QObject *parent):
+	FileScanner(parent)
+{
+}
+
+FaceFileScanner::~FaceFileScanner()
+{
+}
+
+QUrl FaceFileScanner::basePath()
+{
+	return m_basePath;
+}
+
+void FaceFileScanner::setBasePath(const QUrl &url)
+{
+	m_basePath = url;
+	QStringList path = url.toLocalFile().split("/");
+	if (path.size() > 0 && path.last() == "") {
+		path.takeLast();
+	}
+	setScanPath(path.join("/") + "/data/ground_truths/xml/");
+}
+
+void FaceFileScanner::scanFile(const QString &fileName)
+{
+	// Zaujímajú ma len xml súbory
+	QFileInfo fileInfo(fileName);
+	if (fileInfo.suffix() != QLatin1String("xml")) {
+		return;
+	}
+
+	ImageInfo img = readFile(fileName);
+	if (!img.isValid()) {
+		return;
+	}
+	emit imageScanned(img);
+}
+
+FaceFileScanner::ImageInfo FaceFileScanner::readFile(const QString &fileName)
+{
+	ImageInfo ret;
+	ret.setDefinitionUrl(QUrl::fromLocalFile(fileName));
+	QFile definitionFile(fileName);
+	QFileInfo definitionFileInfo(fileName);
+	if (!definitionFile.open(QIODevice::ReadOnly)) {
+		return ret;
+	}
+	QVector<FaceData> data;
 	ReadState state = NoState;
 	QXmlStreamReader definitionReader(&definitionFile);
 	QString textAcumulator;
@@ -85,7 +213,13 @@ bool FaceFileReader::readFile(const QString &fileName)
 							state = SubjectState;
 						}
 						if (definitionReader.attributes().hasAttribute("relative")) {
-							m_url = definitionReader.attributes().value("relative").toString();
+							QFileInfo inf(basePath().toLocalFile() + "/" + definitionReader.attributes().value("relative").toString());
+							if (inf.isReadable()) {
+								ret.setUrl(inf.absoluteFilePath());
+							}
+							inf.setFile(inf.absolutePath() + "/" + inf.baseName() + ".png");
+							ret.setUrl(inf.absoluteFilePath());
+							//ret.setUrl(basePath().toLocalFile() + "/" + definitionReader.attributes().value("relative").toString());
 						}
 						break;
 					case SubjectState:
@@ -130,7 +264,7 @@ bool FaceFileReader::readFile(const QString &fileName)
 					case FaceState:
 						if (definitionReader.qualifiedName() == "Face") {
 							state = ApplicationState;
-							m_faceData << faceData;
+							data << faceData;
 							faceData.leftEye = QPoint();
 							faceData.rightEye = QPoint();
 						}
@@ -182,90 +316,8 @@ bool FaceFileReader::readFile(const QString &fileName)
 				break;
 		}
 	}
-	return true;
-}
-
-QString FaceFileReader::definitionFile() const
-{
-	return m_definitionFile;
-}
-
-QImage FaceFileReader::readImage() const
-{
-	return readImage(m_prefix + m_url, m_format);
-}
-
-QImage FaceFileReader::readImage(const QString &fileName, const QLatin1String &format) const
-{
-	QImage ret;
-
-	QFileInfo fileInfo(fileName);
-	if (fileInfo.suffix() == "bz2") {
-		fileInfo.setFile(fileName.left(fileName.size() - 8) + ".png");
-		if (fileInfo.exists()) {
-			if (ret.load(fileInfo.absoluteFilePath(), "PNG")) {
-				return ret;
-			}
-		}
-		fileInfo.setFile(fileName.left(fileName.size() - 4));
-		if (fileInfo.exists()) {
-			if (ret.load(fileInfo.absoluteFilePath(), format.latin1())) {
-				return ret;
-			}
-		}
-	}
-
-	FILE *inputFile;
-	inputFile = fopen(fileName.toUtf8().constData(), "r");
-	if (!inputFile) {
-		qWarning() << QString("Could not open file: %1").arg(fileName);
-		return ret;
-	}
-
-	int bzError;
-	BZFILE *bzFile;
-	bzFile = BZ2_bzReadOpen(&bzError, inputFile, 0, 0, NULL, 0);
-	if (bzError != BZ_OK) {
-		BZ2_bzReadClose(&bzError, bzFile);
-		fclose(inputFile);
-		return ret;
-	}
-
-	bzError = BZ_OK;
-	int nBuf;
-	char buf[65536];
-	QByteArray imageData;
-	while (bzError == BZ_OK) {
-		nBuf = BZ2_bzRead(&bzError, bzFile, buf, sizeof(buf));
-		imageData.append(buf, nBuf);
-	}
-	fclose(inputFile);
-	if (bzError != BZ_STREAM_END) {
-		qWarning() << QString("Could not read file: %1").arg(fileName);
-	}
-	else {
-		if (!ret.loadFromData(imageData, format.latin1())) {
-			qWarning() << QString("Bad image format of file: %1").arg(fileName);
-		}
-	}
-	BZ2_bzReadClose(&bzError, bzFile);
-
+	ret.setFaceData(data);
 	return ret;
-}
-
-QVector<FaceFileReader::FaceData> FaceFileReader::faceData() const
-{
-	return m_faceData;
-}
-
-void FaceFileReader::setDataDir(const QString &dataDir)
-{
-	sm_dataDir = dataDir;
-}
-
-QUrl FaceFileReader::imageUrl() const
-{
-	return QUrl("image://faceimage/" + m_definitionFile);
 }
 
 } /* end of namespace FaceDetect */

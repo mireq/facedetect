@@ -11,14 +11,13 @@
 #include <lapackpp/blas3pp.h>
 #include <lapackpp/laslv.h>
 #include <lapackpp/lavli.h>
+#include <lapackpp/laexcp.h>
 #include "Align.h"
-
-#include <iostream>
-#include <QDebug>
 
 namespace FaceDetect {
 
-Align::Align():
+Align::Align(QObject *parent):
+	QObject(parent),
 	m_faceFeaturesSum(sm_faceFeaturesCount * 2),
 	m_avgFaceFeatures(sm_faceFeaturesCount * 2),
 	m_normalizedFaceFeatures(sm_faceFeaturesCount * 2),
@@ -35,37 +34,35 @@ Align::Align():
 	}
 }
 
+Align::~Align()
+{
+}
+
 void Align::setCollectStatistics(bool statistics)
 {
 	m_collectStatistics = statistics;
 }
 
-void Align::scanImage(const QString &definitionFile)
+void Align::addImage(const FaceFileScanner::ImageInfo &info)
 {
-	FaceFileReader reader;
-	if (!reader.readFile(definitionFile)) {
+	if (!info.isValid()) {
 		return;
 	}
-	scanImage(reader);
-}
 
-void Align::scanImage(const FaceFileReader &reader)
-{
-	QVector<FaceFileReader::FaceData> faces = reader.faceData();
-	foreach (const FaceFileReader::FaceData &face, faces) {
+	for (auto face = info.faceBegin(); face != info.faceEnd(); ++face) {
 		// Kointrola, či sú všetky požadované body zadané
-		if (!checkControlPoints(face)) {
+		if (!checkControlPoints(*face)) {
 			continue;
 		}
 		m_imgCount++;
 		if (m_imgCount == 1) {
-			m_avgFaceFeatures = getControlPointsVector(face);
+			m_avgFaceFeatures = getControlPointsVector(*face);
 			m_faceFeaturesSum = m_avgFaceFeatures;
 		}
 		else {
 			m_avgDirty = true;
 			m_normalized = false;
-			LaColVectorDouble featVector = getControlPointsVector(face);
+			LaColVectorDouble featVector = getControlPointsVector(*face);
 			LaGenMatDouble aMatrix(sm_faceFeaturesCount * 2, 4);
 			fillFeaturesMatrix(featVector, aMatrix);
 			LaColVectorDouble tVector = getTransformVector(aMatrix, false);
@@ -76,7 +73,7 @@ void Align::scanImage(const FaceFileReader &reader)
 			}
 			calcAvg();
 		}
-			m_faceData.append(face);
+			m_faceData.append(*face);
 	}
 }
 
@@ -85,7 +82,7 @@ std::size_t Align::imgCount() const
 	return m_imgCount;
 }
 
-QTransform Align::getTransform(const FaceFileReader::FaceData &face) const
+QTransform Align::getTransform(const FaceFileScanner::FaceData &face) const
 {
 	calcAvg();
 	// Kointrola, či sú všetky požadované body zadané
@@ -113,7 +110,7 @@ QImage Align::getStatisticsImage() const
 			imgMatrix(y, x) = 0;
 		}
 	}
-	foreach (const FaceFileReader::FaceData &data, m_faceData) {
+	foreach (const FaceFileScanner::FaceData &data, m_faceData) {
 		QTransform transform = getTransform(data);
 		QPoint point;
 		point = transform.map(data.leftEye);
@@ -174,7 +171,7 @@ QImage Align::getStatisticsImage() const
 	return image;
 }
 
-bool Align::checkControlPoints(const FaceFileReader::FaceData &data) const
+bool Align::checkControlPoints(const FaceFileScanner::FaceData &data) const
 {
 	if (data.leftEye != QPoint() && data.rightEye != QPoint() && data.nose != QPoint() && data.mouth != QPoint()) {
 		return true;
@@ -184,7 +181,7 @@ bool Align::checkControlPoints(const FaceFileReader::FaceData &data) const
 	}
 }
 
-LaColVectorDouble Align::getControlPointsVector(const FaceFileReader::FaceData &data) const
+LaColVectorDouble Align::getControlPointsVector(const FaceFileScanner::FaceData &data) const
 {
 	LaColVectorDouble ret(sm_faceFeaturesCount * 2);
 	ret(0) = data.leftEye.x();
@@ -283,8 +280,12 @@ void Align::normalize() const
 		LaGenMatDouble aMatrix(4, 4);
 		fillFeaturesMatrix(m_topLine, aMatrix);
 		LaColVectorDouble tVector(4);
-		LaLinearSolve(aMatrix, tVector, transformedLine);
-		m_normalizedFaceFeatures = transform(m_avgFaceFeatures, tVector);
+		try {
+			LaLinearSolve(aMatrix, tVector, transformedLine);
+			m_normalizedFaceFeatures = transform(m_avgFaceFeatures, tVector);
+		}
+		catch (LaException &) {
+		}
 
 		m_normalized = true;
 	}

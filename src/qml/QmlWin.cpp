@@ -11,13 +11,11 @@
 #include <QDeclarativeContext>
 #include <QDeclarativeEngine>
 #include <QGLWidget>
-#include "core/FaceBrowserModel.h"
-#include "core/FaceFileScanner.h"
+#include "libfacedetect/FaceFileScanner.h"
 #include "core/FaceImageProvider.h"
-#include "libfacedetect/FaceFileReader.h"
 #include "QmlWin.h"
 
-using FaceDetect::FaceFileReader;
+using FaceDetect::FaceFileScanner;
 
 QmlWin::QmlWin(QWidget *parent):
 	QDeclarativeView(parent)
@@ -30,30 +28,54 @@ QmlWin::QmlWin(QWidget *parent):
 
 	setResizeMode(QDeclarativeView::SizeRootObjectToView);
 	QStringList arguments = qApp->arguments();
-	int datadirIdx;
-	QString datadir;
-	if ((datadirIdx = arguments.indexOf("--datadir")) != -1) {
-		if (datadirIdx < arguments.count() - 1) {
-			datadir = arguments[datadirIdx + 1];
-			FaceFileReader::setDataDir(datadir);
-		}
-	}
+
 	FaceImageProvider *imageProvider = new FaceImageProvider;
 	engine()->addImageProvider(QLatin1String("faceimage"), imageProvider);
 
-	FaceBrowserModel *model = new FaceBrowserModel(this);
-	imageProvider->bindFacesModel(model);
-	m_scanner = new FaceFileScanner(this);
-	rootContext()->setContextProperty("facesModel", model);
-	rootContext()->setContextProperty("faceScanner", m_scanner);
+	m_aligner = new FaceDetect::Align(this);
+	m_aligner->setCollectStatistics(true);
+	m_faceBrowserModel = new FaceBrowserModel(m_aligner, this);
+	m_faceFileScanner = new FaceFileScanner(this);
+	imageProvider->bindScanner(m_faceFileScanner);
+	imageProvider->bindAlign(m_aligner);
+	rootContext()->setContextProperty("runtime", this);
 	setSource(QUrl("qrc:/qml/main.qml"));
-
-	m_scanner->setScanPath(datadir + "/data/ground_truths/xml/");
-	QObject::connect(m_scanner, SIGNAL(fileScanned(QString)), model, SLOT(addDefinitionFile(QString)));
+	connect(m_faceFileScanner, SIGNAL(imageScanned(FaceDetect::FaceFileScanner::ImageInfo)), this, SLOT(imageScanned(FaceDetect::FaceFileScanner::ImageInfo)));
+	m_faceFileScanner->setBasePath(m_scanPath);
 }
 
 QmlWin::~QmlWin()
 {
-	m_scanner->stop();
+	m_faceFileScanner->stop();
+}
+
+QString QmlWin::scanPath() const
+{
+	return m_scanPath;
+}
+
+void QmlWin::setScanPath(const QString &scanPath)
+{
+	if (m_scanPath != scanPath) {
+		m_scanPath = scanPath;
+		m_faceFileScanner->setBasePath(m_scanPath);
+		emit scanPathChanged(m_scanPath);
+	}
+}
+
+FaceBrowserModel *QmlWin::faceBrowserModel() const
+{
+	return m_faceBrowserModel;
+}
+
+FaceFileScanner *QmlWin::faceFileScanner() const
+{
+	return m_faceFileScanner;
+}
+
+void QmlWin::imageScanned(const FaceDetect::FaceFileScanner::ImageInfo &img)
+{
+	m_faceBrowserModel->addDefinitionFile(img);
+	m_aligner->addImage(img);
 }
 

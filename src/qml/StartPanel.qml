@@ -39,15 +39,15 @@ Item {
 					height: databaseLabel.height
 					anchors { left: databaseLabel.right; right: parent.right; leftMargin: 10 }
 					font.pixelSize: 14; font.bold: true;
-					text: faceScanner.scanPath
+					text: runtime.scanPath
 				}
 			}
 			PushButton {
 				width: 200; height: 60
 				text: "Štart"
 				onClicked: {
-					faceScanner.scanPath = databaseEdit.text
-					faceScanner.start();
+					runtime.scanPath = databaseEdit.text
+					runtime.faceFileScanner.start();
 					main.state = "grid";
 				}
 				anchors.horizontalCenter: parent.horizontalCenter

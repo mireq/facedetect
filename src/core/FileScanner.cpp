@@ -11,8 +11,6 @@
 #include <QFile>
 #include "FileScanner.h"
 
-#include <QDebug>
-
 FileScanner::FileScanner(QObject *parent):
 	QThread(parent),
 	m_scanning(false)

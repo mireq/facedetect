@@ -9,9 +9,14 @@
 
 #include <QApplication>
 #include "qml/QmlWin.h"
+#include "libfacedetect/FaceFileScanner.h"
 
 int main(int argc, char *argv[])
 {
+	qRegisterMetaType<FaceDetect::FaceFileScanner::ImageInfo>("FaceDetect::FaceFileScanner::ImageInfo");
+	QApplication::setApplicationName("Face detector");
+	QApplication::setOrganizationDomain("linuxos.sk");
+	QApplication::setOrganizationName("LinuxOS.sk");
 	QApplication app(argc, argv);
 	QmlWin win;
 	win.show();

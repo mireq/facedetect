@@ -12,14 +12,10 @@
 #include <qmath.h>
 #include "FaceBrowserModel.h"
 
-#include <QDebug>
-
-using FaceDetect::FaceFileReader;
-
-FaceBrowserModel::FaceBrowserModel(QObject *parent):
-	QAbstractListModel(parent)
+FaceBrowserModel::FaceBrowserModel(FaceDetect::Align *aligner, QObject *parent):
+	QAbstractListModel(parent),
+	m_aligner(aligner)
 {
-	m_aligner.setCollectStatistics(true);
 	QHash<int, QByteArray> roles = roleNames();
 	roles.insert(ImageRole, QByteArray("image"));
 	roles.insert(FaceDataRole, QByteArray("faceData"));
@@ -49,62 +45,56 @@ QVariant FaceBrowserModel::data(const QModelIndex &index, int role) const
 	if (index.row() < 0 || index.row() >= m_files.count()) {
 		return QVariant();
 	}
-	FaceFileReader reader;
-	reader.readFile(m_files[index.row()]);
+	FaceDetect::FaceFileScanner::ImageInfo img = m_files[index.row()];
 	switch (role) {
 		case ImageRole:
-			return QVariant(m_files[index.row()]);
+			return QVariant(m_files[index.row()].definitionUrl().toLocalFile());
 		case FaceDataRole: {
-			FaceFileReader reader;
-			reader.readFile(m_files[index.row()]);
 			QList<QVariant> ret;
-			QVector<FaceFileReader::FaceData> data = reader.faceData();
-			foreach (const FaceFileReader::FaceData &face, data) {
+			for (auto face = img.faceBegin(); face != img.faceEnd(); ++face) {
 				QMap<QString, QVariant> faceData;
-				faceData["leftEyeX"] = face.leftEye.x();
-				faceData["rightEyeX"] = face.rightEye.x();
-				faceData["noseX"] = face.nose.x();
-				faceData["mouthX"] = face.mouth.x();
-				faceData["leftEyeY"] = face.leftEye.y();
-				faceData["rightEyeY"] = face.rightEye.y();
-				faceData["noseY"] = face.nose.y();
-				faceData["mouthY"] = face.mouth.y();
+				faceData["leftEyeX"] = face->leftEye.x();
+				faceData["rightEyeX"] = face->rightEye.x();
+				faceData["noseX"] = face->nose.x();
+				faceData["mouthX"] = face->mouth.x();
+				faceData["leftEyeY"] = face->leftEye.y();
+				faceData["rightEyeY"] = face->rightEye.y();
+				faceData["noseY"] = face->nose.y();
+				faceData["mouthY"] = face->mouth.y();
 				ret.append(faceData);
 			}
 			return QVariant(ret);
 		}
 		case DefinitionFileRole: {
-			QFile defFile(m_files[index.row()]);
+			QFile defFile(m_files[index.row()].definitionUrl().toLocalFile());
 			defFile.open(QIODevice::ReadOnly);
 			return QString::fromUtf8(defFile.readAll());
 		}
 		case TransformRotateRole: {
-			QVector<FaceDetect::FaceFileReader::FaceData> data = reader.faceData();
-			if (data.size() == 1) {
-				QTransform transform = getTransform(data[0]);
+			if (img.faceEnd() - img.faceBegin() == 1) {
+				QTransform transform = getTransform(*img.faceBegin());
 				QLineF line(transform.map(QPointF(0, 0)), transform.map(QPointF(1, 0)));
 				return -line.angle();
 			}
 			break;
 		}
 		case TransformScaleRole: {
-			QVector<FaceDetect::FaceFileReader::FaceData> data = reader.faceData();
-			if (data.size() == 1) {
-				QTransform transform = getTransform(data[0]);
+			if (img.faceEnd() - img.faceBegin() == 1) {
+				QTransform transform = getTransform(*img.faceBegin());
 				QLineF line(transform.map(QPointF(0, 0)), transform.map(QPointF(1, 0)));
 				return line.length();
 			}
 			break;
 		}
 		case TransformTranslateXRole:
-			if (reader.faceData().size() == 1) {
-				QTransform transform = getTransform(reader.faceData()[0]);
+			if (img.faceEnd() - img.faceBegin() == 1) {
+				QTransform transform = getTransform(*img.faceBegin());
 				return transform.dx();
 			}
 			break;
 		case TransformTranslateYRole:
-			if (reader.faceData().size() == 1) {
-				QTransform transform = getTransform(reader.faceData()[0]);
+			if (img.faceEnd() - img.faceBegin() == 1) {
+				QTransform transform = getTransform(*img.faceBegin());
 				return transform.dy();
 			}
 			break;
@@ -114,21 +104,15 @@ QVariant FaceBrowserModel::data(const QModelIndex &index, int role) const
 	return QVariant();
 }
 
-QImage FaceBrowserModel::getStatisticsImage() const
+QTransform FaceBrowserModel::getTransform(const FaceDetect::FaceFileScanner::FaceData &data) const
 {
-	return m_aligner.getStatisticsImage();
+	return m_aligner->getTransform(data);
 }
 
-QTransform FaceBrowserModel::getTransform(const FaceDetect::FaceFileReader::FaceData &data) const
-{
-	return m_aligner.getTransform(data);
-}
-
-void FaceBrowserModel::addDefinitionFile(const QString &fileName)
+void FaceBrowserModel::addDefinitionFile(const FaceDetect::FaceFileScanner::ImageInfo &image)
 {
 	beginInsertRows(QModelIndex(), m_files.count(), m_files.count());
-	m_aligner.scanImage(fileName);
-	m_files.append(fileName);
+	m_files.append(image);
 	endInsertRows();
 }
 

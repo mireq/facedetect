@@ -24,8 +24,11 @@ endif(CMAKE_BUILD_TYPE MATCHES Debug)
 find_package(Qt4 4.5 COMPONENTS QtCore QtDeclarative QtGui QtOpengl QtXml REQUIRED)
 find_package(BZip2 REQUIRED)
 find_package(PkgConfig REQUIRED)
+find_package(Boost 1.32.0)
 pkg_check_modules(LAPACKPP REQUIRED lapackpp)
 
+set(QT_USE_DECLARATIVE 1)
+set(QT_USE_OPENGL 1)
 set(QT_USE_XML 1)
 
 include(${QT_USE_FILE})
@@ -44,24 +47,30 @@ include_directories(
 set(facedetect_SRCS
 	src/main.cpp
 	src/core/FaceBrowserModel.cpp
-	src/core/FaceFileScanner.cpp
 	src/core/FaceImageProvider.cpp
 	src/core/FileScanner.cpp
 	src/libfacedetect/Align.cpp
-	src/libfacedetect/FaceFileReader.cpp
+	src/libfacedetect/BPNeuralNet.cpp
+	src/libfacedetect/ImageDataReader.cpp
+	src/libfacedetect/FaceFileScanner.cpp
+	src/libfacedetect/NeuralNet.cpp
+	src/libfacedetect/TrainingDataReader.cpp
 	src/qml/QmlWin.cpp
 )
 
 set(facedetect_HDRS
 	src/core/FaceImageProvider.h
-	src/libfacedetect/Align.h
-	src/libfacedetect/FaceFileReader.h
 )
 
 set(facedetect_MOC_HDRS
 	src/core/FaceBrowserModel.h
-	src/core/FaceFileScanner.h
 	src/core/FileScanner.h
+	src/libfacedetect/Align.h
+	src/libfacedetect/BPNeuralNet.h
+	src/libfacedetect/FaceFileScanner.h
+	src/libfacedetect/ImageDataReader.h
+	src/libfacedetect/NeuralNet.h
+	src/libfacedetect/TrainingDataReader.h
 	src/qml/QmlWin.h
 )
 

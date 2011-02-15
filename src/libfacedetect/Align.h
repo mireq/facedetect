@@ -10,30 +10,33 @@
 #ifndef ALIGN_L4LZ6THZ
 #define ALIGN_L4LZ6THZ
 
+#include <QObject>
 #include <QString>
 #include <QTransform>
 #include <QVector>
 #include <lapackpp/gmd.h>
 #include <lapackpp/lacvd.h>
 #include <cstdlib>
-#include "FaceFileReader.h"
+#include "FaceFileScanner.h"
 
 namespace FaceDetect {
 
-class Align
+class Align: public QObject
 {
+Q_OBJECT
 public:
-	Align();
+	explicit Align(QObject *parent = 0);
+	virtual ~Align();
 	void setCollectStatistics(bool statistics);
-	void scanImage(const QString &definitionFile);
-	void scanImage(const FaceFileReader &reader);
+	void addImage(const FaceFileScanner::ImageInfo &info);
+	//void scanImage(const FaceFileReader &reader);
 	std::size_t imgCount() const;
-	QTransform getTransform(const FaceFileReader::FaceData &face) const;
+	QTransform getTransform(const FaceFileScanner::FaceData &face) const;
 	QImage getStatisticsImage() const;
 
 private:
-	bool checkControlPoints(const FaceFileReader::FaceData &data) const;
-	LaColVectorDouble getControlPointsVector(const FaceFileReader::FaceData &data) const;
+	bool checkControlPoints(const FaceFileScanner::FaceData &data) const;
+	LaColVectorDouble getControlPointsVector(const FaceFileScanner::FaceData &data) const;
 	LaColVectorDouble getTransformVector(const LaGenMatDouble &aMatrix, bool normalized = true) const;
 	LaColVectorDouble transform(const LaColVectorDouble &input, const LaColVectorDouble &transVector) const;
 	void fillFeaturesMatrix(const LaColVectorDouble &input, LaGenMatDouble &aMatrix) const;
@@ -50,7 +53,7 @@ private:
 	mutable bool m_avgDirty;
 	mutable bool m_normalized;
 	bool m_collectStatistics;
-	QVector<FaceFileReader::FaceData> m_faceData;
+	QVector<FaceFileScanner::FaceData> m_faceData;
 
 	static const int sm_faceFeaturesCount = 4;
 	static const int sm_lineSize = 128;

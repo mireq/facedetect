@@ -11,7 +11,9 @@
 #define FACEIMAGEPROVIDER_N9V13OYL
 
 #include <QDeclarativeImageProvider>
-class FaceBrowserModel;
+#include <QPointer>
+#include "libfacedetect/Align.h"
+#include "libfacedetect/FaceFileScanner.h"
 
 class FaceImageProvider: public QDeclarativeImageProvider
 {
@@ -19,10 +21,12 @@ public:
 	FaceImageProvider();
 	~FaceImageProvider();
 	QImage requestImage(const QString &id, QSize *size, const QSize &requestedSize);
-	void bindFacesModel(FaceBrowserModel *model);
+	void bindScanner(FaceDetect::FaceFileScanner *scanner);
+	void bindAlign(FaceDetect::Align *align);
 
 private:
-	FaceBrowserModel *m_facesModel;
+	QPointer<FaceDetect::FaceFileScanner> m_scanner;
+	QPointer<FaceDetect::Align> m_align;
 }; /* -----  end of class FaceImageProvider  ----- */
 
 #endif /* end of include guard: FACEIMAGEPROVIDER_N9V13OYL */

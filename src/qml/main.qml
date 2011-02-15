@@ -5,7 +5,7 @@ Item {
 	width: 1024
 	height: 768
 	state: "start"
-	property double scanningProgress: faceScanner.progress
+	property double scanningProgress: runtime.faceFileScanner.progress
 
 	Rectangle {
 		anchors.fill: parent
@@ -13,10 +13,11 @@ Item {
 	}
 	GridView {
 		id: facesView
+		property Item selectedItem
 		anchors { left: parent.left; top: parent.top; bottom: parent.bottom; right: parent.right }
 		anchors.topMargin: topBar.height
 		anchors.fill: parent
-		model: facesModel
+		model: runtime.faceBrowserModel
 		delegate: FaceDelegate{}
 		cellWidth: 192
 		cellHeight: 192
@@ -63,7 +64,7 @@ Item {
 					title: "Podrobnosti"
 					width: imageDetailsView.width
 					FaceMetadata {
-						metadata: facesView.currentItem == null ? null : facesView.currentItem.facesModel.faceData
+						metadata: facesView.selectedItem == null ? null : facesView.selectedItem.facesModel.faceData
 					}
 				}
 				InfoListItem {
@@ -71,7 +72,7 @@ Item {
 					title: "Definičný súbor"
 					width: imageDetailsView.width
 					Text {
-						text: facesView.currentItem == null ? "" : facesView.currentItem.facesModel.definitionFile
+						text: facesView.selectedItem == null ? "" : facesView.selectedItem.facesModel.definitionFile
 						color: "white"
 						textFormat: Text.PlainText
 					}
@@ -81,11 +82,11 @@ Item {
 					title: "Transformácia"
 					width: imageDetailsView.width
 					TransformationDelegate {
-						source: facesView.currentItem == null ? "" : facesView.currentItem.facesModel.image
-						transformRotate: facesView.currentItem == null ? 0.0 : facesView.currentItem.facesModel.transformRotate
-						transformScale: facesView.currentItem == null ? 0.0 : facesView.currentItem.facesModel.transformScale
-						transformTranslateX: facesView.currentItem == null ? 0.0 : facesView.currentItem.facesModel.transformTranslateX
-						transformTranslateY: facesView.currentItem == null ? 0.0 : facesView.currentItem.facesModel.transformTranslateY
+						source: facesView.selectedItem == null ? "" : facesView.selectedItem.facesModel.image
+						transformRotate: facesView.selectedItem == null ? 0.0 : facesView.selectedItem.facesModel.transformRotate
+						transformScale: facesView.selectedItem == null ? 0.0 : facesView.selectedItem.facesModel.transformScale
+						transformTranslateX: facesView.selectedItem == null ? 0.0 : facesView.selectedItem.facesModel.transformTranslateX
+						transformTranslateY: facesView.selectedItem == null ? 0.0 : facesView.selectedItem.facesModel.transformTranslateY
 					}
 				}
 			}
@@ -138,10 +139,10 @@ Item {
 					color: "#444444"
 					styleColor: "#80ffffff"
 					Column {
-						Text { text: "Preskenovaných adresárov: " + faceScanner.scannedDirs; font.pixelSize: 14; color: "#333333" }
-						Text { text: "Preskenovaných súborov: " + faceScanner.scannedFiles; font.pixelSize: 14; color: "#333333" }
-						Text { text: "Celkovo adresárov: " + faceScanner.totalDirs; font.pixelSize: 14; color: "#333333" }
-						Text { text: "Celkovo súborov: " + faceScanner.totalFiles; font.pixelSize: 14; color: "#333333" }
+						Text { text: "Preskenovaných adresárov: " + runtime.faceFileScanner.scannedDirs; font.pixelSize: 14; color: "#333333" }
+						Text { text: "Preskenovaných súborov: " + runtime.faceFileScanner.scannedFiles; font.pixelSize: 14; color: "#333333" }
+						Text { text: "Celkovo adresárov: " + runtime.faceFileScanner.totalDirs; font.pixelSize: 14; color: "#333333" }
+						Text { text: "Celkovo súborov: " + runtime.faceFileScanner.totalFiles; font.pixelSize: 14; color: "#333333" }
 					}
 				}
 			}
@@ -155,8 +156,8 @@ Item {
 		anchors.right: parent.right
 		height: 72
 
-		property bool scanning: faceScanner.scanning
-		property double scanningProgress: faceScanner.progress
+		property bool scanning: runtime.faceFileScanner.scanning
+		property double scanningProgress: runtime.faceFileScanner.progress
 		property string scanningText: "Skenovanie ..."
 		property string scanningExtendedText: ""
 		state: "idle"
@@ -170,7 +171,7 @@ Item {
 			}
 		}
 		onScanningProgressChanged: {
-			scanningExtendedText = "Prehľadaných " + faceScanner.scannedDirs + " adresárov a " + faceScanner.scannedFiles + " súborov";
+			scanningExtendedText = "Prehľadaných " + runtime.faceFileScanner.scannedDirs + " adresárov a " + runtime.faceFileScanner.scannedFiles + " súborov";
 		}
 
 		BorderImage {
@@ -204,8 +205,8 @@ Item {
 				anchors.margins: 5
 				opacity: 0
 				onClicked: {
-					if (facesView.currentItem != null) {
-						facesView.currentItem.hide();
+					if (facesView.selectedItem != null) {
+						facesView.selectedItem.hide();
 					}
 					if (main.state == "info") {
 						main.state = "grid";
@@ -227,8 +228,8 @@ Item {
 				anchors.margins: 5
 				opacity: 0
 				onClicked: {
-					if (facesView.currentItem != null) {
-						facesView.currentItem.hide();
+					if (facesView.selectedItem != null) {
+						facesView.selectedItem.hide();
 					}
 					main.state = "info";
 				}
@@ -274,7 +275,7 @@ Item {
 					anchors.left: parent.left
 					anchors.right: parent.right
 					anchors.verticalCenter: parent.verticalCenter
-					progress: faceScanner.progress
+					progress: runtime.faceFileScanner.progress
 					opacity: 0
 				}
 			}
@@ -316,6 +317,7 @@ Item {
 			PropertyChanges { target: controlPointsDisplay; opacity: 0 }
 			PropertyChanges { target: infoButtonTranslate; y: 0 }
 			PropertyChanges { target: infoButton; opacity: 1 }
+			PropertyChanges { target: facesView; selectedItem: null }
 		},
 		State {
 			name: "zoom"; when: main.state == "zoom"

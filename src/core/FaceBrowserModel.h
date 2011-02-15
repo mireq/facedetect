@@ -13,20 +13,21 @@
 #include <QAbstractListModel>
 #include <QVector>
 #include "libfacedetect/Align.h"
-#include "libfacedetect/FaceFileReader.h"
+#include "libfacedetect/FaceFileScanner.h"
 
+/**
+ * \brief Model pre prechádzanie obrázkov tvárí.
+ */
 class FaceBrowserModel: public QAbstractListModel
 {
 Q_OBJECT
 public:
-	explicit FaceBrowserModel(QObject *parent = 0);
+	explicit FaceBrowserModel(FaceDetect::Align *aligner, QObject *parent = 0);
 	int rowCount(const QModelIndex &parent = QModelIndex()) const;
 	QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
 	QImage getStatisticsImage() const;
-	QTransform getTransform(const FaceDetect::FaceFileReader::FaceData &data) const;
-
-public slots:
-	void addDefinitionFile(const QString &fileName);
+	QTransform getTransform(const FaceDetect::FaceFileScanner::FaceData &data) const;
+	void addDefinitionFile(const FaceDetect::FaceFileScanner::ImageInfo &image);
 
 private:
 	enum DataRole {
@@ -39,8 +40,8 @@ private:
 		TransformTranslateYRole
 	};
 
-	QVector<QString> m_files;
-	FaceDetect::Align m_aligner;
+	QVector<FaceDetect::FaceFileScanner::ImageInfo> m_files;
+	FaceDetect::Align *m_aligner;
 }; /* -----  end of class FaceBrowserModel  ----- */
 
 #endif /* end of include guard: FACEBROWSERMODEL_XWF44CQJ */

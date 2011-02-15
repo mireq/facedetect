@@ -8,15 +8,10 @@
  */
 
 #include <QPainter>
-#include "libfacedetect/FaceFileReader.h"
-#include "FaceBrowserModel.h"
 #include "FaceImageProvider.h"
 
-using FaceDetect::FaceFileReader;
-
 FaceImageProvider::FaceImageProvider():
-	QDeclarativeImageProvider(QDeclarativeImageProvider::Image),
-	m_facesModel(0)
+	QDeclarativeImageProvider(QDeclarativeImageProvider::Image)
 {
 }
 
@@ -29,37 +24,39 @@ QImage FaceImageProvider::requestImage(const QString &id, QSize *size, const QSi
 	QStringList path = id.split("/");
 	if (path.size() > 0 && (path[0] == "original")) {
 		path.pop_front();
-		FaceFileReader reader;
-		reader.readFile(path.join("/"));
-		QImage image = reader.readImage();
+		FaceDetect::FaceFileScanner::ImageInfo imageInfo = m_scanner->readFile(path.join("/"));
+		QImage image = imageInfo.getImage();
 		*size = image.size();
 		return image;
 	}
-	else if (path.size() > 0 && (path[0] == "transformed") && m_facesModel != 0) {
+	else if (path.size() > 0 && (path[0] == "transformed") && m_scanner != 0) {
 		path.pop_front();
-		FaceFileReader reader;
-		reader.readFile(path.join("/"));
-		QVector<FaceDetect::FaceFileReader::FaceData> data = reader.faceData();
+		FaceDetect::FaceFileScanner::ImageInfo imageInfo = m_scanner->readFile(path.join("/"));
 		QImage image(QSize(128, 128), QImage::Format_ARGB32);
-		if (data.size() == 1) {
-			QTransform transform = m_facesModel->getTransform(data[0]);
+		if (imageInfo.faceEnd() - imageInfo.faceBegin() == 1) {
+			QTransform transform = m_align->getTransform(*imageInfo.faceBegin());
 			QPainter painter(&image);
 			painter.setTransform(transform);
-			painter.drawImage(QPoint(0, 0), reader.readImage());
+			painter.drawImage(QPoint(0, 0), imageInfo.getImage());
 		}
 		*size = image.size();
 		return image;
 	}
-	else if (path.size() > 0 && path[0] == "statimage" && m_facesModel != 0) {
-		QImage image = m_facesModel->getStatisticsImage();
+	else if (path.size() > 0 && path[0] == "statimage" && m_scanner != 0) {
+		QImage image = m_align->getStatisticsImage();
 		*size = image.size();
 		return image;
 	}
 	return QImage();
 }
 
-void FaceImageProvider::bindFacesModel(FaceBrowserModel *model)
+void FaceImageProvider::bindScanner(FaceDetect::FaceFileScanner *scanner)
 {
-	m_facesModel = model;
+	m_scanner = scanner;
+}
+
+void FaceImageProvider::bindAlign(FaceDetect::Align *align)
+{
+	m_align = align;
 }
 
