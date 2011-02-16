@@ -11,6 +11,7 @@
 #include <QDeclarativeContext>
 #include <QDeclarativeEngine>
 #include <QGLWidget>
+#include <QSettings>
 #include "libfacedetect/FaceFileScanner.h"
 #include "core/FaceImageProvider.h"
 #include "QmlWin.h"
@@ -20,6 +21,11 @@ using FaceDetect::FaceFileScanner;
 QmlWin::QmlWin(QWidget *parent):
 	QDeclarativeView(parent)
 {
+	QSettings settings;
+	settings.beginGroup("paths");
+	m_scanPath = settings.value("database").toString();
+	settings.endGroup();
+
 	// Nastavenie OpenGL
 	setAttribute(Qt::WA_OpaquePaintEvent);
 	setAttribute(Qt::WA_NoSystemBackground);
@@ -46,6 +52,10 @@ QmlWin::QmlWin(QWidget *parent):
 
 QmlWin::~QmlWin()
 {
+	QSettings settings;
+	settings.beginGroup("paths");
+	settings.setValue("database", m_scanPath);
+	settings.endGroup();
 	m_faceFileScanner->stop();
 }
 

@@ -22,7 +22,7 @@ FaceImageProvider::~FaceImageProvider()
 QImage FaceImageProvider::requestImage(const QString &id, QSize *size, const QSize & /*requestedSize*/)
 {
 	QStringList path = id.split("/");
-	if (path.size() > 0 && (path[0] == "original")) {
+	if (path.size() > 0 && (path[0] == "original") && m_scanner != 0) {
 		path.pop_front();
 		FaceDetect::FaceFileScanner::ImageInfo imageInfo = m_scanner->readFile(path.join("/"));
 		QImage image = imageInfo.getImage();
@@ -42,7 +42,7 @@ QImage FaceImageProvider::requestImage(const QString &id, QSize *size, const QSi
 		*size = image.size();
 		return image;
 	}
-	else if (path.size() > 0 && path[0] == "statimage" && m_scanner != 0) {
+	else if (path.size() > 0 && path[0] == "statimage" && m_align != 0) {
 		QImage image = m_align->getStatisticsImage();
 		*size = image.size();
 		return image;
