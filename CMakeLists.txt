@@ -55,7 +55,7 @@ set(facedetect_SRCS
 	src/libfacedetect/FaceFileScanner.cpp
 	src/libfacedetect/NeuralNet.cpp
 	src/libfacedetect/TrainingDataReader.cpp
-	src/qml/QmlWin.cpp
+	src/gui/qml/QmlWin.cpp
 )
 
 set(facedetect_HDRS
@@ -71,14 +71,14 @@ set(facedetect_MOC_HDRS
 	src/libfacedetect/ImageDataReader.h
 	src/libfacedetect/NeuralNet.h
 	src/libfacedetect/TrainingDataReader.h
-	src/qml/QmlWin.h
+	src/gui/qml/QmlWin.h
 )
 
 set(facedetect_UIS
 )
 
 set(facedetect_QRCS
-	src/qml/qml.qrc
+	src/gui/qml/qml.qrc
 )
 
 qt4_wrap_cpp(facedetect_MOC_SRCS ${facedetect_MOC_HDRS})

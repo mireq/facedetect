@@ -8,7 +8,7 @@
  */
 
 #include <QApplication>
-#include "qml/QmlWin.h"
+#include "gui/qml/QmlWin.h"
 #include "libfacedetect/FaceFileScanner.h"
 
 int main(int argc, char *argv[])
