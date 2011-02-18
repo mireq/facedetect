@@ -19,6 +19,7 @@ Item {
 	property double transformTranslateX;
 	property double transformTranslateY;
 	property bool open: transformationInfo.state == "open"
+	property Item parentWindow
 	Image {
 		asynchronous: true
 		anchors.fill: parent
@@ -26,7 +27,7 @@ Item {
 	}
 	Image {
 		id: transformAnimation
-		parent: main
+		parent: parentWindow
 		x: faceDetectorForeground.x + 10
 		y: faceDetectorForeground.y + 10
 		width: faceDetectorForeground.width - 20
@@ -50,11 +51,12 @@ Item {
 			},
 			State {
 				name: "closed"; when: !transformationContainer.open
-				ParentChange { target: transformAnimation; parent: main; x: faceDetectorForeground.x + 10; y: faceDetectorForeground.y + 10; width: faceDetectorForeground.width - 20; height: faceDetectorForeground.height - 20 }
+				ParentChange { target: transformAnimation; parent: parentWindow; x: faceDetectorForeground.x + 10; y: faceDetectorForeground.y + 10; width: faceDetectorForeground.width - 20; height: faceDetectorForeground.height - 20 }
 			}
 		]
 		transitions: [
 			Transition {
+				from: "closed"; to: "open"
 				SequentialAnimation {
 					ParallelAnimation {
 						ParentAnimation {

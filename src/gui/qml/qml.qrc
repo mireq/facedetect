@@ -1,6 +1,8 @@
 <RCC>
   <qresource prefix="/qml">
+    <file>CentralWindow.qml</file>
     <file>ControlPointsDisplay.qml</file>
+    <file>FaceDatabaseView.qml</file>
     <file>FaceDelegate.qml</file>
     <file>FaceMetadata.qml</file>
     <file>InfoListItem.qml</file>
@@ -8,6 +10,8 @@
     <file>ProgressBar.qml</file>
     <file>PushButton.qml</file>
     <file>StartPanel.qml</file>
+    <file>TabWidget.qml</file>
+    <file>TitleWidget.qml</file>
     <file>TransformationDelegate.qml</file>
     <file>main.qml</file>
     <file>img/button.png</file>
@@ -24,5 +28,11 @@
     <file>img/progress-inner.sci</file>
     <file>img/progress-outer.png</file>
     <file>img/progress-outer.sci</file>
+    <file>img/tab-left-aitem.png</file>
+    <file>img/tab-left-aitem.sci</file>
+    <file>img/tab-left-bg.png</file>
+    <file>img/tab-left-bg.sci</file>
+    <file>img/tab-left-item.png</file>
+    <file>img/tab-left-item.sci</file>
   </qresource>
 </RCC>

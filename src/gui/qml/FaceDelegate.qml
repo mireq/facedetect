@@ -31,7 +31,6 @@ Item {
 
 	function hide() {
 		faceImageWrapper.state = "grid";
-		main.state = "grid"
 	}
 
 	Item {
