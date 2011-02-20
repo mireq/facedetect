@@ -8,6 +8,8 @@
  */
 
 #include <QApplication>
+#include <QDebug>
+#include "gui/console/ConsoleInterface.h"
 #include "gui/qml/QmlWin.h"
 #include "libfacedetect/FaceFileScanner.h"
 
@@ -17,9 +19,34 @@ int main(int argc, char *argv[])
 	QApplication::setApplicationName("Face detector");
 	QApplication::setOrganizationDomain("linuxos.sk");
 	QApplication::setOrganizationName("LinuxOS.sk");
-	QApplication app(argc, argv);
-	QmlWin win;
-	win.show();
-	return app.exec();
+
+	QString interface = "console";
+	{
+		QApplication app(argc, argv);
+		QStringList arguments = app.arguments();
+		int interfaceArgId = arguments.indexOf("--interface");
+		if (interfaceArgId != -1) {
+			if (arguments.size() - 1 <= interfaceArgId) {
+				qDebug("Missing argument (console|touch)");
+				return -1;
+			}
+			interface = arguments[interfaceArgId + 1];
+		}
+	}
+	if (interface == "console") {
+		QCoreApplication app(argc, argv);
+		ConsoleInterface interface;
+		interface.run();
+		return app.exec();
+	}
+	else if (interface == "touch") {
+		QApplication app(argc, argv);
+		QmlWin win;
+		win.show();
+		return app.exec();
+	}
+	else {
+		qDebug("Unsupported interface");
+	}
 }
 

@@ -23,7 +23,7 @@ QmlWin::QmlWin(QWidget *parent):
 {
 	QSettings settings;
 	settings.beginGroup("paths");
-	m_scanPath = settings.value("database").toString();
+	m_facesPath = settings.value("database").toString();
 	settings.endGroup();
 
 	// Nastavenie OpenGL
@@ -47,29 +47,28 @@ QmlWin::QmlWin(QWidget *parent):
 	rootContext()->setContextProperty("runtime", this);
 	setSource(QUrl("qrc:/qml/main.qml"));
 	connect(m_faceFileScanner, SIGNAL(imageScanned(FaceDetect::FaceFileScanner::ImageInfo)), this, SLOT(imageScanned(FaceDetect::FaceFileScanner::ImageInfo)));
-	m_faceFileScanner->setBasePath(m_scanPath);
+	m_faceFileScanner->setBasePath(m_facesPath);
 }
 
 QmlWin::~QmlWin()
 {
 	QSettings settings;
 	settings.beginGroup("paths");
-	settings.setValue("database", m_scanPath);
+	settings.setValue("faces", m_facesPath);
 	settings.endGroup();
 	m_faceFileScanner->stop();
 }
 
-QString QmlWin::scanPath() const
+QString QmlWin::facesPath() const
 {
-	return m_scanPath;
+	return m_facesPath;
 }
 
-void QmlWin::setScanPath(const QString &scanPath)
+void QmlWin::setFacesPath(const QString &facesPath)
 {
-	if (m_scanPath != scanPath) {
-		m_scanPath = scanPath;
-		m_faceFileScanner->setBasePath(m_scanPath);
-		emit scanPathChanged(m_scanPath);
+	if (m_facesPath != facesPath) {
+		m_facesPath = facesPath;
+		emit facesPathChanged(m_facesPath);
 	}
 }
 

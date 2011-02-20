@@ -9,7 +9,6 @@
     <file>LoadingIndicator.qml</file>
     <file>ProgressBar.qml</file>
     <file>PushButton.qml</file>
-    <file>StartPanel.qml</file>
     <file>TabWidget.qml</file>
     <file>TitleWidget.qml</file>
     <file>TransformationDelegate.qml</file>
