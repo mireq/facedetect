@@ -8,14 +8,15 @@
  */
 
 #include <cstdio>
-#include <QCoreApplication>
+#include <QApplication>
 #include <QDebug>
 #include <QSettings>
 #include "ConsoleInterface.h"
 
 ConsoleInterface::ConsoleInterface(QObject *parent):
 	QObject(parent),
-	m_cout(stdout)
+	m_cout(stdout),
+	m_trainingDatabase(new FaceDetect::TrainingImageDatabase(this))
 {
 }
 
@@ -39,16 +40,25 @@ void ConsoleInterface::scanFaces()
 	m_faceScanner = QSharedPointer<FaceDetect::FaceFileScanner>(new FaceDetect::FaceFileScanner());
 	m_faceScanner->setBasePath(m_facesPath);
 	connect(m_faceScanner.data(), SIGNAL(progressChanged(double)), this, SLOT(updateProgress(double)));
-	connect(m_faceScanner.data(), SIGNAL(scanningChanged(bool)), this, SLOT(faceScanningStatusChanged(bool)));
+	connect(m_faceScanner.data(), SIGNAL(scanningChanged(bool)), this, SLOT(onFaceScanningStatusChanged(bool)));
+	connect(m_faceScanner.data(), SIGNAL(imageScanned(FaceDetect::FaceFileScanner::ImageInfo)), SLOT(onImageScanned(FaceDetect::FaceFileScanner::ImageInfo)));
 	m_faceScanner->start();
 }
 
-void ConsoleInterface::faceScanningStatusChanged(bool scanning)
+void ConsoleInterface::onFaceScanningStatusChanged(bool scanning)
 {
 	if (!scanning) {
 		m_faceScanner = QSharedPointer<FaceDetect::FaceFileScanner>(0);
+		for (std::size_t sample = 0; sample < m_trainingDatabase->trainingSetSize(); ++sample) {
+			m_trainingDatabase->inputVector(sample);
+		}
 		qApp->quit();
 	}
+}
+
+void ConsoleInterface::onImageScanned(const FaceDetect::FaceFileScanner::ImageInfo &image)
+{
+	m_trainingDatabase->addImage(image);
 }
 
 void ConsoleInterface::updateProgress(double progress)

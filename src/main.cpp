@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
 		}
 	}
 	if (interface == "console") {
-		QCoreApplication app(argc, argv);
+		QApplication app(argc, argv);
 		ConsoleInterface interface;
 		interface.run();
 		return app.exec();

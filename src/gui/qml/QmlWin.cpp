@@ -39,6 +39,7 @@ QmlWin::QmlWin(QWidget *parent):
 	engine()->addImageProvider(QLatin1String("faceimage"), imageProvider);
 
 	m_aligner = new FaceDetect::Align(this);
+	m_aligner->setImageSize(128);
 	m_aligner->setCollectStatistics(true);
 	m_faceBrowserModel = new FaceBrowserModel(m_aligner, this);
 	m_faceFileScanner = new FaceFileScanner(this);

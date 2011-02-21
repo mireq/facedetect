@@ -25,7 +25,8 @@ Align::Align(QObject *parent):
 	m_imgCount(0),
 	m_avgDirty(false),
 	m_normalized(false),
-	m_collectStatistics(false)
+	m_collectStatistics(false),
+	m_imageSize(128)
 {
 	for (int i = 0; i < m_faceFeaturesSum.rows(); ++i) {
 		m_faceFeaturesSum(i) = 0;
@@ -41,6 +42,12 @@ Align::~Align()
 void Align::setCollectStatistics(bool statistics)
 {
 	m_collectStatistics = statistics;
+}
+
+void Align::setImageSize(int imageSize)
+{
+	m_imageSize = imageSize;
+	m_normalized = false;
 }
 
 void Align::addImage(const FaceFileScanner::ImageInfo &info)
@@ -73,7 +80,9 @@ void Align::addImage(const FaceFileScanner::ImageInfo &info)
 			}
 			calcAvg();
 		}
+		if (m_collectStatistics) {
 			m_faceData.append(*face);
+		}
 	}
 }
 
@@ -273,7 +282,7 @@ void Align::normalize() const
 
 		// Prepočet vlastností po normalizácii
 		LaColVectorDouble transformedLine(4);
-		transformedLine(0) = sm_lineSize;
+		transformedLine(0) = m_imageSize;
 		transformedLine(1) = 0;
 		transformedLine(2) = 0;
 		transformedLine(3) = 0;

@@ -10,6 +10,8 @@
 #include <QPainter>
 #include "FaceImageProvider.h"
 
+using FaceDetect::FaceFileScanner;
+
 FaceImageProvider::FaceImageProvider():
 	QDeclarativeImageProvider(QDeclarativeImageProvider::Image)
 {
@@ -24,14 +26,14 @@ QImage FaceImageProvider::requestImage(const QString &id, QSize *size, const QSi
 	QStringList path = id.split("/");
 	if (path.size() > 0 && (path[0] == "original") && m_scanner != 0) {
 		path.pop_front();
-		FaceDetect::FaceFileScanner::ImageInfo imageInfo = m_scanner->readFile(path.join("/"));
+		FaceFileScanner::ImageInfo imageInfo = m_scanner->readFile(path.join("/"));
 		QImage image = imageInfo.getImage();
 		*size = image.size();
 		return image;
 	}
 	else if (path.size() > 0 && (path[0] == "transformed") && m_scanner != 0) {
 		path.pop_front();
-		FaceDetect::FaceFileScanner::ImageInfo imageInfo = m_scanner->readFile(path.join("/"));
+		FaceFileScanner::ImageInfo imageInfo = m_scanner->readFile(path.join("/"));
 		QImage image(QSize(128, 128), QImage::Format_ARGB32);
 		if (imageInfo.faceEnd() - imageInfo.faceBegin() == 1) {
 			QTransform transform = m_align->getTransform(*imageInfo.faceBegin());

@@ -55,6 +55,7 @@ set(facedetect_SRCS
 	src/libfacedetect/FaceFileScanner.cpp
 	src/libfacedetect/NeuralNet.cpp
 	src/libfacedetect/TrainingDataReader.cpp
+	src/libfacedetect/TrainingImageDatabase.cpp
 	src/gui/console/ConsoleInterface.cpp
 	src/gui/qml/QmlWin.cpp
 )
@@ -72,6 +73,7 @@ set(facedetect_MOC_HDRS
 	src/libfacedetect/ImageDataReader.h
 	src/libfacedetect/NeuralNet.h
 	src/libfacedetect/TrainingDataReader.h
+	src/libfacedetect/TrainingImageDatabase.h
 	src/gui/console/ConsoleInterface.h
 	src/gui/qml/QmlWin.h
 )

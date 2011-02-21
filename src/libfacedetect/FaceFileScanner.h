@@ -43,6 +43,7 @@ public:
 		FaceDataIterator faceBegin() const;
 		FaceDataIterator faceEnd() const;
 		QImage getImage() const;
+		QVector<ImageInfo> splitFaces() const;
 
 	private:
 		void setUrl(const QUrl &url);
@@ -57,7 +58,7 @@ public:
 		friend class FaceFileScanner;
 	}; /* -----  end of class ImageInfo  ----- */
 
-	FaceFileScanner(QObject *parent = 0);
+	explicit FaceFileScanner(QObject *parent = 0);
 	~FaceFileScanner();
 	QUrl basePath();
 	void setBasePath(const QUrl &url);

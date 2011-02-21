@@ -28,8 +28,8 @@ public:
 	explicit Align(QObject *parent = 0);
 	virtual ~Align();
 	void setCollectStatistics(bool statistics);
+	void setImageSize(int imageSize);
 	void addImage(const FaceFileScanner::ImageInfo &info);
-	//void scanImage(const FaceFileReader &reader);
 	std::size_t imgCount() const;
 	QTransform getTransform(const FaceFileScanner::FaceData &face) const;
 	QImage getStatisticsImage() const;
@@ -53,10 +53,10 @@ private:
 	mutable bool m_avgDirty;
 	mutable bool m_normalized;
 	bool m_collectStatistics;
+	int m_imageSize;
 	QVector<FaceFileScanner::FaceData> m_faceData;
 
 	static const int sm_faceFeaturesCount = 4;
-	static const int sm_lineSize = 128;
 }; /* -----  end of class Align  ----- */
 
 } /* end of namespace FaceDetect */

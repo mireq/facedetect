@@ -105,6 +105,18 @@ QImage FaceFileScanner::ImageInfo::getImage() const
 	return ret;
 }
 
+QVector<FaceFileScanner::ImageInfo> FaceFileScanner::ImageInfo::splitFaces() const
+{
+	QVector<ImageInfo> ret;
+	ImageInfo workingCopy = *this;
+	foreach (const FaceData &faceData, m_faceData) {
+		workingCopy.m_faceData.clear();
+		workingCopy.m_faceData.append(faceData);
+		ret.append(workingCopy);
+	}
+	return ret;
+}
+
 void FaceFileScanner::ImageInfo::setUrl(const QUrl &url)
 {
 	if (m_url == url) {

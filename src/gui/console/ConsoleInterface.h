@@ -14,6 +14,7 @@
 #include <QTextStream>
 #include <QObject>
 #include "libfacedetect/FaceFileScanner.h"
+#include "libfacedetect/TrainingImageDatabase.h"
 
 class ConsoleInterface: public QObject
 {
@@ -25,13 +26,15 @@ public:
 
 private slots:
 	void scanFaces();
-	void faceScanningStatusChanged(bool scanning);
+	void onFaceScanningStatusChanged(bool scanning);
+	void onImageScanned(const FaceDetect::FaceFileScanner::ImageInfo &image);
 	void updateProgress(double progress);
 
 private:
 	QString m_facesPath;
 	QTextStream m_cout;
 	QSharedPointer<FaceDetect::FaceFileScanner> m_faceScanner;
+	FaceDetect::TrainingImageDatabase *m_trainingDatabase;
 }; /* -----  end of class ConsoleInterface  ----- */
 
 #endif /* end of include guard: CONSOLEINTERFACE_9JAL83V */
