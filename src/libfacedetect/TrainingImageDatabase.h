@@ -11,7 +11,6 @@
 #define TRAININGIMAGEDATABASE_20EM4P61
 
 #include <QImage>
-#include <QLabel>
 #include <QSharedPointer>
 #include <QVector>
 #include "Align.h"
@@ -29,15 +28,15 @@ public:
 	virtual std::size_t inputVectorSize() const;
 	virtual std::size_t outputVectorSize() const;
 	virtual std::size_t trainingSetSize() const;
-	virtual LaColVectorDouble inputVector(std::size_t sample) const;
-	virtual LaColVectorDouble outputVector(std::size_t sample) const;
+	virtual LaVectorDouble inputVector(std::size_t sample) const;
+	virtual LaVectorDouble outputVector(std::size_t sample) const;
 	void addImage(const FaceDetect::FaceFileScanner::ImageInfo &image);
 
 private:
 	struct TrainingSample {
 		mutable QSharedPointer<FaceFileScanner::ImageInfo> info;
-		mutable LaColVectorDouble input;
-		mutable LaColVectorDouble output;
+		mutable LaVectorDouble input;
+		mutable LaVectorDouble output;
 	};
 
 	void calcVectors(std::size_t sample) const;
@@ -49,7 +48,6 @@ private:
 	QVector<TrainingSample> m_samples;
 	mutable QImage m_workingImage;
 	mutable QVector<QRgb> m_colorTable;
-	QLabel *m_label;
 }; /* -----  end of class TrainingImageDatabase  ----- */
 
 } /* end of namespace FaceDetect */

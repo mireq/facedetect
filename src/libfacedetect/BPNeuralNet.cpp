@@ -20,12 +20,12 @@ BPNeuralNet::~BPNeuralNet()
 {
 }
 
-LaColVectorDouble BPNeuralNet::calcOutput(const LaColVectorDouble &input)
+LaVectorDouble BPNeuralNet::calcOutput(const LaVectorDouble &input)
 {
 	return input;
 }
 
-void BPNeuralNet::trainSample(const LaColVectorDouble &input, const LaColVectorDouble &expectedOutput)
+void BPNeuralNet::trainSample(const LaVectorDouble &input, const LaVectorDouble &expectedOutput)
 {
 	Q_UNUSED(input);
 	Q_UNUSED(expectedOutput);

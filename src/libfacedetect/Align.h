@@ -15,7 +15,7 @@
 #include <QTransform>
 #include <QVector>
 #include <lapackpp/gmd.h>
-#include <lapackpp/lacvd.h>
+#include <lapackpp/lavd.h>
 #include <cstdlib>
 #include "FaceFileScanner.h"
 
@@ -36,19 +36,19 @@ public:
 
 private:
 	bool checkControlPoints(const FaceFileScanner::FaceData &data) const;
-	LaColVectorDouble getControlPointsVector(const FaceFileScanner::FaceData &data) const;
-	LaColVectorDouble getTransformVector(const LaGenMatDouble &aMatrix, bool normalized = true) const;
-	LaColVectorDouble transform(const LaColVectorDouble &input, const LaColVectorDouble &transVector) const;
-	void fillFeaturesMatrix(const LaColVectorDouble &input, LaGenMatDouble &aMatrix) const;
+	LaVectorDouble getControlPointsVector(const FaceFileScanner::FaceData &data) const;
+	LaVectorDouble getTransformVector(const LaGenMatDouble &aMatrix, bool normalized = true) const;
+	LaVectorDouble transform(const LaVectorDouble &input, const LaVectorDouble &transVector) const;
+	void fillFeaturesMatrix(const LaVectorDouble &input, LaGenMatDouble &aMatrix) const;
 	void calcAvg() const;
 	void normalize() const;
 	bool checkPointRange(const QPoint &point) const;
 
 private:
-	LaColVectorDouble m_faceFeaturesSum;
-	mutable LaColVectorDouble m_avgFaceFeatures;
-	mutable LaColVectorDouble m_normalizedFaceFeatures;
-	mutable LaColVectorDouble m_topLine;
+	LaVectorDouble m_faceFeaturesSum;
+	mutable LaVectorDouble m_avgFaceFeatures;
+	mutable LaVectorDouble m_normalizedFaceFeatures;
+	mutable LaVectorDouble m_topLine;
 	std::size_t m_imgCount;
 	mutable bool m_avgDirty;
 	mutable bool m_normalized;

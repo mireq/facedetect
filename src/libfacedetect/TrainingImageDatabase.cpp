@@ -12,18 +12,13 @@
 #include <QPixmap>
 #include <QTransform>
 #include "TrainingImageDatabase.h"
-#include <unistd.h>
-#include <QApplication>
 
 namespace FaceDetect {
 
 TrainingImageDatabase::TrainingImageDatabase(QObject *parent):
 	TrainingDataReader(parent),
-	m_aligner(new Align(this)),
-	m_label(new QLabel)
+	m_aligner(new Align(this))
 {
-	m_label->show();
-	m_label->resize(20, 20);
 	m_aligner->setImageSize(128);
 	m_aligner->setCollectStatistics(false);
 }
@@ -47,7 +42,7 @@ std::size_t TrainingImageDatabase::trainingSetSize() const
 	return m_samples.size();
 }
 
-LaColVectorDouble TrainingImageDatabase::inputVector(std::size_t sample) const
+LaVectorDouble TrainingImageDatabase::inputVector(std::size_t sample) const
 {
 	if (m_samples[sample].info != 0) {
 		calcVectors(sample);
@@ -55,7 +50,7 @@ LaColVectorDouble TrainingImageDatabase::inputVector(std::size_t sample) const
 	return m_samples[sample].input;
 }
 
-LaColVectorDouble TrainingImageDatabase::outputVector(std::size_t sample) const
+LaVectorDouble TrainingImageDatabase::outputVector(std::size_t sample) const
 {
 	if (m_samples[sample].info != 0) {
 		calcVectors(sample);
@@ -109,8 +104,8 @@ inline void TrainingImageDatabase::calcVectors(std::size_t sample) const
 		m_workingImage = imageInfo.getImage().scaled(QSize(sm_imageWidth, sm_imageHeight));
 	}
 
-	m_samples[sample].input = LaColVectorDouble(sm_inputVectorSize);
-	m_samples[sample].output = LaColVectorDouble(1);
+	m_samples[sample].input = LaVectorDouble(sm_inputVectorSize);
+	m_samples[sample].output = LaVectorDouble(1);
 	m_samples[sample].info.clear();
 
 	QImage smallImage = m_workingImage.scaled(QSize(sm_imageWidth, sm_imageHeight), Qt::IgnoreAspectRatio, Qt::SmoothTransformation).convertToFormat(QImage::Format_Indexed8, m_colorTable);
@@ -118,10 +113,6 @@ inline void TrainingImageDatabase::calcVectors(std::size_t sample) const
 		m_samples[sample].input(pixel) = static_cast<double>(smallImage.pixelIndex(pixel % sm_imageWidth, pixel / sm_imageWidth)) / 256;
 	}
 	m_samples[sample].output(0) = hasFace;
-
-	m_label->setPixmap(QPixmap::fromImage(smallImage));
-	qApp->processEvents();
-	usleep(1000);
 }
 
 } /* end of namespace FaceDetect */

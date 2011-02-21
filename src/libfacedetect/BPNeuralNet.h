@@ -20,8 +20,8 @@ Q_OBJECT
 public:
 	BPNeuralNet(QObject *parent = 0);
 	~BPNeuralNet();
-	virtual LaColVectorDouble calcOutput(const LaColVectorDouble &input);
-	virtual void trainSample(const LaColVectorDouble &input, const LaColVectorDouble &expectedOutput);
+	virtual LaVectorDouble calcOutput(const LaVectorDouble &input);
+	virtual void trainSample(const LaVectorDouble &input, const LaVectorDouble &expectedOutput);
 	virtual void initializeTraining();
 
 private:

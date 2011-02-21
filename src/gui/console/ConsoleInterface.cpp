@@ -49,9 +49,8 @@ void ConsoleInterface::onFaceScanningStatusChanged(bool scanning)
 {
 	if (!scanning) {
 		m_faceScanner = QSharedPointer<FaceDetect::FaceFileScanner>(0);
-		for (std::size_t sample = 0; sample < m_trainingDatabase->trainingSetSize(); ++sample) {
-			m_trainingDatabase->inputVector(sample);
-		}
+		m_cout << "\rStarting training\n";
+		m_cout.flush();
 		qApp->quit();
 	}
 }

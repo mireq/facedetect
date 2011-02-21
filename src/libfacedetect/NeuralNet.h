@@ -12,7 +12,7 @@
 
 #include <QObject>
 #include <QSharedPointer>
-#include <lapackpp/lacvd.h>
+#include <lapackpp/lavd.h>
 
 namespace FaceDetect {
 
@@ -36,10 +36,10 @@ public:
 	std::size_t outputVectorSize() const;
 	void train();
 	void stop();
-	virtual LaColVectorDouble calcOutput(const LaColVectorDouble &input) = 0;
+	virtual LaVectorDouble calcOutput(const LaVectorDouble &input) = 0;
 
 protected:
-	virtual void trainSample(const LaColVectorDouble &input, const LaColVectorDouble &expectedOutput) = 0;
+	virtual void trainSample(const LaVectorDouble &input, const LaVectorDouble &expectedOutput) = 0;
 	virtual void initializeTraining() = 0;
 
 private:

@@ -51,7 +51,6 @@ set(facedetect_SRCS
 	src/core/FileScanner.cpp
 	src/libfacedetect/Align.cpp
 	src/libfacedetect/BPNeuralNet.cpp
-	src/libfacedetect/ImageDataReader.cpp
 	src/libfacedetect/FaceFileScanner.cpp
 	src/libfacedetect/NeuralNet.cpp
 	src/libfacedetect/TrainingDataReader.cpp
@@ -70,7 +69,6 @@ set(facedetect_MOC_HDRS
 	src/libfacedetect/Align.h
 	src/libfacedetect/BPNeuralNet.h
 	src/libfacedetect/FaceFileScanner.h
-	src/libfacedetect/ImageDataReader.h
 	src/libfacedetect/NeuralNet.h
 	src/libfacedetect/TrainingDataReader.h
 	src/libfacedetect/TrainingImageDatabase.h

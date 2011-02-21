@@ -7,7 +7,7 @@
  * =====================================================================
  */
 
-#include <lapackpp/lacvd.h>
+#include <lapackpp/lavd.h>
 #include <QObject>
 
 namespace FaceDetect {
@@ -21,8 +21,8 @@ public:
 	virtual std::size_t inputVectorSize() const = 0;
 	virtual std::size_t outputVectorSize() const = 0;
 	virtual std::size_t trainingSetSize() const = 0;
-	virtual LaColVectorDouble inputVector(std::size_t sample) const = 0;
-	virtual LaColVectorDouble outputVector(std::size_t sample) const = 0;
+	virtual LaVectorDouble inputVector(std::size_t sample) const = 0;
+	virtual LaVectorDouble outputVector(std::size_t sample) const = 0;
 
 private:
 }; /* -----  end of class TrainingDataReader  ----- */

@@ -7,6 +7,8 @@
  * =====================================================================
  */
 
+#include <QDebug>
+#include <iostream>
 #include <QPainter>
 #include <lapackpp/blas3pp.h>
 #include <lapackpp/laslv.h>
@@ -69,14 +71,14 @@ void Align::addImage(const FaceFileScanner::ImageInfo &info)
 		else {
 			m_avgDirty = true;
 			m_normalized = false;
-			LaColVectorDouble featVector = getControlPointsVector(*face);
+			LaVectorDouble featVector = getControlPointsVector(*face);
 			LaGenMatDouble aMatrix(sm_faceFeaturesCount * 2, 4);
 			fillFeaturesMatrix(featVector, aMatrix);
-			LaColVectorDouble tVector = getTransformVector(aMatrix, false);
-			LaColVectorDouble newFeatures(sm_faceFeaturesCount * 2);
+			LaVectorDouble tVector = getTransformVector(aMatrix, false);
+			LaGenMatDouble newFeatures(sm_faceFeaturesCount * 2, 1);
 			Blas_Mat_Mat_Mult(aMatrix, tVector, newFeatures);
 			for (int i = 0; i < m_faceFeaturesSum.rows(); ++i) {
-				m_faceFeaturesSum(i) += newFeatures(i);
+				m_faceFeaturesSum(i) += newFeatures(i, 0);
 			}
 			calcAvg();
 		}
@@ -98,12 +100,10 @@ QTransform Align::getTransform(const FaceFileScanner::FaceData &face) const
 	if (!checkControlPoints(face)) {
 		return QTransform();
 	}
-	LaColVectorDouble featVector = getControlPointsVector(face);
+	LaVectorDouble featVector = getControlPointsVector(face);
 	LaGenMatDouble aMatrix(sm_faceFeaturesCount * 2, 4);
 	fillFeaturesMatrix(featVector, aMatrix);
-	LaColVectorDouble tVector = getTransformVector(aMatrix, true);
-	LaColVectorDouble newFeatures(sm_faceFeaturesCount * 2);
-	Blas_Mat_Mat_Mult(aMatrix, tVector, newFeatures);
+	LaVectorDouble tVector = getTransformVector(aMatrix, true);
 	return QTransform(tVector(0), tVector(1), -tVector(1), tVector(0), tVector(2), tVector(3));
 }
 
@@ -190,9 +190,9 @@ bool Align::checkControlPoints(const FaceFileScanner::FaceData &data) const
 	}
 }
 
-LaColVectorDouble Align::getControlPointsVector(const FaceFileScanner::FaceData &data) const
+LaVectorDouble Align::getControlPointsVector(const FaceFileScanner::FaceData &data) const
 {
-	LaColVectorDouble ret(sm_faceFeaturesCount * 2);
+	LaVectorDouble ret(sm_faceFeaturesCount * 2);
 	ret(0) = data.leftEye.x();
 	ret(1) = data.leftEye.y();
 	ret(2) = data.rightEye.x();
@@ -204,7 +204,7 @@ LaColVectorDouble Align::getControlPointsVector(const FaceFileScanner::FaceData 
 	return ret;
 }
 
-LaColVectorDouble Align::getTransformVector(const LaGenMatDouble &aMatrix, bool normalized) const
+LaVectorDouble Align::getTransformVector(const LaGenMatDouble &aMatrix, bool normalized) const
 {
 	if (normalized) {
 		normalize();
@@ -223,21 +223,21 @@ LaColVectorDouble Align::getTransformVector(const LaGenMatDouble &aMatrix, bool 
 	else {
 		Blas_Mat_Mat_Mult(aMatrix, m_avgFaceFeatures, varCovMatrix, true);
 	}
-	LaColVectorDouble tVector(4);
+	LaGenMatDouble tVector(4, 1);
 	Blas_Mat_Mat_Mult(nMatrix, varCovMatrix, tVector);
 	return tVector;
 }
 
-LaColVectorDouble Align::transform(const LaColVectorDouble &input, const LaColVectorDouble &transVector) const
+LaVectorDouble Align::transform(const LaVectorDouble &input, const LaVectorDouble &transVector) const
 {
-	LaColVectorDouble ret(input.rows());
+	LaGenMatDouble ret(input.rows(), 1);
 	LaGenMatDouble aMatrix(input.rows(), 4);
 	fillFeaturesMatrix(input, aMatrix);
 	Blas_Mat_Mat_Mult(aMatrix, transVector, ret);
 	return ret;
 }
 
-void Align::fillFeaturesMatrix(const LaColVectorDouble &input, LaGenMatDouble &aMatrix) const
+void Align::fillFeaturesMatrix(const LaVectorDouble &input, LaGenMatDouble &aMatrix) const
 {
 	for (int row = 0; row < input.rows(); ++row) {
 		aMatrix(row, 0) = input(row);
@@ -281,14 +281,14 @@ void Align::normalize() const
 		m_topLine(3) = tY + diffY;
 
 		// Prepočet vlastností po normalizácii
-		LaColVectorDouble transformedLine(4);
+		LaVectorDouble transformedLine(4);
 		transformedLine(0) = m_imageSize;
 		transformedLine(1) = 0;
 		transformedLine(2) = 0;
 		transformedLine(3) = 0;
 		LaGenMatDouble aMatrix(4, 4);
 		fillFeaturesMatrix(m_topLine, aMatrix);
-		LaColVectorDouble tVector(4);
+		LaVectorDouble tVector(4);
 		try {
 			LaLinearSolve(aMatrix, tVector, transformedLine);
 			m_normalizedFaceFeatures = transform(m_avgFaceFeatures, tVector);
