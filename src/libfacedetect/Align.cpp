@@ -7,8 +7,6 @@
  * =====================================================================
  */
 
-#include <QDebug>
-#include <iostream>
 #include <QPainter>
 #include <lapackpp/blas3pp.h>
 #include <lapackpp/laslv.h>

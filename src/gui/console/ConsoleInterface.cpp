@@ -51,13 +51,23 @@ void ConsoleInterface::onFaceScanningStatusChanged(bool scanning)
 		m_faceScanner = QSharedPointer<FaceDetect::FaceFileScanner>(0);
 		m_cout << "\rStarting training\n";
 		m_cout.flush();
-		qApp->quit();
+	
+		m_neuralNet = QSharedPointer<FaceDetect::NeuralNet>(new FaceDetect::BPNeuralNet());
+		m_neuralNet->setTrainingDataReader(m_trainingDatabase);
+		connect(m_neuralNet.data(), SIGNAL(finished()), this, SLOT(onTrainingFinished()));
+		connect(m_neuralNet.data(), SIGNAL(terminated()), this, SLOT(onTrainingFinished()));
+		m_neuralNet->start();
 	}
 }
 
 void ConsoleInterface::onImageScanned(const FaceDetect::FaceFileScanner::ImageInfo &image)
 {
 	m_trainingDatabase->addImage(image);
+}
+
+void ConsoleInterface::onTrainingFinished()
+{
+	qApp->quit();
 }
 
 void ConsoleInterface::updateProgress(double progress)

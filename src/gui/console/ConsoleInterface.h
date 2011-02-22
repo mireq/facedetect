@@ -13,6 +13,7 @@
 #include <QSharedPointer>
 #include <QTextStream>
 #include <QObject>
+#include "libfacedetect/BPNeuralNet.h"
 #include "libfacedetect/FaceFileScanner.h"
 #include "libfacedetect/TrainingImageDatabase.h"
 
@@ -28,12 +29,14 @@ private slots:
 	void scanFaces();
 	void onFaceScanningStatusChanged(bool scanning);
 	void onImageScanned(const FaceDetect::FaceFileScanner::ImageInfo &image);
+	void onTrainingFinished();
 	void updateProgress(double progress);
 
 private:
 	QString m_facesPath;
 	QTextStream m_cout;
 	QSharedPointer<FaceDetect::FaceFileScanner> m_faceScanner;
+	QSharedPointer<FaceDetect::NeuralNet> m_neuralNet;
 	FaceDetect::TrainingImageDatabase *m_trainingDatabase;
 }; /* -----  end of class ConsoleInterface  ----- */
 

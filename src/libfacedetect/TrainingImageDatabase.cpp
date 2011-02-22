@@ -44,6 +44,10 @@ std::size_t TrainingImageDatabase::trainingSetSize() const
 
 LaVectorDouble TrainingImageDatabase::inputVector(std::size_t sample) const
 {
+	if (!m_workingImage.isNull()) {
+		m_workingImage = QImage();
+		m_colorTable.clear();
+	}
 	if (m_samples[sample].info != 0) {
 		calcVectors(sample);
 	}
@@ -89,7 +93,6 @@ inline void TrainingImageDatabase::calcVectors(std::size_t sample) const
 		}
 		m_colorTable = colorTable;
 	}
-
 
 	FaceFileScanner::ImageInfo imageInfo = *(m_samples[sample].info);
 	bool hasFace = false;
