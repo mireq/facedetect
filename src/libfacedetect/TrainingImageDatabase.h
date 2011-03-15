@@ -31,6 +31,8 @@ public:
 	virtual LaVectorDouble inputVector(std::size_t sample) const;
 	virtual LaVectorDouble outputVector(std::size_t sample) const;
 	void addImage(const FaceDetect::FaceFileScanner::ImageInfo &image);
+	void addImage(const LaVectorDouble &input, const LaVectorDouble &output);
+	void shuffle();
 
 private:
 	struct TrainingSample {

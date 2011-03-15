@@ -23,7 +23,7 @@ QmlWin::QmlWin(QWidget *parent):
 {
 	QSettings settings;
 	settings.beginGroup("paths");
-	m_facesPath = settings.value("database").toString();
+	m_facesPath = settings.value("faces").toString();
 	settings.endGroup();
 
 	// Nastavenie OpenGL

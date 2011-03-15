@@ -10,15 +10,17 @@
 #ifndef NEURALNET_9RUG4BT8
 #define NEURALNET_9RUG4BT8
 
-#include <QObject>
 #include <QSharedPointer>
+#include <QThread>
+#include <boost/serialization/access.hpp>
+#include <lapackpp/gmd.h>
 #include <lapackpp/lavd.h>
 
 namespace FaceDetect {
 
 class TrainingDataReader;
 
-class NeuralNet: public QObject
+class NeuralNet: public QThread
 {
 Q_OBJECT
 Q_PROPERTY(double learningSpeed READ learningSpeed WRITE setLearningSpeed);
@@ -34,19 +36,35 @@ public:
 	void setTrainingDataReader(TrainingDataReader *reader);
 	std::size_t inputVectorSize() const;
 	std::size_t outputVectorSize() const;
-	void train();
+	void run();
 	void stop();
 	virtual LaVectorDouble calcOutput(const LaVectorDouble &input) = 0;
+	template<class Archive> void serialize(Archive &ar, const unsigned int version) {
+		Q_UNUSED(version);
+		ar & m_learningSpeed;
+		ar & m_numEpoch;
+	}
+
+signals:
+	void sampleFinished(std::size_t sample, int epoch);
+	void epochFinished(int epoch, double mse);
 
 protected:
 	virtual void trainSample(const LaVectorDouble &input, const LaVectorDouble &expectedOutput) = 0;
 	virtual void initializeTraining() = 0;
+	void initializeMatrix(LaGenMatDouble &matrix, double min, double max) const;
 
 private:
+	double calcMse();
+
+private:
+	Q_DISABLE_COPY(NeuralNet);
 	bool m_stop;
 	double m_learningSpeed;
 	int m_numEpoch;
-	QSharedPointer<TrainingDataReader> m_reader;
+	TrainingDataReader *m_reader;
+
+friend class boost::serialization::access;
 }; /* -----  end of class NeuralNet  ----- */
 
 } /* end of namespace FaceDetect */

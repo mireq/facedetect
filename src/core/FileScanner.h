@@ -54,6 +54,7 @@ private:
 	void clearState();
 
 private:
+	Q_DISABLE_COPY(FileScanner);
 	QString m_scanPath;
 	double m_progress;
 	long m_scannedDirs;

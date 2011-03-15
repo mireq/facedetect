@@ -7,7 +7,7 @@
  * =====================================================================
  */
 
-#include <QDebug>
+#include <algorithm>
 #include <QPainter>
 #include <QPixmap>
 #include <QTransform>
@@ -81,6 +81,19 @@ void TrainingImageDatabase::addImage(const FaceDetect::FaceFileScanner::ImageInf
 		sample.info = QSharedPointer<FaceFileScanner::ImageInfo>(new FaceFileScanner::ImageInfo(image));
 		m_samples.append(sample);
 	}
+}
+
+void TrainingImageDatabase::addImage(const LaVectorDouble &input, const LaVectorDouble &output)
+{
+	TrainingSample sample;
+	sample.input = input;
+	sample.output = output;
+	m_samples.append(sample);
+}
+
+void TrainingImageDatabase::shuffle()
+{
+	std::random_shuffle(m_samples.begin(), m_samples.end());
 }
 
 inline void TrainingImageDatabase::calcVectors(std::size_t sample) const
