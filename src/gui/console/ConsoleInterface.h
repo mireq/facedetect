@@ -10,6 +10,7 @@
 #ifndef CONSOLEINTERFACE_9JAL83V
 #define CONSOLEINTERFACE_9JAL83V
 
+#include <QStringList>
 #include <QSharedPointer>
 #include <QTextStream>
 #include <QObject>
@@ -18,7 +19,6 @@
 #include "libfacedetect/FaceFileScanner.h"
 #include "libfacedetect/ImageFileScanner.h"
 #include "libfacedetect/TrainingImageDatabase.h"
-class QStringList;
 
 class ConsoleInterface: public QObject
 {
@@ -29,7 +29,11 @@ public:
 	void run();
 
 private slots:
+	void startScan();
 	void scanFaces();
+	void scanNonFaces();
+	void startTraining();
+	void detectFaces();
 	void onFaceScanningStatusChanged(bool scanning);
 	void onNonFaceScanningFinished();
 	void onImageScanned(const FaceDetect::FaceFileScanner::ImageInfo &image);
@@ -42,11 +46,14 @@ private slots:
 private:
 	void parseCommandline();
 	QString getArgument(const QStringList &arguments, const QString &argumentName);
+	QStringList getArguments(const QStringList &arguments, const QString &argumentName);
 	void saveNeuralNet();
+	void scanImageFile(const QString &file);
 
 private:
 	QString m_loadNetFile;
 	QString m_saveNetFile;
+	QStringList m_detectFiles;
 
 	QString m_facesPath;
 	QString m_nonFacesPath;

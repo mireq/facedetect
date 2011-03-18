@@ -54,6 +54,8 @@ set(facedetect_SRCS
 	src/libfacedetect/BPNeuralNet.cpp
 	src/libfacedetect/FaceFileScanner.cpp
 	src/libfacedetect/ImageFileScanner.cpp
+	src/libfacedetect/ImageFilter.cpp
+	src/libfacedetect/ImageSegmenter.cpp
 	src/libfacedetect/NeuralNet.cpp
 	src/libfacedetect/TrainingDataReader.cpp
 	src/libfacedetect/TrainingImageDatabase.cpp
@@ -63,6 +65,8 @@ set(facedetect_SRCS
 
 set(facedetect_HDRS
 	src/core/FaceImageProvider.h
+	src/libfacedetect/ImageFilter.h
+	src/libfacedetect/ImageSegmenter.h
 	src/libfacedetect/serialization/LapackSerialization.h
 )
 

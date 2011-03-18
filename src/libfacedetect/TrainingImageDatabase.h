@@ -15,6 +15,7 @@
 #include <QVector>
 #include "Align.h"
 #include "FaceFileScanner.h"
+#include "ImageFilter.h"
 #include "TrainingDataReader.h"
 
 namespace FaceDetect {
@@ -48,8 +49,8 @@ private:
 	static const std::size_t sm_inputVectorSize = sm_imageWidth * sm_imageHeight;
 	Align *m_aligner;
 	QVector<TrainingSample> m_samples;
+	ImageFilter m_imageFilter;
 	mutable QImage m_workingImage;
-	mutable QVector<QRgb> m_colorTable;
 }; /* -----  end of class TrainingImageDatabase  ----- */
 
 } /* end of namespace FaceDetect */

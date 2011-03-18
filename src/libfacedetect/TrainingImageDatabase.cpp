@@ -21,6 +21,7 @@ TrainingImageDatabase::TrainingImageDatabase(QObject *parent):
 {
 	m_aligner->setImageSize(128);
 	m_aligner->setCollectStatistics(false);
+	m_imageFilter.setFilters(FaceDetect::ImageFilter::GrayscaleFilter);
 }
 
 TrainingImageDatabase::~TrainingImageDatabase()
@@ -46,7 +47,6 @@ LaVectorDouble TrainingImageDatabase::inputVector(std::size_t sample) const
 {
 	if (!m_workingImage.isNull()) {
 		m_workingImage = QImage();
-		m_colorTable.clear();
 	}
 	if (m_samples[sample].info != 0) {
 		calcVectors(sample);
@@ -100,11 +100,6 @@ inline void TrainingImageDatabase::calcVectors(std::size_t sample) const
 {
 	if (m_workingImage.isNull()) {
 		m_workingImage = QImage(QSize(128, 128), QImage::Format_RGB888);
-		QVector<QRgb> colorTable(256);
-		for (int i = 0; i < 256; ++i) {
-			colorTable[i] = qRgb(i, i, i);
-		}
-		m_colorTable = colorTable;
 	}
 
 	FaceFileScanner::ImageInfo imageInfo = *(m_samples[sample].info);
@@ -124,7 +119,7 @@ inline void TrainingImageDatabase::calcVectors(std::size_t sample) const
 	m_samples[sample].output = LaVectorDouble(1);
 	m_samples[sample].info.clear();
 
-	QImage smallImage = m_workingImage.scaled(QSize(sm_imageWidth, sm_imageHeight), Qt::IgnoreAspectRatio, Qt::SmoothTransformation).convertToFormat(QImage::Format_Indexed8, m_colorTable);
+	QImage smallImage = m_imageFilter.filterImage(m_workingImage.scaled(QSize(sm_imageWidth, sm_imageHeight), Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
 	for (std::size_t pixel = 0; pixel < sm_inputVectorSize; ++pixel) {
 		m_samples[sample].input(pixel) = static_cast<double>(smallImage.pixelIndex(pixel % sm_imageWidth, pixel / sm_imageWidth)) / 256;
 	}

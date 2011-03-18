@@ -12,6 +12,7 @@
 #include <lapackpp/laslv.h>
 #include <lapackpp/lavli.h>
 #include <lapackpp/laexcp.h>
+#include "ImageFilter.h"
 #include "Align.h"
 
 namespace FaceDetect {
@@ -153,28 +154,24 @@ QImage Align::getStatisticsImage() const
 		}
 	}
 
-	QLinearGradient imgGradient(QPoint(0, 0), QPoint(256, 0));
+	QImage image(QSize(128, 128), QImage::Format_ARGB32);
+	for (int x = 0; x < 128; ++x) {
+		for (int y = 0; y < 128; ++y) {
+			int value = qMin(int(imgMatrix(y, x)), 255);
+			image.setPixel(x, y, qRgb(value, value, value));
+		}
+	}
+
+	QLinearGradient imgGradient;
 	imgGradient.setColorAt(0.0, Qt::darkCyan);
 	imgGradient.setColorAt(0.05, Qt::cyan);
 	imgGradient.setColorAt(0.1, Qt::green);
 	imgGradient.setColorAt(0.2, Qt::yellow);
 	imgGradient.setColorAt(1.0, Qt::red);
-	QImage gradImg(QSize(256, 1), QImage::Format_ARGB32);
-	QPainter gradPainter(&gradImg);
-	gradPainter.setPen(Qt::NoPen);
-	gradPainter.fillRect(QRect(0, 0, 256, 1), imgGradient);
-
-	QImage image(QSize(128, 128), QImage::Format_ARGB32);
-	QPainter painter(&image);
-	painter.setPen(Qt::NoPen);
-	painter.fillRect(QRect(0, 0, 128, 128), Qt::white);
-	painter.end();
-	for (int x = 0; x < 128; ++x) {
-		for (int y = 0; y < 128; ++y) {
-			int value = qMin(int(imgMatrix(y, x)), 255);
-			image.setPixel(x, y, gradImg.pixel(value, 0));
-		}
-	}
+	ImageFilter filter;
+	filter.setFilters(FaceDetect::ImageFilter::GrayscaleFilter);
+	filter.setGrayscaleGradient(imgGradient);
+	image = filter.filterImage(image);
 	return image;
 }
 
