@@ -15,23 +15,35 @@
 #include <QPoint>
 #include <QVector>
 #include <QUrl>
-#include "core/FileScanner.h"
+#include "FileScanner.h"
 
 namespace FaceDetect {
 
+/**
+ * \brief Skener pre vyhľadávanie a čítanie údajov z fotografií tvárí.
+ */
 class FaceFileScanner: public FileScanner
 {
 Q_OBJECT
 public:
+/**
+ * \brief Kontrolné body tváre.
+ */
 	struct FaceData {
-		QPoint leftEye;
-		QPoint rightEye;
-		QPoint nose;
-		QPoint mouth;
+		QPoint leftEye;  /**< Pozícia ľavého oka.  */
+		QPoint rightEye; /**< Pozícia pravého oka. */
+		QPoint nose;     /**< Pozícia nosa.        */
+		QPoint mouth;    /**< Pozícia úst.         */
 	};
 
+/**
+ * Iterátor pre iteráciu medzi dátami tváre.
+ */
 	typedef QVector<FaceData>::const_iterator FaceDataIterator;
 
+	/**
+	 * \brief Informácie o fotografii.
+	 */
 	class ImageInfo
 	{
 	public:
@@ -51,9 +63,13 @@ public:
 		void setFaceData(const QVector<FaceData> &faceData);
 
 	private:
+		/// Čitateľnosť súboru s fotografiou (ak je čitateľný má hodnotu \e true)
 		bool m_valid;
+		/// URL súboru s fotografiou
 		QUrl m_url;
+		/// URL súboru s informácii o fotografii
 		QUrl m_definitionUrl;
+		/// Dáta s informáciami o tvárach na fotografii
 		QVector<FaceData> m_faceData;
 		friend class FaceFileScanner;
 	}; /* -----  end of class ImageInfo  ----- */
@@ -66,18 +82,26 @@ public:
 	ImageInfo readFile(const QString &fileName);
 
 signals:
+/**
+ * Signál sa vyšle po úspešnom preskenovaní fotografie. Všetky fotografie, u
+ * ktorých došlo k akejkoľvek chybe pri skenovaní budú preskočené.
+ */
 	void imageScanned(const FaceDetect::FaceFileScanner::ImageInfo &image);
 
 private:
+	/**
+	 * Stav čítania XML súboru.
+	 */
 	enum ReadState {
-		NoState,
-		RecordingsState,
-		RecordingState,
-		URLState,
-		SubjectState,
-		ApplicationState,
-		FaceState
+		NoState,          /**< Stav pred začiatkom čítania */
+		RecordingsState,  /**< Čítanie záznamov            */
+		RecordingState,   /**< Čítanie konkrétneho záznamu */
+		URLState,         /**< Čítanie URL súboru          */
+		SubjectState,     /**< Čítanie záznamu o subjekte  */
+		ApplicationState, /**< Čítanie záznamu o dátach    */
+		FaceState         /**< Čítanie dát tváre           */
 	};
+	/// URL základného adresára.
 	QUrl m_basePath;
 }; /* -----  end of class FaceFileScanner  ----- */
 

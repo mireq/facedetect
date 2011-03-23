@@ -7,6 +7,7 @@
  * =====================================================================
  */
 
+#include <QDebug>
 #include <QPainter>
 #include <lapackpp/blas3pp.h>
 #include <lapackpp/laslv.h>
@@ -17,14 +18,15 @@
 
 namespace FaceDetect {
 
+/**
+ * Vytvorenie inštancie triedy pre zarovnávanie fotografií.
+ */
 Align::Align(QObject *parent):
 	QObject(parent),
-	m_faceFeaturesSum(sm_faceFeaturesCount * 2),
-	m_avgFaceFeatures(sm_faceFeaturesCount * 2),
-	m_normalizedFaceFeatures(sm_faceFeaturesCount * 2),
-	m_topLine(4),
-	m_imgCount(0),
-	m_avgDirty(false),
+	m_faceFeaturesSum(FaceFeaturesCount * 2),
+	m_avgFaceFeatures(FaceFeaturesCount * 2),
+	m_normalizedFaceFeatures(FaceFeaturesCount * 2),
+	m_faceCount(0),
 	m_normalized(false),
 	m_collectStatistics(false),
 	m_imageSize(128)
@@ -40,17 +42,34 @@ Align::~Align()
 {
 }
 
+/**
+ * Počas vkladania záznamov pre zarovnanie sa môžu zaznamenávať štatistiky,
+ * pomocou ktorých sa dá zostaviť rozdelenie kontrolných bodov. Zapnutie záznamu
+ * štatistíky vyžadujem dodatočnú RAM pre zaznamenanie kontrolných bodov
+ * všetkých fotografií.
+ * \sa getStatisticsImage()
+ */
 void Align::setCollectStatistics(bool statistics)
 {
 	m_collectStatistics = statistics;
+	if (!m_collectStatistics) {
+		m_faceData.clear();
+	}
 }
 
+/**
+ * Nastavenie veľkosti, ktorú má mať výsledná transformovaná fotografia.
+ * Štandardná veľkosť je 128 (obrázky sú teda veľkosti 128x128).
+ */
 void Align::setImageSize(int imageSize)
 {
 	m_imageSize = imageSize;
 	m_normalized = false;
 }
 
+/**
+ * Spracovanie fotografie \a info.
+ */
 void Align::addImage(const FaceFileScanner::ImageInfo &info)
 {
 	if (!info.isValid()) {
@@ -62,59 +81,71 @@ void Align::addImage(const FaceFileScanner::ImageInfo &info)
 		if (!checkControlPoints(*face)) {
 			continue;
 		}
-		m_imgCount++;
-		if (m_imgCount == 1) {
+		m_faceCount++;
+		if (m_faceCount == 1) {
 			m_avgFaceFeatures = getControlPointsVector(*face);
 			m_faceFeaturesSum = m_avgFaceFeatures;
 		}
 		else {
-			m_avgDirty = true;
 			m_normalized = false;
+			// Výpočet transformovaných vlastností
 			LaVectorDouble featVector = getControlPointsVector(*face);
-			LaGenMatDouble aMatrix(sm_faceFeaturesCount * 2, 4);
-			fillFeaturesMatrix(featVector, aMatrix);
+			LaGenMatDouble aMatrix = fillFeaturesMatrix(featVector);
 			LaVectorDouble tVector = getTransformVector(aMatrix, false);
-			LaGenMatDouble newFeatures(sm_faceFeaturesCount * 2, 1);
+			LaGenMatDouble newFeatures(FaceFeaturesCount * 2, 1);
+			// $t_new = A \cdot t$
 			Blas_Mat_Mat_Mult(aMatrix, tVector, newFeatures);
+			// Výpočet priemerných hodnôt
 			for (int i = 0; i < m_faceFeaturesSum.rows(); ++i) {
 				m_faceFeaturesSum(i) += newFeatures(i, 0);
 			}
 			calcAvg();
 		}
+
+		// Záznam dát pre prípad, že potrebujeme štatistiky
 		if (m_collectStatistics) {
 			m_faceData.append(*face);
 		}
 	}
 }
 
-std::size_t Align::imgCount() const
+/**
+ * Vráti počet obrázkov, ktoré boli spracované.
+ */
+std::size_t Align::faceCount() const
 {
-	return m_imgCount;
+	return m_faceCount;
 }
 
+/**
+ * Vráti transformačnú maticu pre tvár \a face.
+ */
 QTransform Align::getTransform(const FaceFileScanner::FaceData &face) const
 {
-	calcAvg();
 	// Kointrola, či sú všetky požadované body zadané
 	if (!checkControlPoints(face)) {
 		return QTransform();
 	}
 	LaVectorDouble featVector = getControlPointsVector(face);
-	LaGenMatDouble aMatrix(sm_faceFeaturesCount * 2, 4);
-	fillFeaturesMatrix(featVector, aMatrix);
+	LaGenMatDouble aMatrix = fillFeaturesMatrix(featVector);
 	LaVectorDouble tVector = getTransformVector(aMatrix, true);
 	return QTransform(tVector(0), tVector(1), -tVector(1), tVector(0), tVector(2), tVector(3));
 }
 
+/**
+ * V prípade, že je povolené zbieranie štatistických dát vráti táto metóda
+ * obrázok s rozdelením kontrolných bodov po zarovnaní.
+ * \sa setCollectStatistics()
+ */
 QImage Align::getStatisticsImage() const
 {
-	if (m_imgCount < 2) {
+	if (m_faceCount < 2) {
 		return QImage(QSize(1, 1), QImage::Format_ARGB32);
 	}
 	normalize();
-	LaGenMatDouble imgMatrix(128, 128);
-	for (int x = 0; x < 128; ++x) {
-		for (int y = 0; y < 128; ++y) {
+	LaGenMatDouble imgMatrix(m_imageSize, m_imageSize);
+	for (int x = 0; x < m_imageSize; ++x) {
+		for (int y = 0; y < m_imageSize; ++y) {
 			imgMatrix(y, x) = 0;
 		}
 	}
@@ -138,30 +169,36 @@ QImage Align::getStatisticsImage() const
 			imgMatrix(point.y(), point.x())++;
 		}
 	}
+
+	// Nájdenie najväčšieho prvku
 	double max = 0;
-	for (int x = 0; x < 128; ++x) {
-		for (int y = 0; y < 128; ++y) {
+	for (int x = 0; x < m_imageSize; ++x) {
+		for (int y = 0; y < m_imageSize; ++y) {
 			if (imgMatrix(y, x) > max) {
 				max = imgMatrix(y, x);
 			}
 		}
 	}
+
+	// Prepočet hodnôt rozdelenia na rozsah 0 - 1.
 	if (max != 0) {
-		for (int x = 0; x < 128; ++x) {
-			for (int y = 0; y < 128; ++y) {
+		for (int x = 0; x < m_imageSize; ++x) {
+			for (int y = 0; y < m_imageSize; ++y) {
 				imgMatrix(y, x) = (imgMatrix(y, x) / max) * 256.0;
 			}
 		}
 	}
 
-	QImage image(QSize(128, 128), QImage::Format_ARGB32);
-	for (int x = 0; x < 128; ++x) {
-		for (int y = 0; y < 128; ++y) {
+	// Nastavenie hodnôt pixelov obrázku
+	QImage image(QSize(m_imageSize, m_imageSize), QImage::Format_ARGB32);
+	for (int x = 0; x < m_imageSize; ++x) {
+		for (int y = 0; y < m_imageSize; ++y) {
 			int value = qMin(int(imgMatrix(y, x)), 255);
 			image.setPixel(x, y, qRgb(value, value, value));
 		}
 	}
 
+	// Prevod obrázku v odtieňoch šedej na farebnú mapu
 	QLinearGradient imgGradient;
 	imgGradient.setColorAt(0.0, Qt::darkCyan);
 	imgGradient.setColorAt(0.05, Qt::cyan);
@@ -175,6 +212,9 @@ QImage Align::getStatisticsImage() const
 	return image;
 }
 
+/**
+ * Kontrola správnosti všetkých kontrolných bodov.
+ */
 bool Align::checkControlPoints(const FaceFileScanner::FaceData &data) const
 {
 	if (data.leftEye != QPoint() && data.rightEye != QPoint() && data.nose != QPoint() && data.mouth != QPoint()) {
@@ -185,9 +225,12 @@ bool Align::checkControlPoints(const FaceFileScanner::FaceData &data) const
 	}
 }
 
+/**
+ * Prevod kontrolných bodov na vektor.
+ */
 LaVectorDouble Align::getControlPointsVector(const FaceFileScanner::FaceData &data) const
 {
-	LaVectorDouble ret(sm_faceFeaturesCount * 2);
+	LaVectorDouble ret(FaceFeaturesCount * 2);
 	ret(0) = data.leftEye.x();
 	ret(1) = data.leftEye.y();
 	ret(2) = data.rightEye.x();
@@ -199,11 +242,18 @@ LaVectorDouble Align::getControlPointsVector(const FaceFileScanner::FaceData &da
 	return ret;
 }
 
+/**
+ * Výpočet transformačného vektoru pre maticu \a aMatrix zostavenú zo vstupných
+ * bodov. V prípade, že je zapnutá normalizácia vlastnosti budú upravené tak,
+ * aby oči boli v jednej rovine vo vzdialenosti 128. Transformačný vektor má 4
+ * položky, ktoré sú ekvivalentmi s položkami (m11, m12, m13, m23).
+ */
 LaVectorDouble Align::getTransformVector(const LaGenMatDouble &aMatrix, bool normalized) const
 {
 	if (normalized) {
 		normalize();
 	}
+
 	LaGenMatDouble nMatrix(4, 4);
 	Blas_Mat_Mat_Mult(aMatrix, aMatrix, nMatrix, true);
 
@@ -223,39 +273,56 @@ LaVectorDouble Align::getTransformVector(const LaGenMatDouble &aMatrix, bool nor
 	return tVector;
 }
 
+/**
+ * Transformácia vstupného vektoru \a input na výstupný vektor (návratová
+ * hodnota).
+ */
 LaVectorDouble Align::transform(const LaVectorDouble &input, const LaVectorDouble &transVector) const
 {
 	LaGenMatDouble ret(input.rows(), 1);
-	LaGenMatDouble aMatrix(input.rows(), 4);
-	fillFeaturesMatrix(input, aMatrix);
+	LaGenMatDouble aMatrix = fillFeaturesMatrix(input);
+	// $o = A \cdot t$
 	Blas_Mat_Mat_Mult(aMatrix, transVector, ret);
 	return ret;
 }
 
-void Align::fillFeaturesMatrix(const LaVectorDouble &input, LaGenMatDouble &aMatrix) const
+/**
+ * Vytvorenie matice z vektoru, v ktorom sú kontrolné body vo formáte (x1, y1,
+ * x2, y2 ...). Vzniknutá matica má potom riadky (x1, x2, 1, 0), (x2, -x1, 0,
+ * 1), (y1, y2, 1, 0) ...
+ */
+LaGenMatDouble Align::fillFeaturesMatrix(const LaVectorDouble &input) const
 {
+	LaGenMatDouble aMatrix(input.rows(), 4);
 	for (int row = 0; row < input.rows(); ++row) {
 		aMatrix(row, 0) = input(row);
 		aMatrix(row, 1) = ((row & 0x01) == 0) ? (-input(row + 1)) : (input(row - 1));
 		aMatrix(row, 2) = ((row & 0x01) == 0) ? 1 : 0;
 		aMatrix(row, 3) = ((row & 0x01) == 0) ? 0 : 1;
 	}
+	return aMatrix;
 }
 
+/**
+ * Výpočet priemerných hodnôt kontrolných bodov. Výsledok výpočtu sa bude
+ * nachádzať v premennej m_avgFaceFeatures.
+ */
 void Align::calcAvg() const
 {
-	if (m_avgDirty) {
-		for (int i = 0; i < m_faceFeaturesSum.rows(); ++i) {
-			m_avgFaceFeatures(i) = m_faceFeaturesSum(i) / double(m_imgCount);
-		}
-		m_avgDirty = false;
+	for (int i = 0; i < m_faceFeaturesSum.rows(); ++i) {
+		m_avgFaceFeatures(i) = m_faceFeaturesSum(i) / double(m_faceCount);
 	}
 }
 
+/**
+ * Prepočet kontrolných bodov tak, aby vrchné 2 body boli rovnobežné s x-ovou
+ * osou. Normalizované hodnoty sa uložia do premennej m_normalizedFaceFeatures.
+ */
 void Align::normalize() const
 {
 	if (!m_normalized) {
 		// Výpočet vrchnej čiary pre orezávanie fotografií
+		// tX, tY - stred (ťažisko) kontrolných bodov
 		double tX = 0;
 		double tY = 0;
 		for (int i = 0; i < 4; ++i) {
@@ -264,16 +331,20 @@ void Align::normalize() const
 		}
 		tX /= 4.0;
 		tY /= 4.0;
+	
 		double diffX = 0;
 		double diffY = 0;
+		// Ľavý bod horného ohraničenia fotografie
 		diffX = (m_avgFaceFeatures(0) - tX) * 1.5;
 		diffY = (m_avgFaceFeatures(1) - tY) * 1.5;
-		m_topLine(0) = tX + diffX;
-		m_topLine(1) = tY + diffY;
+		LaVectorDouble topLine(4);
+		topLine(0) = tX + diffX;
+		topLine(1) = tY + diffY;
+		// Pravý bod horného ohraničenia fotografie
 		diffX = (m_avgFaceFeatures(2) - tX) * 1.5;
 		diffY = (m_avgFaceFeatures(3) - tY) * 1.5;
-		m_topLine(2) = tX + diffX;
-		m_topLine(3) = tY + diffY;
+		topLine(2) = tX + diffX;
+		topLine(3) = tY + diffY;
 
 		// Prepočet vlastností po normalizácii
 		LaVectorDouble transformedLine(4);
@@ -281,26 +352,30 @@ void Align::normalize() const
 		transformedLine(1) = 0;
 		transformedLine(2) = 0;
 		transformedLine(3) = 0;
-		LaGenMatDouble aMatrix(4, 4);
-		fillFeaturesMatrix(m_topLine, aMatrix);
+		LaGenMatDouble aMatrix = fillFeaturesMatrix(topLine);
 		LaVectorDouble tVector(4);
 		try {
 			LaLinearSolve(aMatrix, tVector, transformedLine);
 			m_normalizedFaceFeatures = transform(m_avgFaceFeatures, tVector);
 		}
 		catch (LaException &) {
+			qWarning() << "Failed to normalize features";
 		}
 
 		m_normalized = true;
 	}
 }
 
+/**
+ * Metóda testuje sa nachádza bod \a point vo vnútri štvorca s tvárou
+ * (štandardne 128x128 bodov).
+ */
 bool Align::checkPointRange(const QPoint &point) const
 {
 	if (point.x() < 0 || point.y() < 0) {
 		return false;
 	}
-	if (point.x() >= 128 || point.y() >= 128) {
+	if (point.x() >= m_imageSize || point.y() >= m_imageSize) {
 		return false;
 	}
 	return true;

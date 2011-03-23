@@ -7,6 +7,9 @@
  * =====================================================================
  */
 
+#ifndef IMAGESEGMENTER_TTAZQSZT
+#define IMAGESEGMENTER_TTAZQSZT
+
 #include <QImage>
 #include <QPoint>
 #include <QRect>
@@ -16,6 +19,14 @@
 
 namespace FaceDetect {
 
+/**
+ * \brief Segmentácia bitmapy
+ *
+ * Táto trieda je zodpovedná za segmentáciu bitmapy na menšie bitmapy používané
+ * pre detekciu tváre. Obraz rozdeľovaný na segmenty môže byť transformovaný
+ * transformačnou maticou. V takomto prípade nebudú vrátené segmenty, ktoré sa
+ * nachádzajú mimo aktívnej oblasti bitmapy.
+ */
 class ImageSegmenter
 {
 public:
@@ -34,25 +45,37 @@ public:
 	int segmentCount() const;
 	QRect segmentRect(int segment) const;
 	QImage segmentImage(int segment) const;
-	QImage trans() const;
 
 private:
-	void recalcRegions() const;
+	void recalcSegments() const;
 	double calcIntersect(const QPointF &p1, const QPointF &p2, double yPos, bool *ok = 0) const;
 
 private:
+	/// Zdrojový obrázok.
 	QImage m_sourceImage;
+	/// Obrázok po transformácii.
 	mutable QImage m_transformedImage;
+	/// Veľkosť segmentu.
 	QSize m_segmentSize;
+	/// Transformácia bitmapy
 	QTransform m_transform;
+	/// Počty segmentov v riadku segmentov
 	mutable QVector<int> m_lineCounts;
+	/// Začiatky riadkov segmentov
 	mutable QVector<int> m_lineStarts;
+	/// Oblasť, v ktorej je transformovaná bitmapa
 	mutable QRect m_boundingRect;
+	/// x-ový posun segmentu
 	int m_xStep;
+	/// y-ový posun segmentu
 	int m_yStep;
+	/// Ak je \e true segmenty musia byť znovu prepočítané
 	mutable bool m_dirty;
+	/// Počet segmentov v obrázku
 	mutable int m_segmentCount;
 }; /* -----  end of class ImageSegmenter  ----- */
 
 } /* end of namespace FaceDetect */
+
+#endif /* end of include guard: IMAGESEGMENTER_TTAZQSZT */
 

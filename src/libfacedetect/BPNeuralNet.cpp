@@ -15,6 +15,9 @@
 
 namespace FaceDetect {
 
+/**
+ * \econstruct
+ */
 BPNeuralNet::BPNeuralNet(QObject *parent):
 	NeuralNet(parent)
 {
@@ -56,13 +59,13 @@ void BPNeuralNet::trainSample(const LaVectorDouble &input, const LaVectorDouble 
 	// Výpočet $\Psi^\prime(u_j)$
 	// Ako dočasné úložište sa používa hodnota stredných neurónov
 	for (int row = 0; row < m_stred.rows(); ++row) {
-		m_stred(row) = derivAktivFunkcia(m_stred(row));
+		m_delta(row) = derivAktivFunkcia(m_stred(row));
 	}
 	// Výpočet $\Delta_j=\Psi^\prime(u_j)v_j^T\Delta$
-	Blas_Mat_Mat_Trans_Mult(m_stred, m_v, m_stred);
-	m_stred *= delta;
+	Blas_Mat_Mat_Trans_Mult(m_delta, m_v, m_delta);
+	m_delta *= delta;
 	// Výpočet $\matr{W} = \matr{W}+\Delta\vect{x}^T\eta$
-	Blas_Mat_Mat_Mult(m_stred, input, m_w, false, true, n, 1.0);
+	Blas_Mat_Mat_Mult(m_delta, input, m_w, false, true, n, 1.0);
 }
 
 void BPNeuralNet::initializeTraining()
@@ -70,15 +73,22 @@ void BPNeuralNet::initializeTraining()
 	m_w = LaGenMatDouble(m_stredNeuronov, trainingDataReader()->inputVectorSize());
 	m_v = LaGenMatDouble(m_stredNeuronov, 1);
 	m_stred = LaGenMatDouble(m_stredNeuronov, 1);
+	m_delta = LaGenMatDouble(m_stredNeuronov, 1);
 	initializeMatrix(m_w, -0.5, 0.5);
 	initializeMatrix(m_v, -0.5, 0.5);
 }
 
+/**
+ * Vypočíta aktivačnú funkciu (výstupnú hodnotu) pre potenciál \a potencial.
+ */
 inline double BPNeuralNet::aktivFunkcia(const double &potencial) const
 {
 	return 1.0 / (1.0 + exp(-potencial));
 }
 
+/**
+ * Vypočíta deriváciu aktivačnej funkcie pre potenciál \a potencial.
+ */
 inline double BPNeuralNet::derivAktivFunkcia(const double &potencial) const
 {
 	double pom = exp(-potencial);

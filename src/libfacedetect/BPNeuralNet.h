@@ -17,6 +17,9 @@
 
 namespace FaceDetect {
 
+/**
+ * \brief Neurónová sieť so spätným šírením signálov.
+ */
 class BPNeuralNet: public NeuralNet
 {
 Q_OBJECT
@@ -36,12 +39,19 @@ public:
 	}
 
 private:
-	Q_DISABLE_COPY(BPNeuralNet);
+	/// Počet stredných neurónov
 	static const int m_stredNeuronov = 20;
 
+	/// Váhy medzi vstupnou vrstvou a skrytou vrstvou.
 	LaGenMatDouble m_w;
+	/// Váhy medzi skrytou vrstvou a výstupnou vrstvou.
 	LaVectorDouble m_v;
+	/// Potenciály v strednej vrstve.
 	LaVectorDouble m_stred;
+	/// Vektor delta.
+	LaVectorDouble m_delta;
+
+	Q_DISABLE_COPY(BPNeuralNet)
 
 friend class boost::serialization::access;
 }; /* -----  end of class BPNeuralNet  ----- */

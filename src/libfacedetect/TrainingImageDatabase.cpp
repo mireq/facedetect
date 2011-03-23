@@ -15,6 +15,9 @@
 
 namespace FaceDetect {
 
+/**
+ * Vytvorenie trénovacej databázy.
+ */
 TrainingImageDatabase::TrainingImageDatabase(QObject *parent):
 	TrainingDataReader(parent),
 	m_aligner(new Align(this))
@@ -28,12 +31,12 @@ TrainingImageDatabase::~TrainingImageDatabase()
 {
 }
 
-std::size_t TrainingImageDatabase::inputVectorSize() const
+int TrainingImageDatabase::inputVectorSize() const
 {
-	return sm_inputVectorSize;
+	return InputVecotrSize;
 }
 
-std::size_t TrainingImageDatabase::outputVectorSize() const
+int TrainingImageDatabase::outputVectorSize() const
 {
 	return 1;
 }
@@ -62,12 +65,18 @@ LaVectorDouble TrainingImageDatabase::outputVector(std::size_t sample) const
 	return m_samples[sample].output;
 }
 
+/**
+ * Pridanie obrázku \a image do množiny trénovacích vzorov.
+ */
 void TrainingImageDatabase::addImage(const FaceDetect::FaceFileScanner::ImageInfo &image)
 {
 	if (!image.isValid()) {
 		return;
 	}
+
 	m_aligner->addImage(image);
+
+	// Viacej než 1 tvár v súbore
 	if (image.faceEnd() - image.faceBegin() >= 2) {
 		auto images = image.splitFaces();
 		foreach (const FaceFileScanner::ImageInfo &img, images) {
@@ -83,6 +92,10 @@ void TrainingImageDatabase::addImage(const FaceDetect::FaceFileScanner::ImageInf
 	}
 }
 
+/**
+ * Pridanie trénovacieho vzoru priamo ako dvojicu: vstupný vektor, očakávaný
+ * výstup.
+ */
 void TrainingImageDatabase::addImage(const LaVectorDouble &input, const LaVectorDouble &output)
 {
 	TrainingSample sample;
@@ -91,11 +104,18 @@ void TrainingImageDatabase::addImage(const LaVectorDouble &input, const LaVector
 	m_samples.append(sample);
 }
 
+/**
+ * Premiešanie vstupov.
+ */
 void TrainingImageDatabase::shuffle()
 {
 	std::random_shuffle(m_samples.begin(), m_samples.end());
 }
 
+/**
+ * Prevod obrázku vo vzorke \a sample na vektor. Výstup sa zapisuje do premennej
+ * m_samples.
+ */
 inline void TrainingImageDatabase::calcVectors(std::size_t sample) const
 {
 	if (m_workingImage.isNull()) {
@@ -112,16 +132,16 @@ inline void TrainingImageDatabase::calcVectors(std::size_t sample) const
 		painter.drawImage(QPoint(0, 0), imageInfo.getImage());
 	}
 	else {
-		m_workingImage = imageInfo.getImage().scaled(QSize(sm_imageWidth, sm_imageHeight));
+		m_workingImage = imageInfo.getImage().scaled(QSize(ImageWidth, ImageHeight));
 	}
 
-	m_samples[sample].input = LaVectorDouble(sm_inputVectorSize);
+	m_samples[sample].input = LaVectorDouble(InputVecotrSize);
 	m_samples[sample].output = LaVectorDouble(1);
 	m_samples[sample].info.clear();
 
-	QImage smallImage = m_imageFilter.filterImage(m_workingImage.scaled(QSize(sm_imageWidth, sm_imageHeight), Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
-	for (std::size_t pixel = 0; pixel < sm_inputVectorSize; ++pixel) {
-		m_samples[sample].input(pixel) = static_cast<double>(smallImage.pixelIndex(pixel % sm_imageWidth, pixel / sm_imageWidth)) / 256;
+	QImage smallImage = m_imageFilter.filterImage(m_workingImage.scaled(QSize(ImageWidth, ImageHeight), Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
+	for (int pixel = 0; pixel < InputVecotrSize; ++pixel) {
+		m_samples[sample].input(pixel) = static_cast<double>(smallImage.pixelIndex(pixel % ImageWidth, pixel / ImageWidth)) / 256;
 	}
 	m_samples[sample].output(0) = hasFace;
 }

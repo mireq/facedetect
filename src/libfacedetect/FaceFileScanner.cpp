@@ -29,44 +29,67 @@ FaceFileScanner::ImageInfo::~ImageInfo()
 {
 }
 
+/**
+ * Metóda vráti \e true, ak je URL obrázku čitateľné.
+ * \sa url()
+ */
 bool FaceFileScanner::ImageInfo::isValid() const
 {
 	return m_valid;
 }
 
+/**
+ * Vráti URL obrázku.
+ */
 QUrl FaceFileScanner::ImageInfo::url() const
 {
 	return m_url;
 }
 
+/**
+ * Vráti URL XML súboru s definovanými informáciami o obrázku.
+ */
 QUrl FaceFileScanner::ImageInfo::definitionUrl() const
 {
 	return m_definitionUrl;
 }
 
+/**
+ * Vráti iterátor pre začiatok zoznamu tvárí.
+ */
 FaceFileScanner::FaceDataIterator FaceFileScanner::ImageInfo::faceBegin() const
 {
 	return m_faceData.begin();
 }
 
+/**
+ * Vráti iterátor pre koniec zoznamu tvárí.
+ */
 FaceFileScanner::FaceDataIterator FaceFileScanner::ImageInfo::faceEnd() const
 {
 	return m_faceData.end();
 }
 
+/**
+ * Vráti obrázok, ktorý sa nachádza na adrese url(). Potporované formáty sú PNG
+ * a PPM komprimované algoritmom BZ2.
+ */
 QImage FaceFileScanner::ImageInfo::getImage() const
 {
+	// Formát obrázku, kotrý hľadáme je PNG
 	const char *format = "PNG";
 	QImage ret;
 	QString fileName = m_url.toLocalFile();
 	QFileInfo fileInfo(fileName);
 
+	// Ak je prípona "png" priamo otvoríme obrázok.
 	if (fileInfo.suffix() == "png") {
 		if (ret.load(fileInfo.absoluteFilePath(), format)) {
 			return ret;
 		}
 	}
 
+	// Inak sa obrázok otvorí priamo ako súbor
 	FILE *inputFile;
 	inputFile = fopen(fileName.toUtf8().constData(), "r");
 	if (!inputFile) {
@@ -74,6 +97,8 @@ QImage FaceFileScanner::ImageInfo::getImage() const
 		return ret;
 	}
 
+	// Predpokladá sa, že súbor je komprimovaný algoritmom BZ2
+	// Otvorenie archívu BZ2
 	int bzError;
 	BZFILE *bzFile;
 	bzFile = BZ2_bzReadOpen(&bzError, inputFile, 0, 0, NULL, 0);
@@ -83,6 +108,7 @@ QImage FaceFileScanner::ImageInfo::getImage() const
 		return ret;
 	}
 
+	// Čítanie dát archívu
 	bzError = BZ_OK;
 	int nBuf;
 	char buf[65536];
@@ -92,6 +118,7 @@ QImage FaceFileScanner::ImageInfo::getImage() const
 		imageData.append(buf, nBuf);
 	}
 	fclose(inputFile);
+
 	if (bzError != BZ_STREAM_END) {
 		qWarning() << QString("Could not read file: %1").arg(fileName);
 	}
@@ -105,6 +132,10 @@ QImage FaceFileScanner::ImageInfo::getImage() const
 	return ret;
 }
 
+/**
+ * Vytvorenie samostatného objektu FaceFileScanner::ImageInfo pre každú tvár,
+ * ktorá sa nachádza na fotografií.
+ */
 QVector<FaceFileScanner::ImageInfo> FaceFileScanner::ImageInfo::splitFaces() const
 {
 	QVector<ImageInfo> ret;
@@ -117,26 +148,39 @@ QVector<FaceFileScanner::ImageInfo> FaceFileScanner::ImageInfo::splitFaces() con
 	return ret;
 }
 
+/**
+ * Nastavenie URL súboru z obrázkom.
+ */
 void FaceFileScanner::ImageInfo::setUrl(const QUrl &url)
 {
 	if (m_url == url) {
 		return;
 	}
 	m_url = url;
+	// Kontrola čitateľnosti súboru
 	QFileInfo fileInfo(m_url.toLocalFile());
 	m_valid = fileInfo.isReadable();
 }
 
+/**
+ * Nastavenie URL s definíciou informácii o fotografii.
+ */
 void FaceFileScanner::ImageInfo::setDefinitionUrl(const QUrl &url)
 {
 	m_definitionUrl = url;
 }
 
+/**
+ * Nastavenie dát tvárí.
+ */
 void FaceFileScanner::ImageInfo::setFaceData(const QVector<FaceData> &faceData)
 {
 	m_faceData = faceData;
 }
 
+/**
+ * \econstruct
+ */
 FaceFileScanner::FaceFileScanner(QObject *parent):
 	FileScanner(parent)
 {
@@ -146,11 +190,20 @@ FaceFileScanner::~FaceFileScanner()
 {
 }
 
+/**
+ * Vráti cestu k základnému adresáru.
+ * \sa setBasePath()
+ */
 QUrl FaceFileScanner::basePath()
 {
 	return m_basePath;
 }
 
+/**
+ * Nastavenie základného adresára, v ktorom sa nachádza databáza tvárí. Samotné
+ * definičné súbory sa hľadajú v podadresári "data/ground_truths/xml/".
+ * \sa basePath()
+ */
 void FaceFileScanner::setBasePath(const QUrl &url)
 {
 	m_basePath = url;
@@ -176,20 +229,28 @@ void FaceFileScanner::scanFile(const QString &fileName)
 	emit imageScanned(img);
 }
 
+/**
+ * Načítanie informácií o definičnom súbore \a fileName.
+ */
 FaceFileScanner::ImageInfo FaceFileScanner::readFile(const QString &fileName)
 {
 	ImageInfo ret;
 	ret.setDefinitionUrl(QUrl::fromLocalFile(fileName));
+
 	QFile definitionFile(fileName);
 	QFileInfo definitionFileInfo(fileName);
 	if (!definitionFile.open(QIODevice::ReadOnly)) {
 		return ret;
 	}
+
 	QVector<FaceData> data;
 	ReadState state = NoState;
+
 	QXmlStreamReader definitionReader(&definitionFile);
-	QString textAcumulator;
 	FaceData faceData;
+
+	// Pomocná premenná na akumuláciu textu počas čítania XML
+	QString textAcumulator;
 	while (!definitionReader.atEnd()) {
 		definitionReader.readNext();
 		switch (definitionReader.tokenType()) {

@@ -13,10 +13,13 @@
 #include <lapackpp/lavd.h>
 #include <QImage>
 #include <QVector>
-#include "core/FileScanner.h"
+#include "FileScanner.h"
 
 namespace FaceDetect {
 
+/**
+ * \brief Skener pre obrázky neobsahujúce tvár.
+ */
 class ImageFileScanner: public FileScanner
 {
 Q_OBJECT
@@ -26,15 +29,20 @@ public:
 	virtual void scanFile(const QString &fileName);
 
 signals:
+/**
+ * Signál sa vyšle pre každý skenovaný segment obrázku. Všetky obrázky väčšie
+ * ako štandardné výška a šírka sú automaticky segmentované. Výstupom je vždy
+ * hodnota 0 (tento skener nekontroluje prítomnosť tváre).
+ */
 	void imageScanned(const LaVectorDouble &input, const LaVectorDouble &output);
 
 private:
-	QImage m_workingImage;
-	QVector<QRgb> m_colorTable;
-
-	static const std::size_t sm_imageWidth = 20;
-	static const std::size_t sm_imageHeight = 20;
-	static const std::size_t sm_inputVectorSize = sm_imageWidth * sm_imageHeight;
+	/// Štandardná šírka obrázka.
+	static const int ImageWidth = 20;
+	/// Štandardná výška obrázka.
+	static const int ImageHeight = 20;
+	/// Veľkosť vstupného vektoru (každý pixel má samostatnú položku).
+	static const int InputVectorSize = ImageWidth * ImageHeight;
 }; /* -----  end of class ImageFileScanner  ----- */
 
 } /* end of namespace FaceDetect */

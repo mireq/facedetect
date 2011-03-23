@@ -20,14 +20,17 @@
 
 namespace FaceDetect {
 
+/**
+ * \brief Načítavanie trénovacích vzorov databázy tvárí a obrázkov
+ */
 class TrainingImageDatabase: public TrainingDataReader
 {
 Q_OBJECT
 public:
 	explicit TrainingImageDatabase(QObject *parent = 0);
 	virtual ~TrainingImageDatabase();
-	virtual std::size_t inputVectorSize() const;
-	virtual std::size_t outputVectorSize() const;
+	virtual int inputVectorSize() const;
+	virtual int outputVectorSize() const;
 	virtual std::size_t trainingSetSize() const;
 	virtual LaVectorDouble inputVector(std::size_t sample) const;
 	virtual LaVectorDouble outputVector(std::size_t sample) const;
@@ -36,20 +39,30 @@ public:
 	void shuffle();
 
 private:
+	/**
+	 * Položka trénovacej množiny.
+	 */
 	struct TrainingSample {
-		mutable QSharedPointer<FaceFileScanner::ImageInfo> info;
-		mutable LaVectorDouble input;
-		mutable LaVectorDouble output;
+		mutable QSharedPointer<FaceFileScanner::ImageInfo> info; /**< Informácie o obrázku (ak je nastavený vstupný a výstupný vektor má hodnotu 0) */
+		mutable LaVectorDouble input;                            /**< Vstupný vektor.                                                               */
+		mutable LaVectorDouble output;                           /**< Očakávaný výstup.                                                             */
 	};
 
 	void calcVectors(std::size_t sample) const;
 
-	static const std::size_t sm_imageWidth = 20;
-	static const std::size_t sm_imageHeight = 20;
-	static const std::size_t sm_inputVectorSize = sm_imageWidth * sm_imageHeight;
+	/// Šírka obrázku.
+	static const int ImageWidth = 20;
+	/// Výška obrázku.
+	static const int ImageHeight = 20;
+	/// Veľkosť vstupného vektoru.
+	static const int InputVecotrSize = ImageWidth * ImageHeight;
+	/// Objekt na zarovnávanie fotografií.
 	Align *m_aligner;
+	/// Zoznam trénovacích vzorov.
 	QVector<TrainingSample> m_samples;
+	/// Filter pre prevod obrázku do odtieňov šedej a úpravu svetlosti.
 	ImageFilter m_imageFilter;
+	/// Pomocný obrázok používaný pred škálovaním.
 	mutable QImage m_workingImage;
 }; /* -----  end of class TrainingImageDatabase  ----- */
 

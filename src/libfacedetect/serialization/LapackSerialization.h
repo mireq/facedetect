@@ -12,9 +12,17 @@
 #include <lapackpp/gmd.h>
 #include <lapackpp/lavd.h>
 
+/**
+ * \file
+ * Serializácia typov, ktoré používa lapack
+ */
+
 namespace boost {
 namespace serialization {
 
+/**
+ * Serializácia generickej matice.
+ */
 template <class Archive> void save(Archive &ar, const LaGenMatDouble &data, unsigned int /* version */)
 {
 	int cols = data.cols();
@@ -28,6 +36,9 @@ template <class Archive> void save(Archive &ar, const LaGenMatDouble &data, unsi
 	}
 }
 
+/**
+ * Deserializácia generickej matice.
+ */
 template <class Archive> void load(Archive &ar, LaGenMatDouble &data, unsigned int /* version */)
 {
 	int cols;
@@ -44,6 +55,9 @@ template <class Archive> void load(Archive &ar, LaGenMatDouble &data, unsigned i
 	}
 }
 
+/**
+ * Serializácia a deserializácia vektoru.
+ */
 template <class Archive> void serialize(Archive &ar, LaVectorDouble &data, unsigned int /*version*/)
 {
 	ar & boost::serialization::base_object<LaGenMatDouble>(data);
@@ -52,5 +66,5 @@ template <class Archive> void serialize(Archive &ar, LaVectorDouble &data, unsig
 } /* end of namespace serialization */
 } /* end of namespace boost */
 
-BOOST_SERIALIZATION_SPLIT_FREE(LaGenMatDouble);
+BOOST_SERIALIZATION_SPLIT_FREE(LaGenMatDouble)
 

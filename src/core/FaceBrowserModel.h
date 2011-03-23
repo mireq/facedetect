@@ -15,7 +15,7 @@
 #include "libfacedetect/Align.h"
 #include "libfacedetect/FaceFileScanner.h"
 
-/**
+/*
  * \brief Model pre prechádzanie obrázkov tvárí.
  */
 class FaceBrowserModel: public QAbstractListModel
@@ -30,6 +30,7 @@ public:
 	void addDefinitionFile(const FaceDetect::FaceFileScanner::ImageInfo &image);
 
 private:
+	/*! \cond PRIVATE */
 	enum DataRole {
 		ImageRole = Qt::UserRole + 1,
 		FaceDataRole,
@@ -42,6 +43,7 @@ private:
 
 	QVector<FaceDetect::FaceFileScanner::ImageInfo> m_files;
 	FaceDetect::Align *m_aligner;
+	/* \endcond */
 }; /* -----  end of class FaceBrowserModel  ----- */
 
 #endif /* end of include guard: FACEBROWSERMODEL_XWF44CQJ */

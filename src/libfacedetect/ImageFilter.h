@@ -17,14 +17,22 @@
 
 namespace FaceDetect {
 
+/**
+ * \brief Filter bitmapových obrázkov.
+ *
+ * Tento filter slúži na prípravu bitmapových obrázkov.
+ */
 class ImageFilter
 {
 public:
+	/**
+	 * Typy aktivovaných filtrov
+	 */
 	enum Filter {
-		NoFilter = 0x00,
-		GrayscaleFilter = 0x01
+		NoFilter = 0x00,       /**< Žiaden filter                      */
+		GrayscaleFilter = 0x01 /**< Filter na prevod do odtieňov šedej */
 	};
-	Q_DECLARE_FLAGS(Filters, Filter);
+	Q_DECLARE_FLAGS(Filters, Filter)
 
 	ImageFilter();
 	Filters filters() const;
@@ -38,15 +46,19 @@ private:
 	void filterGrayscale(QImage &sourceImage) const;
 
 private:
+	/// Aktivované filtre.
 	Filters m_filters;
+	/// Gradient používaný pri prevode na odtiene "šedej".
 	QLinearGradient m_grayscaleGradient;
+	/// Farebná paleta s farbami šedej od 0 po 255.
 	mutable QVector<QRgb> m_colorTable;
-	static const int sm_grayscaleColorCount = 256;
+	/// Počet odtieňov šedej
+	static const int GrayscaleColorCount = 256;
 }; /* -----  end of class ImageFilter  ----- */
 
 } /* end of namespace FaceDetect */
 
-Q_DECLARE_OPERATORS_FOR_FLAGS(FaceDetect::ImageFilter::Filters);
+Q_DECLARE_OPERATORS_FOR_FLAGS(FaceDetect::ImageFilter::Filters)
 
 #endif /* end of include guard: IMAGEFILTER_FKHAR0M2 */
 

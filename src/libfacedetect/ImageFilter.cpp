@@ -19,28 +19,46 @@ ImageFilter::ImageFilter():
 	m_grayscaleGradient.setColorAt(1, Qt::white);
 }
 
+/**
+ * Vráti aktivované filtre.
+ */
 ImageFilter::Filters ImageFilter::filters() const
 {
 	return m_filters;
 }
 
+/**
+ * Nastavenie aktivovaných filtrov.
+ */
 void ImageFilter::setFilters(Filters filters)
 {
 	m_filters = filters;
 }
 
+/**
+ * Vráti prechod používaný pri prevode do odtieňov šedej.
+ */
 QLinearGradient ImageFilter::grayscaleGradient() const
 {
 	return m_grayscaleGradient;
 }
 
+/**
+ * Štandardne má počiatočnú hodnotu čiernu a konečnú bielu. Nastavením iného
+ * gradientu sa dá dosiahnuť aby obrázok v odtieňoch šedej mal v skutočnosti
+ * farebnú mapu zodpovedajúcu gradientu.
+ */
 void ImageFilter::setGrayscaleGradient(const QLinearGradient &gradient)
 {
 	m_grayscaleGradient = gradient;
 	m_grayscaleGradient.setStart(0, 0);
-	m_grayscaleGradient.setFinalStop(sm_grayscaleColorCount, 0);
+	m_grayscaleGradient.setFinalStop(GrayscaleColorCount, 0);
 }
 
+/**
+ * Použitie aktivovaných filtrov na obrázkok \a sourceImage. Výsledkom použitia
+ * filtrov je návratová hodnota
+ */
 QImage ImageFilter::filterImage(const QImage &sourceImage) const
 {
 	QImage ret = sourceImage;
@@ -50,14 +68,14 @@ QImage ImageFilter::filterImage(const QImage &sourceImage) const
 		if (m_grayscaleGradient.stops().count() != 2 ||
 		    m_grayscaleGradient.stops()[0].second != Qt::black ||
 		    m_grayscaleGradient.stops()[1].second != Qt::white) {
-			QImage gradImage(QSize(sm_grayscaleColorCount, 1), QImage::Format_RGB888);
+			QImage gradImage(QSize(GrayscaleColorCount, 1), QImage::Format_RGB888);
 			QPainter gradPainter(&gradImage);
 			gradPainter.setPen(Qt::NoPen);
-			gradPainter.fillRect(QRect(0, 0, sm_grayscaleColorCount, 1), m_grayscaleGradient);
+			gradPainter.fillRect(QRect(0, 0, GrayscaleColorCount, 1), m_grayscaleGradient);
 			gradPainter.end();
 
-			QVector<QRgb> colorTable(sm_grayscaleColorCount);
-			for (int colorIdx = 0; colorIdx < sm_grayscaleColorCount; ++colorIdx) {
+			QVector<QRgb> colorTable(GrayscaleColorCount);
+			for (int colorIdx = 0; colorIdx < GrayscaleColorCount; ++colorIdx) {
 				colorTable[colorIdx] = gradImage.pixel(colorIdx, 0);
 			}
 			ret.setColorTable(colorTable);
@@ -66,6 +84,10 @@ QImage ImageFilter::filterImage(const QImage &sourceImage) const
 	return ret;
 }
 
+/**
+ * Prevod obrázku do indexovaných farieb s farebnou tabuľkou, ktorá obsahuje
+ * odtiene šedej od (0, 0, 0) po (255, 255, 255).
+ */
 void ImageFilter::filterGrayscale(QImage &sourceImage) const
 {
 	if (m_colorTable.isEmpty()) {

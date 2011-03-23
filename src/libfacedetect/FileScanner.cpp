@@ -69,11 +69,13 @@ void FileScanner::stop()
 	if (isRunning()) {
 		m_stop = true;
 		wait();
+		m_stop = false;
 	}
 }
 
 void FileScanner::run()
 {
+	clearState();
 	scanDirectory(m_scanPath, 0.0, 1.0);
 }
 
@@ -98,6 +100,7 @@ void FileScanner::scanDirectory(const QString &directory, double progressFrom, d
 	if (m_stop) {
 		return;
 	}
+	// Vytvorenie zoznamu adresárov a súborov
 	QDir dir(directory);
 	QList<QFileInfo> dirs = dir.entryInfoList(QDir::Dirs | QDir::Readable | QDir::NoDotAndDotDot, QDir::Name);
 	QList<QFileInfo> files = dir.entryInfoList(QDir::Files | QDir::Readable | QDir::NoDotAndDotDot, QDir::Name);
@@ -105,6 +108,7 @@ void FileScanner::scanDirectory(const QString &directory, double progressFrom, d
 	// Aktualizácia celkového počtu súborov a adresárov
 	m_totalDirs += dirs.count();
 	m_totalDirs += files.count();
+	// Výpočet zmen priebehu pre každú položku v zozname súborov
 	double progressStep = (progressTo - progressFrom) / (dirs.count() + files.count());
 
 	// Rekurzívne prehľadanie adresárov

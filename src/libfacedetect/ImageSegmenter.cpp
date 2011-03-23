@@ -12,10 +12,11 @@
 #include <QPolygonF>
 #include "ImageSegmenter.h"
 
-#include <QDebug>
-
 namespace FaceDetect {
 
+/**
+ * Vytvorenie inštancie triedy pre segmentáciu obrásku \a image.
+ */
 ImageSegmenter::ImageSegmenter(const QImage &image):
 	m_sourceImage(image),
 	m_segmentSize(5, 5),
@@ -30,11 +31,17 @@ ImageSegmenter::~ImageSegmenter()
 {
 }
 
+/**
+ * Vráti cieľovú veľkosť segmentov.
+ */
 QSize ImageSegmenter::segmentSize() const
 {
 	return m_segmentSize;
 }
 
+/**
+ * Nastavenie cieľovej veľkosti segmentov na \a size.
+ */
 void ImageSegmenter::setSegmentSize(const QSize &size)
 {
 	if (m_segmentSize != size) {
@@ -43,11 +50,17 @@ void ImageSegmenter::setSegmentSize(const QSize &size)
 	}
 }
 
+/**
+ * Vráti transformáciu používanú na bitmapu.
+ */
 QTransform ImageSegmenter::transform() const
 {
 	return m_transform;
 }
 
+/**
+ * Nastavenie transformačnej matice bitmapy.
+ */
 void ImageSegmenter::setTransform(const QTransform &transform)
 {
 	if (m_transform != transform) {
@@ -56,11 +69,17 @@ void ImageSegmenter::setTransform(const QTransform &transform)
 	}
 }
 
+/**
+ * Vráti x-ový krok posunu segmentu.
+ */
 int ImageSegmenter::xStep()
 {
 	return m_xStep;
 }
 
+/**
+ * Nastavenie x-ového kroku posunu segmentu.
+ */
 void ImageSegmenter::setXStep(int step)
 {
 	if (m_xStep != step) {
@@ -69,11 +88,17 @@ void ImageSegmenter::setXStep(int step)
 	}
 }
 
+/**
+ * Vráti y-ový krok posunu segmentu.
+ */
 int ImageSegmenter::yStep()
 {
 	return m_yStep;
 }
 
+/**
+ * Nastavenie y-ového kroku posunu segmentu.
+ */
 void ImageSegmenter::setYStep(int step)
 {
 	if (m_yStep != step) {
@@ -82,6 +107,10 @@ void ImageSegmenter::setYStep(int step)
 	}
 }
 
+/**
+ * Nastavenie x a y-ového kroku posunu segmentu.
+ * \sa setXStep(), setYStep()
+ */
 void ImageSegmenter::setStep(int xStep, int yStep)
 {
 	if (m_xStep != xStep || m_yStep != yStep) {
@@ -91,15 +120,31 @@ void ImageSegmenter::setStep(int xStep, int yStep)
 	}
 }
 
+/**
+ * Vráti oblasť, v ktorej sa nachádza celá transformovaná bitmapa.
+ */
+QRect ImageSegmenter::boundingRect() const
+{
+	recalcSegments();
+	return m_boundingRect;
+}
+
+/**
+ * Vráti celkový počet segmentov v bitmape.
+ */
 int ImageSegmenter::segmentCount() const
 {
-	recalcRegions();
+	recalcSegments();
 	return m_segmentCount;
 }
 
+/**
+ * Vráti oblasť segmentu pre \a segment. Táto oblasť zodpovedá oblasti v
+ * transformvanej bitmape.
+ */
 QRect ImageSegmenter::segmentRect(int segment) const
 {
-	recalcRegions();
+	recalcSegments();
 	// Kontrola čísla segmentu
 	Q_ASSERT(segment < m_segmentCount);
 
@@ -114,9 +159,12 @@ QRect ImageSegmenter::segmentRect(int segment) const
 	return QRect(QPoint(x, y), m_segmentSize);
 }
 
+/**
+ * Vráti obrázok nachádzajúci sa v segmente \a segment.
+ */
 QImage ImageSegmenter::segmentImage(int segment) const
 {
-	recalcRegions();
+	recalcSegments();
 	Q_ASSERT(segment < m_segmentCount);
 
 	QImage image(m_segmentSize, QImage::Format_ARGB32);
@@ -134,19 +182,10 @@ QImage ImageSegmenter::segmentImage(int segment) const
 	return image;
 }
 
-QImage ImageSegmenter::trans() const
-{
-	recalcRegions();
-	return m_transformedImage;
-}
-
-QRect ImageSegmenter::boundingRect() const
-{
-	recalcRegions();
-	return m_boundingRect;
-}
-
-void ImageSegmenter::recalcRegions() const
+/**
+ * Prepočet jednotlivých segmentov.
+ */
+void ImageSegmenter::recalcSegments() const
 {
 	if (!m_dirty) {
 		return;
@@ -171,34 +210,10 @@ void ImageSegmenter::recalcRegions() const
 	m_lineCounts.reserve(yCount);
 	m_lineStarts.reserve(yCount);
 
-	/*
-	// Vytvorenie transformovaného štvorca
-	QPolygonF imgRect;
-	imgRect << p[0] << p[1] << p[2] << p[3] << p[0];
-	*/
 	// Hľadanie oblastí, ktorých stred je vo vnútri pixmapy
 	m_segmentCount = 0;
 	// Prechádzanie všetkých oblastí po y osi
 	for (int y = y1; y <= y2; y += m_yStep) {
-		/*
-		int rowCount = 0;
-		int firstX = 0;
-		// Prechádzanie všetkých oblastí po x osi
-		for (int x = x1; x <= x2; x += m_xStep) {
-			// Bod je vo vnútri štvorca
-			if (imgRect.containsPoint(QPointF(x, y), Qt::OddEvenFill)) {
-				if (rowCount == 0) {
-					firstX = x;
-				}
-				rowCount++;
-			}
-			// Od prvého bodu, ktorý nie je v konvexnej oblasti nie je žiaden bod
-			// vo vnútri
-			else if (rowCount > 0) {
-				break;
-			}
-		}
-		*/
 		// Nadobúda hodnotu 0 alebo 1 podľa toho, či sa ide zapisovať do int1/int2
 		int pointId = 0;
 		// Priesečník
@@ -240,6 +255,12 @@ void ImageSegmenter::recalcRegions() const
 	m_dirty = false;
 }
 
+/**
+ * Výpočet priesečníku úsečky definovanej bodmi \a p1 a \a p2 s rovnobežkou k
+ * x-ovej osi v pozícii \a yPos. Ak bol nájdený priesečník návratová hodnota
+ * bude x-ová súradnica v ktorej úsečka pretína rovnobežku. Ak sa nepretínajú
+ * návratová hodnota bude 0 a hodota \a ok bude \e false.
+ */
 inline double ImageSegmenter::calcIntersect(const QPointF &p1, const QPointF &p2, double yPos, bool *ok) const
 {
 	// V rovnobežnej úsečke s x-ovou osou nie je možné zistiť priesečník

@@ -15,6 +15,9 @@
 
 namespace FaceDetect {
 
+/**
+ * Vytvorenie inštancie skeneru.
+ */
 ImageFileScanner::ImageFileScanner(QObject *parent):
 	FileScanner(parent)
 {
@@ -24,33 +27,45 @@ ImageFileScanner::~ImageFileScanner()
 {
 }
 
+/**
+ * Skenovanie súboru \a fileName;
+ */
 void ImageFileScanner::scanFile(const QString &fileName)
 {
 	QFileInfo fileInfo(fileName);
+
+	// Kontrola podpory formátu
 	QByteArray extension = fileInfo.suffix().toLatin1();
 	if (!QImageReader::supportedImageFormats().contains(extension)) {
 		return;
 	}
 
+	// Otvorenie obrázku
 	QImage image(fileName);
 	if (image.isNull()) {
 		return;
 	}
 
-	LaVectorDouble inVector(sm_inputVectorSize);
+	// Vytvorenie vstupného a výstupného vektoru
+	LaVectorDouble inVector(InputVectorSize);
 	LaVectorDouble outVector(1);
+	// Výstup pre fotografie bez tváre je vždy 0
 	outVector(0) = 0;
-	std::size_t xCount = image.width() / sm_imageWidth;
-	std::size_t yCount = image.height() / sm_imageHeight;
-	for (std::size_t yTile = 0; yTile < yCount; ++yTile) {
-		std::size_t yBegin = yTile * sm_imageHeight;
-		for (std::size_t xTile = 0; xTile < xCount; ++xTile) {
-			std::size_t xBegin = xTile * sm_imageWidth;
-			for (std::size_t yOffset = 0; yOffset < sm_imageHeight; ++yOffset) {
-				for (std::size_t xOffset = 0; xOffset < sm_imageWidth; ++xOffset) {
+
+	// Výpočet počtu segmentov
+	int xCount = image.width() / ImageWidth;
+	int yCount = image.height() / ImageHeight;
+	// Prechádzanie cez všetky segmenty obrázku
+	for (int yTile = 0; yTile < yCount; ++yTile) {
+		int yBegin = yTile * ImageHeight;
+		for (int xTile = 0; xTile < xCount; ++xTile) {
+			int xBegin = xTile * ImageWidth;
+			// Naplnenie vstupného vektoru
+			for (int yOffset = 0; yOffset < ImageHeight; ++yOffset) {
+				for (int xOffset = 0; xOffset < ImageWidth; ++xOffset) {
 					QRgb color = image.pixel(xBegin + xOffset, yBegin + yOffset);
 					int gray = (qRed(color) * 11 + qGreen(color) * 16 + qBlue(color) * 5) / 32;
-					inVector(xOffset + yOffset * sm_imageHeight) = static_cast<double>(gray) / 256.0;
+					inVector(xOffset + yOffset * ImageHeight) = static_cast<double>(gray) / 256.0;
 				}
 			}
 			emit imageScanned(inVector, outVector);

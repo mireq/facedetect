@@ -49,10 +49,10 @@ set(facedetect_SRCS
 	src/main.cpp
 	src/core/FaceBrowserModel.cpp
 	src/core/FaceImageProvider.cpp
-	src/core/FileScanner.cpp
 	src/libfacedetect/Align.cpp
 	src/libfacedetect/BPNeuralNet.cpp
 	src/libfacedetect/FaceFileScanner.cpp
+	src/libfacedetect/FileScanner.cpp
 	src/libfacedetect/ImageFileScanner.cpp
 	src/libfacedetect/ImageFilter.cpp
 	src/libfacedetect/ImageSegmenter.cpp
@@ -72,10 +72,10 @@ set(facedetect_HDRS
 
 set(facedetect_MOC_HDRS
 	src/core/FaceBrowserModel.h
-	src/core/FileScanner.h
 	src/libfacedetect/Align.h
 	src/libfacedetect/BPNeuralNet.h
 	src/libfacedetect/FaceFileScanner.h
+	src/libfacedetect/FileScanner.h
 	src/libfacedetect/ImageFileScanner.h
 	src/libfacedetect/NeuralNet.h
 	src/libfacedetect/TrainingDataReader.h

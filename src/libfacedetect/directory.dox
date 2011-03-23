@@ -1,0 +1,9 @@
+/**
+ * \namespace FaceDetect
+ * Menný priestor knižnice pre detekciu tváre.
+ */
+
+/**
+ * \dir
+ * Adresár s knižnicou pre detekciu tváre.
+ */

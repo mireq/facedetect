@@ -1,0 +1,455 @@
+body {
+    background-color : white;
+    color : black;
+    margin : 0px;
+    padding : 0px;
+  }
+
+
+hr {
+    display:block;
+    border : none;
+    height : 1px;
+    background-color : #ccc;
+  }
+
+
+pre {
+    padding: 0.3em;
+    margin : 0.2em;
+    border: #ddd 1px dotted;
+    background: #f4f4f4;
+    color: black;
+    overflow : auto;
+  }
+
+
+img {
+    border : none;
+  }
+
+
+h1 {
+    font-size : 140%;
+    color : #001;
+  }
+
+
+h2 {
+    font-size : 130%;
+    color : #124;
+  }
+
+
+h3 {
+    font-size : 125%;
+  }
+
+div.groupHeader {
+    font-size : 110%;
+    color : #124;
+    font-weight : bold;
+}
+
+/* Link */
+
+a:link {
+    color: #0830A2;
+    text-decoration: none;
+  }
+
+
+a:visited {
+    color: #41626C;
+    text-decoration: none;
+  }
+
+/* Centrovanie */
+
+
+
+
+div.center {
+    text-align : center;
+    margin-left : auto;
+    margin-right : auto;
+  }
+
+/* Tabulka */
+
+
+
+
+table {
+    border-style : solid;
+    border-width : 2px 1px;
+    border-top-color : #373737;
+    border-right-color : #c0c0c0;
+    border-bottom-color : #5f636d;
+    border-left-color : #c0c0c0;
+    border-collapse : collapse;
+    border-spacing : 0px;
+    width : 100%;
+    margin-top : 0.3em;
+    margin-bottom : 0.3em;
+  }
+
+th {
+    background : #565962 url('shared/th_bg.png') repeat-x top;
+    border-style : none dotted;
+    border-width : medium 1px;
+    border-color : #888;
+    color : white;
+    text-shadow : #2d2e34 1px 1px 1px;
+  }
+
+
+td {
+    border : #c0c0c0 solid 1px;
+  }
+
+
+td, th {
+    padding : 2px;
+  }
+
+
+td p, th p {
+    padding : 0px;
+    margin : 1px 0px;
+  }
+
+
+tr:nth-child(2n) {
+    background : #fafafb url('shared/tr_bg1.png') repeat-x top;
+  }
+
+
+tr:nth-child(2n+1) {
+    background : #efeff0 url('shared/tr_bg2.png') repeat-x top;
+  }
+
+/* Hlavicka funkcie */
+
+
+
+
+div.memproto table.memname {
+    border : none;
+  }
+
+
+table.memname tr {
+    display : inline;
+    background : transparent;
+  }
+
+
+table.memname tr td {
+    display : inline;
+  }
+
+
+table.memname {
+    margin : 0.1em;
+  }
+
+
+table.memname tr {
+    display : block;
+    float : left;
+  }
+
+
+table.memname tr td {
+    margin : 0px;
+    width : auto !important;
+    float : left;
+    padding : 0px;
+    border : none;
+  }
+
+
+td.paramkey {
+    text-align: right;
+  }
+
+
+td.paramtype {
+    color : black;
+    white-space: nowrap;
+  }
+
+
+td.paramname {
+    color: #458;
+    font-style: italic;
+  }
+
+
+td.paramname code {
+    font-style : no;
+  }
+
+/* Zoznam clenov */
+
+
+
+
+tr.memlist td {
+    border : #c0c0c0 1px;
+    border-style : solid none;
+  }
+
+/* Dokumentacia clenov */
+
+
+
+
+.memproto {
+    width: 100%;
+    background-color: #eeeeee;
+    border: #c0c0c0 solid 1px;
+    font-weight: bold;
+    font-size : 110%;
+    padding : 0.4em;
+  }
+
+
+.memitem {
+    padding: 0.4em;
+    margin-bottom : 1em;
+  }
+
+
+.memdoc {
+    padding: 0px;
+  }
+
+/* Zoznam parametrov */
+
+
+
+
+div.memdoc dd table, div.memdoc dd tr:nth-child(n), div.memdoc dd td {
+    border : none;
+    background : transparent;
+  }
+
+
+table[border="0"], table[border="0"] tr:nth-child(n), table[border="0"] td {
+    border : none;
+    background : transparent;
+  }
+
+table[border="0"] {
+    width : auto;
+}
+
+div.memdoc dd table {
+    width : auto;
+  }
+
+
+div.memdoc dd td {
+    padding : 0px 2px;
+  }
+
+/* Kod */
+
+
+
+
+div.memdoc code, p code {
+    color : #777;
+  }
+
+/* Zakladne info o triedach */
+
+
+
+
+.mdescRight {
+    color : #555;
+    font-style : italic;
+  }
+
+/* Tabulky okolo diagramov */
+
+
+
+
+div.dynsection table, div.dynsection table tr, div.dynsection table td {
+    border : none;
+    background : none;
+  }
+
+/* Zvyraznovanie syntaxe */
+
+
+
+
+span.preprocessor, span.preprocessor a {
+    color : darkgreen;
+  }
+
+
+span.comment {
+    color: #555;
+    /*font-style: italic;*/
+  }
+
+
+span.string,span.stringliteral,span.char,span.charliteral {
+    color: #aa0000;
+  }
+
+
+span.keyword {
+    font-weight: bold;
+    color: #771;
+  }
+
+/* Viz tiez */
+
+
+
+dl.see dt {
+    font-weight : bold;
+    display : inline;
+    padding : 0px;
+    margin : 0px;
+  }
+
+
+dl.see dd {
+    padding : 0px 0px 0px 0.4em;
+    margin : 0px;
+    display : inline;
+  }
+
+/* Hlavicka, telo, pata */
+
+
+
+
+div#header {
+    height : 72px;
+    background : #617cca url('shared/header_bg.png') repeat-x top;
+    text-align : right;
+  }
+
+
+div#page-body {
+    padding : 8px;
+  }
+
+
+div#header span.title {
+    font-size : 18px;
+    font-weight : bold;
+    padding-right : 8px;
+    padding-left : 8px;
+    color : white;
+    margin-top : 4px;
+    text-shadow : #263c76 1px 1px 5px;
+  }
+
+
+ul#menu {
+    padding : 0px;
+    margin : 0px;
+    position : absolute;
+    top : 42px;
+    right : 10px;
+  }
+
+
+ul#menu li {
+    margin : 0px 1px;
+    float : left;
+    height : 30px;
+    background : #526cb5 url('shared/tab_bg.png') repeat-x bottom;
+    list-style : none;
+    position : relative;
+  }
+
+
+ul#menu li a {
+    font-size : 14px;
+    font-weight : bold;
+    color : white;
+    padding : 7px;
+    display : block;
+    text-shadow : #354675 1px 1px 2px;
+  }
+
+
+ul#menu li a:hover {
+    background : url('shared/tab_arrow.png') no-repeat top center;
+  }
+
+
+ul#menu li:hover {
+    background : #526cb5 url('shared/tab_hover_bg.png') repeat-x bottom;
+  }
+
+
+ul#menu li ul {
+    position : absolute;
+    z-index : 1;
+    margin : 0px;
+    padding : 0px;
+    visibility : hidden;
+    top : 30px;
+    background : red;
+  }
+
+
+ul#menu li:hover ul {
+    visibility: visible;
+  }
+
+
+ul#menu li ul li a {
+    font-size : 12px;
+    padding : 2px 6px 2px 20px;
+    margin : 0px;
+    text-shadow : #354675 1px 1px 1px;
+    white-space: nowrap;
+  }
+
+ul#menu li ul li a:hover {
+    background : url('shared/menu_arrow.png') no-repeat center left;
+  }
+
+
+
+ul#menu li ul li {
+    background : #526cb5 url('shared/menu_bg.png') repeat-x bottom;
+    padding : 0px;
+    margin : 0px;
+    border : #afbde5 1px;
+    border-style : none solid solid;
+    float : none;
+    height : auto;
+    position : relative;
+    text-align : left;
+  }
+
+
+ul#menu li ul li:hover {
+    background : #526cb5 url('shared/menu_bg.png') repeat-x bottom;
+  }
+
+
+div#footer {
+    background : #eeeeee;
+    font-size : 90%;
+    padding : 5px;
+    margin : 5px;
+    border : #c0c0c0 solid 1px;
+    color : #0850A2;
+    text-align : right;
+  }
+
