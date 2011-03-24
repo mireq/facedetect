@@ -21,6 +21,8 @@ namespace FaceDetect {
 BPNeuralNet::BPNeuralNet(QObject *parent):
 	NeuralNet(parent)
 {
+	m_stred = LaGenMatDouble(m_stredNeuronov, 1);
+	m_delta = LaGenMatDouble(m_stredNeuronov, 1);
 }
 
 BPNeuralNet::~BPNeuralNet()
@@ -72,8 +74,6 @@ void BPNeuralNet::initializeTraining()
 {
 	m_w = LaGenMatDouble(m_stredNeuronov, trainingDataReader()->inputVectorSize());
 	m_v = LaGenMatDouble(m_stredNeuronov, 1);
-	m_stred = LaGenMatDouble(m_stredNeuronov, 1);
-	m_delta = LaGenMatDouble(m_stredNeuronov, 1);
 	initializeMatrix(m_w, -0.5, 0.5);
 	initializeMatrix(m_v, -0.5, 0.5);
 }

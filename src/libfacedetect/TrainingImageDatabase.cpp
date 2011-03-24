@@ -135,14 +135,9 @@ inline void TrainingImageDatabase::calcVectors(std::size_t sample) const
 		m_workingImage = imageInfo.getImage().scaled(QSize(ImageWidth, ImageHeight));
 	}
 
-	m_samples[sample].input = LaVectorDouble(InputVecotrSize);
-	m_samples[sample].output = LaVectorDouble(1);
 	m_samples[sample].info.clear();
-
-	QImage smallImage = m_imageFilter.filterImage(m_workingImage.scaled(QSize(ImageWidth, ImageHeight), Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
-	for (int pixel = 0; pixel < InputVecotrSize; ++pixel) {
-		m_samples[sample].input(pixel) = static_cast<double>(smallImage.pixelIndex(pixel % ImageWidth, pixel / ImageWidth)) / 256;
-	}
+	m_samples[sample].input = m_imageFilter.filterVector(m_workingImage.scaled(QSize(ImageWidth, ImageHeight), Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
+	m_samples[sample].output = LaVectorDouble(1);
 	m_samples[sample].output(0) = hasFace;
 }
 

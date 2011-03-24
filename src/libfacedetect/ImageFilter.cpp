@@ -62,8 +62,47 @@ void ImageFilter::setGrayscaleGradient(const QLinearGradient &gradient)
 QImage ImageFilter::filterImage(const QImage &sourceImage) const
 {
 	QImage ret = sourceImage;
+	filterHelper(ret);
+	return ret;
+}
+
+/**
+ * Použitie aktivovaných filtrov na obrázok a prevod na vektor.
+ */
+LaVectorDouble ImageFilter::filterVector(const QImage &src) const
+{
+	const QImage *sourceImage = &src;
+	QImage img;
+	if (m_filters != NoFilter) {
+		img = src;
+		filterHelper(img);
+		filterGrayscale(img);
+		sourceImage = &img;
+	}
+
+	int rows = sourceImage->height();
+	int cols = sourceImage->width();
+	LaVectorDouble vect(rows * cols, 1);
+	double *data = vect.addr();
+	int addr = 0;
+	for (int row = 0; row < rows; ++row) {
+		const uchar *line = sourceImage->scanLine(row);
+		for (int col = 0; col < cols; ++col) {
+			data[addr] = static_cast<double>(line[col]) / 256.0;
+			++addr;
+		}
+	}
+	return vect;
+}
+
+/**
+ * Použitie filtrov na zdrojový obrázok \a sourceImage pričom samotný zdrojový
+ * obrázok je modifikovaný.
+ */
+void ImageFilter::filterHelper(QImage &sourceImage) const
+{
 	if (m_filters & GrayscaleFilter) {
-		filterGrayscale(ret);
+		filterGrayscale(sourceImage);
 		// Ak nie je gradient čiernobiely nastavíme farby podľa gradientu
 		if (m_grayscaleGradient.stops().count() != 2 ||
 		    m_grayscaleGradient.stops()[0].second != Qt::black ||
@@ -78,10 +117,9 @@ QImage ImageFilter::filterImage(const QImage &sourceImage) const
 			for (int colorIdx = 0; colorIdx < GrayscaleColorCount; ++colorIdx) {
 				colorTable[colorIdx] = gradImage.pixel(colorIdx, 0);
 			}
-			ret.setColorTable(colorTable);
+			sourceImage.setColorTable(colorTable);
 		}
 	}
-	return ret;
 }
 
 /**
@@ -90,6 +128,9 @@ QImage ImageFilter::filterImage(const QImage &sourceImage) const
  */
 void ImageFilter::filterGrayscale(QImage &sourceImage) const
 {
+	if (sourceImage.format() == QImage::Format_Indexed8) {
+		return;
+	}
 	if (m_colorTable.isEmpty()) {
 		m_colorTable.resize(256);
 		for (int i = 0; i < 256; ++i) {

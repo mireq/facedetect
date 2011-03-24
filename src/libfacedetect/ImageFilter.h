@@ -14,6 +14,7 @@
 #include <QImage>
 #include <QLinearGradient>
 #include <QVector>
+#include <lapackpp/lavd.h>
 
 namespace FaceDetect {
 
@@ -41,8 +42,10 @@ public:
 	void setGrayscaleGradient(const QLinearGradient &gradient);
 
 	QImage filterImage(const QImage &sourceImage) const;
+	LaVectorDouble filterVector(const QImage &sourceImage) const;
 
 private:
+	void filterHelper(QImage &sourceImage) const;
 	void filterGrayscale(QImage &sourceImage) const;
 
 private:

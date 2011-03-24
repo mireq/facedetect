@@ -58,6 +58,7 @@ void ConsoleInterface::startScan()
 	if (net == 0) {
 		net = new FaceDetect::BPNeuralNet();
 	}
+	net->setTrainingDataReader(m_trainingDatabase);
 	m_neuralNet = QSharedPointer<FaceDetect::NeuralNet>(net);
 	if (unserialized) {
 		onTrainingFinished();
@@ -98,7 +99,6 @@ void ConsoleInterface::startTraining()
 
 	m_cout << "\rStarting training\n";
 	m_neuralNet->setLearningSpeed(0.01);
-	m_neuralNet->setTrainingDataReader(m_trainingDatabase);
 	connect(m_neuralNet.data(), SIGNAL(finished()), this, SLOT(onTrainingFinished()));
 	connect(m_neuralNet.data(), SIGNAL(terminated()), this, SLOT(onTrainingFinished()));
 	connect(m_neuralNet.data(), SIGNAL(epochFinished(int,double)), this, SLOT(printTrainingEpoch(int,double)));

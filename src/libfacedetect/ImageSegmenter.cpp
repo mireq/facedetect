@@ -121,6 +121,32 @@ void ImageSegmenter::setStep(int xStep, int yStep)
 }
 
 /**
+ * Vráti \e true, ak je povolený filter pre prevod do odtieňov šedej.
+ */
+bool ImageSegmenter::grayscaleFilter() const
+{
+	return m_grayscaleFilter.filters() & ImageFilter::GrayscaleFilter;
+}
+
+/**
+ * Nastavenie filtrovania odtieňov šedej.
+ */
+void ImageSegmenter::setGrayscaleFilter(bool filter)
+{
+	if (filter != grayscaleFilter()) {
+		if (filter) {
+			m_grayscaleFilter.setFilters(ImageFilter::GrayscaleFilter);
+		}
+		else {
+			m_grayscaleFilter.setFilters(ImageFilter::NoFilter);
+		}
+		if (!m_transformedImage.isNull()) {
+			m_dirty = true;
+		}
+	}
+}
+
+/**
  * Vráti oblasť, v ktorej sa nachádza celá transformovaná bitmapa.
  */
 QRect ImageSegmenter::boundingRect() const
@@ -167,19 +193,31 @@ QImage ImageSegmenter::segmentImage(int segment) const
 	recalcSegments();
 	Q_ASSERT(segment < m_segmentCount);
 
-	QImage image(m_segmentSize, QImage::Format_ARGB32);
-	QPainter painter(&image);
 	QRect rect = segmentRect(segment);
-	// Aplikujeme rovnakú transformáciu ako na obrázok a posunieme podľa
-	// koordinátov regiónu
-	QTransform transform = m_transform;
-	transform *= QTransform::fromTranslate(-rect.left(), -rect.top());
-	painter.setTransform(transform);
 
-	painter.drawImage(QPoint(0, 0), m_sourceImage);
-	painter.end();
+	if (m_transformedImage.isNull()) {
+		QImage image(m_segmentSize, QImage::Format_ARGB32);
+		image.fill(qRgb(0, 0, 0));
+		QPainter painter(&image);
+		// Aplikujeme rovnakú transformáciu ako na obrázok a posunieme podľa
+		// koordinátov regiónu
+		QTransform transform = m_transform;
+		transform *= QTransform::fromTranslate(-rect.left(), -rect.top());
+		painter.setTransform(transform);
 
-	return image;
+		painter.drawImage(QPoint(0, 0), m_sourceImage);
+		painter.end();
+
+		if (grayscaleFilter()) {
+			return m_grayscaleFilter.filterImage(image);
+		}
+		else {
+			return image;
+		}
+	}
+	else {
+		return m_transformedImage.copy(rect.translated(-m_boundingRect.topLeft()));
+	}
 }
 
 /**
@@ -202,7 +240,7 @@ void ImageSegmenter::recalcSegments() const
 	int y1 = qRound(qMin(qMin(p[0].y(), p[1].y()), qMin(p[2].y(), p[3].y())));
 	int x2 = qRound(qMax(qMax(p[0].x(), p[1].x()), qMax(p[2].x(), p[3].x())));
 	int y2 = qRound(qMax(qMax(p[0].y(), p[1].y()), qMax(p[2].y(), p[3].y())));
-	m_boundingRect = QRect(x1, y1, x2, y2);
+	m_boundingRect = QRect(QPoint(x1, y1), QPoint(x2, y2));
 
 	m_lineCounts.clear();
 	m_lineStarts.clear();
@@ -250,6 +288,23 @@ void ImageSegmenter::recalcSegments() const
 		m_lineCounts << m_segmentCount;
 		m_lineStarts << pixelX1;
 		m_segmentCount += lineCount;
+	}
+
+	if (long(m_boundingRect.width()) * m_boundingRect.height() <= MaxImageResolution) {
+		m_transformedImage = QImage(m_boundingRect.size(), QImage::Format_ARGB32);
+		m_transformedImage.fill(qRgb(0, 0, 0));
+		QPainter imagePainter(&m_transformedImage);
+		QTransform transform = m_transform;
+		transform *= QTransform::fromTranslate(-m_boundingRect.left(), -m_boundingRect.top());
+		imagePainter.setTransform(transform);
+		imagePainter.drawImage(QPoint(0, 0), m_sourceImage);
+		imagePainter.end();
+		if (grayscaleFilter()) {
+			m_transformedImage = m_grayscaleFilter.filterImage(m_transformedImage);
+		}
+	}
+	else {
+		m_transformedImage = QImage();
 	}
 
 	m_dirty = false;
