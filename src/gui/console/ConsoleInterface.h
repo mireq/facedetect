@@ -10,10 +10,12 @@
 #ifndef CONSOLEINTERFACE_9JAL83V
 #define CONSOLEINTERFACE_9JAL83V
 
-#include <QStringList>
-#include <QSharedPointer>
-#include <QTextStream>
+#include <QByteArray>
+#include <QList>
 #include <QObject>
+#include <QSharedPointer>
+#include <QStringList>
+#include <QTextStream>
 #include <lapackpp/lavd.h>
 #include "libfacedetect/BPNeuralNet.h"
 #include "libfacedetect/FaceFileScanner.h"
@@ -29,16 +31,23 @@ public:
 	void run();
 
 private slots:
-	void startScan();
-	void scanFaces();
-	void scanNonFaces();
+	void startNextStep();
+
 	void startTraining();
 	void detectFaces();
-	void onFaceScanningStatusChanged(bool scanning);
+
+	void scanFaceDatabase();
+	void scanNonFaceDatabase();
+	void onFaceScanningFinished();
 	void onNonFaceScanningFinished();
+	void trainNet();
+	void onTrainingFinished();
+
+	// Záznam skenovaných fotografií
 	void onImageScanned(const FaceDetect::FaceFileScanner::ImageInfo &image);
 	void onImageScanned(const LaVectorDouble &input, const LaVectorDouble &output);
-	void onTrainingFinished();
+
+	// Výpisy
 	void updateProgress(double progress);
 	void printTrainingEpoch(int epoch, double mse);
 	void printTrainingSample(std::size_t sample, int epoch);
@@ -62,6 +71,11 @@ private:
 	QSharedPointer<FaceDetect::ImageFileScanner> m_nonfaceScanner;
 	QSharedPointer<FaceDetect::NeuralNet> m_neuralNet;
 	FaceDetect::TrainingImageDatabase *m_trainingDatabase;
+	struct ProcessStep {
+		QObject *object;
+		QByteArray method;
+	};
+	QList<ProcessStep> m_steps;
 }; /* -----  end of class ConsoleInterface  ----- */
 
 #endif /* end of include guard: CONSOLEINTERFACE_9JAL83V */

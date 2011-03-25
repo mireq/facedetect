@@ -39,10 +39,22 @@ void ConsoleInterface::run()
 	m_facesPath = settings.value("faces").toString();
 	m_nonFacesPath = settings.value("nonfaces").toString();
 	settings.endGroup();
-	QMetaObject::invokeMethod(this, "startScan", Qt::QueuedConnection);
+	m_steps.append(ProcessStep{this, "startTraining"});
+	m_steps.append(ProcessStep{this, "detectFaces"});
+	m_steps.append(ProcessStep{qApp, "quit"});
+	startNextStep();
 }
 
-void ConsoleInterface::startScan()
+void ConsoleInterface::startNextStep()
+{
+	if (m_steps.isEmpty()) {
+		return;
+	}
+	ProcessStep step = m_steps.takeFirst();
+	QMetaObject::invokeMethod(step.object, step.method.constData(), Qt::QueuedConnection);
+}
+
+void ConsoleInterface::startTraining()
 {
 	bool unserialized = false;
 	FaceDetect::BPNeuralNet *net = 0;
@@ -60,27 +72,37 @@ void ConsoleInterface::startScan()
 	}
 	net->setTrainingDataReader(m_trainingDatabase);
 	m_neuralNet = QSharedPointer<FaceDetect::NeuralNet>(net);
-	if (unserialized) {
-		onTrainingFinished();
+
+	if (!unserialized) {
+		m_steps.prepend(ProcessStep{this, "trainNet"});
+		m_steps.prepend(ProcessStep{this, "scanNonFaceDatabase"});
+		m_steps.prepend(ProcessStep{this, "scanFaceDatabase"});
 	}
-	else {
-		scanFaces();
-	}
+	startNextStep();
 }
 
-void ConsoleInterface::scanFaces()
+void ConsoleInterface::detectFaces()
+{
+	foreach (const QString &file, m_detectFiles) {
+		scanImageFile(file);
+	}
+	startNextStep();
+}
+
+void ConsoleInterface::scanFaceDatabase()
 {
 	m_cout << "Scanning face database " << m_facesPath << "\n";
 	m_cout.flush();
 	m_faceScanner = QSharedPointer<FaceDetect::FaceFileScanner>(new FaceDetect::FaceFileScanner());
 	m_faceScanner->setBasePath(m_facesPath);
 	connect(m_faceScanner.data(), SIGNAL(progressChanged(double)), this, SLOT(updateProgress(double)));
-	connect(m_faceScanner.data(), SIGNAL(scanningChanged(bool)), this, SLOT(onFaceScanningStatusChanged(bool)));
+	connect(m_faceScanner.data(), SIGNAL(finished()), SLOT(onFaceScanningFinished()));
+	connect(m_faceScanner.data(), SIGNAL(terminated()), SLOT(onFaceScanningFinished()));
 	connect(m_faceScanner.data(), SIGNAL(imageScanned(FaceDetect::FaceFileScanner::ImageInfo)), SLOT(onImageScanned(FaceDetect::FaceFileScanner::ImageInfo)));
 	m_faceScanner->start();
 }
 
-void ConsoleInterface::scanNonFaces()
+void ConsoleInterface::scanNonFaceDatabase()
 {
 	m_cout << "\rScanning nonface database " << m_nonFacesPath << "\n";
 	m_cout.flush();
@@ -92,7 +114,19 @@ void ConsoleInterface::scanNonFaces()
 	m_nonfaceScanner->start();
 }
 
-void ConsoleInterface::startTraining()
+void ConsoleInterface::onFaceScanningFinished()
+{
+	m_faceScanner = QSharedPointer<FaceDetect::FaceFileScanner>(0);
+	startNextStep();
+}
+
+void ConsoleInterface::onNonFaceScanningFinished()
+{
+	m_nonfaceScanner = QSharedPointer<FaceDetect::ImageFileScanner>(0);
+	startNextStep();
+}
+
+void ConsoleInterface::trainNet()
 {
 	m_cout.flush();
 	m_trainingDatabase->shuffle();
@@ -106,25 +140,10 @@ void ConsoleInterface::startTraining()
 	m_neuralNet->start();
 }
 
-void ConsoleInterface::detectFaces()
+void ConsoleInterface::onTrainingFinished()
 {
-	foreach (const QString &file, m_detectFiles) {
-		scanImageFile(file);
-	}
-	qApp->quit();
-}
-
-void ConsoleInterface::onFaceScanningStatusChanged(bool scanning)
-{
-	if (!scanning) {
-		m_faceScanner = QSharedPointer<FaceDetect::FaceFileScanner>(0);
-		scanNonFaces();
-	}
-}
-
-void ConsoleInterface::onNonFaceScanningFinished()
-{
-	startTraining();
+	saveNeuralNet();
+	startNextStep();
 }
 
 void ConsoleInterface::onImageScanned(const FaceDetect::FaceFileScanner::ImageInfo &image)
@@ -135,13 +154,6 @@ void ConsoleInterface::onImageScanned(const FaceDetect::FaceFileScanner::ImageIn
 void ConsoleInterface::onImageScanned(const LaVectorDouble &input, const LaVectorDouble &output)
 {
 	m_trainingDatabase->addImage(input, output);
-}
-
-void ConsoleInterface::onTrainingFinished()
-{
-	saveNeuralNet();
-	detectFaces();
-	//qApp->quit();
 }
 
 void ConsoleInterface::updateProgress(double progress)
@@ -161,7 +173,6 @@ void ConsoleInterface::printTrainingSample(std::size_t sample, int epoch)
 	m_cout << "\rEpoch: " << epoch << " - " << QString("%1%").arg((static_cast<double>(sample) / m_trainingDatabase->trainingSetSize()) * 100.0, 5, 'f', 1);
 	m_cout.flush();
 }
-
 void ConsoleInterface::parseCommandline()
 {
 	QStringList arguments = qApp->arguments();
@@ -221,6 +232,8 @@ void ConsoleInterface::saveNeuralNet()
 void ConsoleInterface::scanImageFile(const QString &file)
 {
 	QImage image(file);
+	m_cout << "\rScanning image " << file << "\n";
+	m_cout.flush();
 	if (image.isNull()) {
 		return;
 	}
