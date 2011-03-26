@@ -10,6 +10,7 @@
 #include <QPainter>
 #include <QPointF>
 #include <QPolygonF>
+#include "utils/PolygonRasterizer.h"
 #include "ImageSegmenter.h"
 
 namespace FaceDetect {
@@ -23,6 +24,7 @@ ImageSegmenter::ImageSegmenter(const QImage &image):
 	m_xStep(1),
 	m_yStep(1),
 	m_dirty(true),
+	m_dirtyImage(false),
 	m_segmentCount(0)
 {
 }
@@ -141,7 +143,7 @@ void ImageSegmenter::setGrayscaleFilter(bool filter)
 			m_grayscaleFilter.setFilters(ImageFilter::NoFilter);
 		}
 		if (!m_transformedImage.isNull()) {
-			m_dirty = true;
+			m_dirtyImage = true;
 		}
 	}
 }
@@ -191,6 +193,7 @@ QRect ImageSegmenter::segmentRect(int segment) const
 QImage ImageSegmenter::segmentImage(int segment) const
 {
 	recalcSegments();
+	repaintImage();
 	Q_ASSERT(segment < m_segmentCount);
 
 	QRect rect = segmentRect(segment);
@@ -223,67 +226,42 @@ QImage ImageSegmenter::segmentImage(int segment) const
 /**
  * Prepočet jednotlivých segmentov.
  */
-void ImageSegmenter::recalcSegments() const
+inline void ImageSegmenter::recalcSegments() const
 {
 	if (!m_dirty) {
 		return;
 	}
 
-	QPointF p[4];
-	// Výpočet vnútra štvorca
-	p[0] = m_transform.map(QPointF(0, 0));
-	p[1] = m_transform.map(QPointF(m_sourceImage.width(), 0));
-	p[2] = m_transform.map(QPointF(m_sourceImage.width(), m_sourceImage.height()));
-	p[3] = m_transform.map(QPointF(0, m_sourceImage.height()));
-	// floor, ceil nahradené round-om aby aj pri veľkosti 1x1px bol nájdený stred
-	int x1 = qRound(qMin(qMin(p[0].x(), p[1].x()), qMin(p[2].x(), p[3].x())));
-	int y1 = qRound(qMin(qMin(p[0].y(), p[1].y()), qMin(p[2].y(), p[3].y())));
-	int x2 = qRound(qMax(qMax(p[0].x(), p[1].x()), qMax(p[2].x(), p[3].x())));
-	int y2 = qRound(qMax(qMax(p[0].y(), p[1].y()), qMax(p[2].y(), p[3].y())));
-	m_boundingRect = QRect(QPoint(x1, y1), QPoint(x2, y2));
-
 	m_lineCounts.clear();
 	m_lineStarts.clear();
-	int yCount = (y2 - y1) / m_yStep + 1;
-	m_lineCounts.reserve(yCount);
-	m_lineStarts.reserve(yCount);
 
-	// Hľadanie oblastí, ktorých stred je vo vnútri pixmapy
+	QVector<QPoint> p(4);
+	// Výpočet vnútra štvorca
+	p[0] = m_transform.map(QPoint(0, 0));
+	p[1] = m_transform.map(QPoint(m_sourceImage.width(), 0));
+	p[2] = m_transform.map(QPoint(m_sourceImage.width(), m_sourceImage.height()));
+	p[3] = m_transform.map(QPoint(0, m_sourceImage.height()));
+
+	// Rasterizátor
+	Utils::PolygonRasterizer rasterizer;
+	// Spracovanie polygónu tranformovaného obdĺžnika
+	rasterizer.processPolygon(p);
+	m_boundingRect = rasterizer.boundingRect();
+	// Získanie začiatkov a koncov polygónu pre každý riadok
+	QVector<Utils::PolygonRasterizer::ScanLine> scanLine = rasterizer.scanLines();
+
 	m_segmentCount = 0;
-	// Prechádzanie všetkých oblastí po y osi
+	int y1 = m_boundingRect.top();
+	int y2 = m_boundingRect.bottom();
+	// Prechádzame všetky položky
 	for (int y = y1; y <= y2; y += m_yStep) {
-		// Nadobúda hodnotu 0 alebo 1 podľa toho, či sa ide zapisovať do int1/int2
-		int pointId = 0;
-		// Priesečník
-		double intX1 = 0;
-		double intX2 = 0;
-		double xInters = 0;
-		// Hľadáme priesečník na všetkých 4 hranách
-		for (int line = 0; line < 4; ++line) {
-			int line2 = line == 3 ? 0 : line + 1;
-			// U rovnobežnej hrany sú krajné priesečníky x jej začiatok a koniec
-			if (p[line].y() == p[line2].y()) {
-				intX1 = p[line].x();
-				intX2 = p[line2].x();
-				break;
-			}
-			// Vyhľadanie prvého, alebo druhého priesečníku a zápis do intX1/intX2
-			bool ok;
-			xInters = calcIntersect(p[line], p[line2], y, &ok);
-			if (ok) {
-				if (pointId == 0) {
-					intX1 = xInters;
-				}
-				else {
-					intX2 = xInters;
-				}
-				pointId++;
-			}
-		}
-		int pixelX1 = qRound(qMin(intX1, intX2));
-		int pixelX2 = qRound(qMax(intX1, intX2));
+		int pixelX1 = scanLine[y - y1].minX;
+		int pixelX2 = scanLine[y - y1].maxX;
 		// Výpočet počtu položiek v riadku
 		int lineCount = (pixelX2 - pixelX1) / m_xStep + 1;
+		if (lineCount < 0) {
+			continue;
+		}
 		// Zaznamenanie počiatočného segmentu a počtu riadkov
 		m_lineCounts << m_segmentCount;
 		m_lineStarts << pixelX1;
@@ -291,56 +269,36 @@ void ImageSegmenter::recalcSegments() const
 	}
 
 	if (long(m_boundingRect.width()) * m_boundingRect.height() <= MaxImageResolution) {
-		m_transformedImage = QImage(m_boundingRect.size(), QImage::Format_ARGB32);
-		m_transformedImage.fill(qRgb(0, 0, 0));
-		QPainter imagePainter(&m_transformedImage);
-		QTransform transform = m_transform;
-		transform *= QTransform::fromTranslate(-m_boundingRect.left(), -m_boundingRect.top());
-		imagePainter.setTransform(transform);
-		imagePainter.drawImage(QPoint(0, 0), m_sourceImage);
-		imagePainter.end();
-		if (grayscaleFilter()) {
-			m_transformedImage = m_grayscaleFilter.filterImage(m_transformedImage);
-		}
+		m_dirtyImage = true;
 	}
 	else {
 		m_transformedImage = QImage();
+		m_dirtyImage = false;
 	}
 
 	m_dirty = false;
 }
 
 /**
- * Výpočet priesečníku úsečky definovanej bodmi \a p1 a \a p2 s rovnobežkou k
- * x-ovej osi v pozícii \a yPos. Ak bol nájdený priesečník návratová hodnota
- * bude x-ová súradnica v ktorej úsečka pretína rovnobežku. Ak sa nepretínajú
- * návratová hodnota bude 0 a hodota \a ok bude \e false.
+ * Vykreslenie obrázku podľa transformácie a jeho zápis do m_transformedImage.
  */
-inline double ImageSegmenter::calcIntersect(const QPointF &p1, const QPointF &p2, double yPos, bool *ok) const
+inline void ImageSegmenter::repaintImage() const
 {
-	// V rovnobežnej úsečke s x-ovou osou nie je možné zistiť priesečník
-	if (p1.y() == p2.y()) {
-		if (ok != 0) {
-			*ok = false;
-		}
-		return 0;
+	if (!m_dirtyImage) {
+		return;
 	}
-
-	// Úsečka nepretína zvolenú rovnobežku s x-ovou osou
-	if (yPos < qMin(p1.y(), p2.y()) || yPos >= qMax(p1.y(), p2.y())) {
-		if (ok != 0) {
-			*ok = false;
-		}
-		return 0;
+	m_transformedImage = QImage(m_boundingRect.size(), QImage::Format_ARGB32);
+	m_transformedImage.fill(qRgb(0, 0, 0));
+	QPainter imagePainter(&m_transformedImage);
+	QTransform transform = m_transform;
+	transform *= QTransform::fromTranslate(-m_boundingRect.left(), -m_boundingRect.top());
+	imagePainter.setTransform(transform);
+	imagePainter.drawImage(QPoint(0, 0), m_sourceImage);
+	imagePainter.end();
+	if (grayscaleFilter()) {
+		m_transformedImage = m_grayscaleFilter.filterImage(m_transformedImage);
 	}
-
-	if (ok != 0) {
-		*ok = true;
-	}
-
-	// Výpočet priesečníku
-	double xInters = (yPos - p1.y()) * (p2.x() - p1.x()) / (p2.y() - p1.y()) + p1.x();
-	return xInters;
+	m_dirtyImage = false;
 }
 
 } /* end of namespace FaceDetect */

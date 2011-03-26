@@ -12,7 +12,7 @@
 
 #include <boost/serialization/access.hpp>
 #include <boost/serialization/base_object.hpp>
-#include "serialization/LapackSerialization.h"
+#include "utils/LapackSerialization.h"
 #include "NeuralNet.h"
 
 namespace FaceDetect {

@@ -51,7 +51,7 @@ public:
 
 private:
 	void recalcSegments() const;
-	double calcIntersect(const QPointF &p1, const QPointF &p2, double yPos, bool *ok = 0) const;
+	void repaintImage() const;
 
 private:
 	/// Zdrojový obrázok.
@@ -74,6 +74,8 @@ private:
 	int m_yStep;
 	/// Ak je \e true segmenty musia byť znovu prepočítané
 	mutable bool m_dirty;
+	/// Ak je \e true musí sa znovu vykresliť obrázok.
+	mutable bool m_dirtyImage;
 	/// Počet segmentov v obrázku
 	mutable int m_segmentCount;
 	/// Filter pre prevod do odtieňov šedej

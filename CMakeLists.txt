@@ -51,6 +51,7 @@ set(facedetect_SRCS
 	src/core/FaceImageProvider.cpp
 	src/libfacedetect/Align.cpp
 	src/libfacedetect/BPNeuralNet.cpp
+	src/libfacedetect/FaceDetector.cpp
 	src/libfacedetect/FaceFileScanner.cpp
 	src/libfacedetect/FileScanner.cpp
 	src/libfacedetect/ImageFileScanner.cpp
@@ -59,15 +60,18 @@ set(facedetect_SRCS
 	src/libfacedetect/NeuralNet.cpp
 	src/libfacedetect/TrainingDataReader.cpp
 	src/libfacedetect/TrainingImageDatabase.cpp
+	src/libfacedetect/utils/PolygonRasterizer.cpp
 	src/gui/console/ConsoleInterface.cpp
 	src/gui/qml/QmlWin.cpp
 )
 
 set(facedetect_HDRS
 	src/core/FaceImageProvider.h
+	src/libfacedetect/FaceDetector.h
 	src/libfacedetect/ImageFilter.h
 	src/libfacedetect/ImageSegmenter.h
-	src/libfacedetect/serialization/LapackSerialization.h
+	src/libfacedetect/utils/LapackSerialization.h
+	src/libfacedetect/utils/PolygonRasterizer.h
 )
 
 set(facedetect_MOC_HDRS
