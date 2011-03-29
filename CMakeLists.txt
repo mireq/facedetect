@@ -67,7 +67,6 @@ set(facedetect_SRCS
 
 set(facedetect_HDRS
 	src/core/FaceImageProvider.h
-	src/libfacedetect/FaceDetector.h
 	src/libfacedetect/ImageFilter.h
 	src/libfacedetect/ImageSegmenter.h
 	src/libfacedetect/utils/LapackSerialization.h
@@ -78,6 +77,7 @@ set(facedetect_MOC_HDRS
 	src/core/FaceBrowserModel.h
 	src/libfacedetect/Align.h
 	src/libfacedetect/BPNeuralNet.h
+	src/libfacedetect/FaceDetector.h
 	src/libfacedetect/FaceFileScanner.h
 	src/libfacedetect/FileScanner.h
 	src/libfacedetect/ImageFileScanner.h

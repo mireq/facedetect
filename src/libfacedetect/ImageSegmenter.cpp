@@ -18,19 +18,35 @@ namespace FaceDetect {
 /**
  * Vytvorenie inštancie triedy pre segmentáciu obrásku \a image.
  */
-ImageSegmenter::ImageSegmenter(const QImage &image):
+ImageSegmenter::ImageSegmenter(const QImage &image, const ImageSegmenter::Settings &settings):
 	m_sourceImage(image),
-	m_segmentSize(5, 5),
-	m_xStep(1),
-	m_yStep(1),
 	m_dirty(true),
 	m_dirtyImage(false),
 	m_segmentCount(0)
 {
+	setupSegmenter(settings);
 }
 
 ImageSegmenter::~ImageSegmenter()
 {
+}
+
+/**
+ * Nastavenie vlastností segmentera.
+ */
+void ImageSegmenter::setupSegmenter(const ImageSegmenter::Settings &settings)
+{
+	setTransform(settings.transform);
+	setSegmentSize(settings.segmentSize);
+	setStep(settings.xStep, settings.yStep);
+}
+
+/**
+ * Vráti zdrojový obrázok pred segmentáciou.
+ */
+const QImage &ImageSegmenter::image() const
+{
+	return m_sourceImage;
 }
 
 /**

@@ -42,7 +42,7 @@ void PolygonRasterizer::processPolygon(const QPolygon &polygon)
 
 	// Inicializácia poľa riadkov
 	m_scanLines.resize(y2 - y1 + 1);
-	for (int y = y1; y < y2; ++y) {
+	for (int y = y1; y < y2 + 1; ++y) {
 		m_scanLines[y - y1].minX = numeric_limits<int>::max(); // Minimum
 		m_scanLines[y - y1].maxX = numeric_limits<int>::min(); // Maximum
 	}
@@ -117,6 +117,14 @@ void PolygonRasterizer::processPolygon(const QPolygon &polygon)
 				}
 			}
 		}
+	}
+
+	// Korekcia posledného prvku
+	if (!m_scanLines.isEmpty() && m_scanLines.first().maxX < m_scanLines.first().minX) {
+		m_scanLines.pop_front();
+	}
+	if (!m_scanLines.isEmpty() && m_scanLines.last().maxX < m_scanLines.last().minX) {
+		m_scanLines.pop_back();
 	}
 }
 

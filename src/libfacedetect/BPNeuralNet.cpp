@@ -41,6 +41,7 @@ LaVectorDouble BPNeuralNet::calcOutput(const LaVectorDouble &input)
 	}
 	// Výpočet $\hat{y} = \vect{x}^T \times \vect{v}$
 	Blas_Mat_Mat_Mult(m_stred, m_v, ret, true);
+	ret(0, 0) = aktivFunkcia(ret(0, 0));
 	return ret;
 }
 
@@ -53,7 +54,7 @@ void BPNeuralNet::trainSample(const LaVectorDouble &input, const LaVectorDouble 
 	// Výpočet chyby $e = y - \hat{y}$
 	double chyba = expectedOutput(0) - out;
 	// Výpočet delta výstupného neurónu $\Delta = \Psi^\prime(u)$
-	double delta = chyba;
+	double delta = chyba * derivAktivFunkcia(out);
 	// Adaptácia váh $\vect{v} = \vect{v} + \vect{o}\eta\Delta$
 	Blas_Add_Mult(m_v, (n * delta), m_stred);
 

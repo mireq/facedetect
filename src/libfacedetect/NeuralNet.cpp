@@ -7,6 +7,7 @@
  * =====================================================================
  */
 
+#include <QMutexLocker>
 #include "NeuralNet.h"
 #include "TrainingDataReader.h"
 
@@ -92,7 +93,10 @@ int NeuralNet::outputVectorSize() const
  */
 void NeuralNet::stop()
 {
-	m_stop = true;
+	{
+		QMutexLocker lock(&m_stopMutex);
+		m_stop = true;
+	}
 	wait();
 }
 
@@ -118,21 +122,26 @@ void NeuralNet::run()
 	if (m_reader == 0) {
 		return;
 	}
-	if (m_stop == true) {
+	{
+		QMutexLocker lock(&m_stopMutex);
+		if (m_stop == true) {
+			m_stop = false;
+			return;
+		}
 		m_stop = false;
-		return;
 	}
-
-	m_stop = false;
 	// Inicializácia váh
 	initializeTraining();
 	// V každej trénovacej epoche sa vyšle signál epochFinished
 	for (int epoch = 0; epoch < m_numEpoch; ++epoch) {
 		// Pre každú vzorku sa volá trainSample
 		for (std::size_t sample = 0; sample < m_reader->trainingSetSize(); ++sample) {
-			if (m_stop) {
-				m_stop = false;
-				return;
+			{
+				QMutexLocker lock(&m_stopMutex);
+				if (m_stop) {
+					m_stop = false;
+					return;
+				}
 			}
 			trainSample(m_reader->inputVector(sample), m_reader->outputVector(sample));
 			// Každých 16 položiek sa vyšle signál sampleFinished
@@ -144,7 +153,10 @@ void NeuralNet::run()
 		double mse = calcMse();
 		emit epochFinished(epoch, mse);
 	}
-	m_stop = false;
+	{
+		QMutexLocker lock(&m_stopMutex);
+		m_stop = false;
+	}
 }
 
 /**

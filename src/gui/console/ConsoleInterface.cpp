@@ -14,6 +14,7 @@
 #include <QApplication>
 #include <QMetaType>
 #include <QSettings>
+#include "libfacedetect/FaceDetector.h"
 #include "libfacedetect/ImageFilter.h"
 #include "libfacedetect/ImageSegmenter.h"
 #include "ConsoleInterface.h"
@@ -39,8 +40,8 @@ void ConsoleInterface::run()
 	m_facesPath = settings.value("faces").toString();
 	m_nonFacesPath = settings.value("nonfaces").toString();
 	settings.endGroup();
-	m_steps.append(ProcessStep{this, "startTraining"});
-	m_steps.append(ProcessStep{this, "detectFaces"});
+	m_steps.append(ProcessStep(this, "startTraining"));
+	m_steps.append(ProcessStep(this, "detectFaces"));
 	m_steps.append(ProcessStep{qApp, "quit"});
 	startNextStep();
 }
@@ -74,9 +75,9 @@ void ConsoleInterface::startTraining()
 	m_neuralNet = QSharedPointer<FaceDetect::NeuralNet>(net);
 
 	if (!unserialized) {
-		m_steps.prepend(ProcessStep{this, "trainNet"});
-		m_steps.prepend(ProcessStep{this, "scanNonFaceDatabase"});
-		m_steps.prepend(ProcessStep{this, "scanFaceDatabase"});
+		m_steps.prepend(ProcessStep(this, "trainNet"));
+		m_steps.prepend(ProcessStep(this, "scanNonFaceDatabase"));
+		m_steps.prepend(ProcessStep(this, "scanFaceDatabase"));
 	}
 	startNextStep();
 }
@@ -132,7 +133,6 @@ void ConsoleInterface::trainNet()
 	m_trainingDatabase->shuffle();
 
 	m_cout << "\rStarting training\n";
-	m_neuralNet->setLearningSpeed(0.01);
 	connect(m_neuralNet.data(), SIGNAL(finished()), this, SLOT(onTrainingFinished()));
 	connect(m_neuralNet.data(), SIGNAL(terminated()), this, SLOT(onTrainingFinished()));
 	connect(m_neuralNet.data(), SIGNAL(epochFinished(int,double)), this, SLOT(printTrainingEpoch(int,double)));
@@ -237,5 +237,14 @@ void ConsoleInterface::scanImageFile(const QString &file)
 	if (image.isNull()) {
 		return;
 	}
+
+	FaceDetect::FaceDetector detector(m_neuralNet.data());
+	detector.setImage(image);
+	FaceDetect::ImageSegmenter::Settings settings;
+	settings.xStep = 1;
+	settings.yStep = 1;
+	settings.segmentSize = QSize(20, 20);
+	detector.setupSegmenter(settings);
+	detector.scanImage();
 }
 

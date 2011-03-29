@@ -72,6 +72,7 @@ private:
 	QSharedPointer<FaceDetect::NeuralNet> m_neuralNet;
 	FaceDetect::TrainingImageDatabase *m_trainingDatabase;
 	struct ProcessStep {
+		ProcessStep(QObject *o, const QByteArray &m): object(o), method(m) {};
 		QObject *object;
 		QByteArray method;
 	};

@@ -10,6 +10,7 @@
 #ifndef NEURALNET_9RUG4BT8
 #define NEURALNET_9RUG4BT8
 
+#include <QMutex>
 #include <QSharedPointer>
 #include <QThread>
 #include <boost/serialization/access.hpp>
@@ -105,6 +106,8 @@ private:
 private:
 	/// Ak je táto premenná \e true tréning sa ukončí hneď po dokončení vzorky.
 	bool m_stop;
+	/// Ochrana premennej stop.
+	QMutex m_stopMutex;
 	/// Rýchlosť učenia neurónovej siete - eta (η).
 	double m_learningSpeed;
 	/// Počet tréningových epoch.

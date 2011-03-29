@@ -31,8 +31,18 @@ namespace FaceDetect {
 class ImageSegmenter
 {
 public:
-	explicit ImageSegmenter(const QImage &image);
+	struct Settings {
+		Settings(): segmentSize(5, 5), xStep(1), yStep(1) {};
+		QTransform transform;
+		QSize segmentSize;
+		int xStep;
+		int yStep;
+	};
+
+	explicit ImageSegmenter(const QImage &image, const ImageSegmenter::Settings &settings = ImageSegmenter::Settings());
 	~ImageSegmenter();
+	void setupSegmenter(const ImageSegmenter::Settings &settings);
+	const QImage &image() const;
 	QSize segmentSize() const;
 	void setSegmentSize(const QSize &size);
 	QTransform transform() const;

@@ -11,21 +11,31 @@
 #define FACEDETECTOR_YYFAKUAG
 
 #include <QImage>
+#include <QSharedPointer>
+#include <lapackpp/gmf.h>
 #include "ImageSegmenter.h"
 #include "NeuralNet.h"
 
 namespace FaceDetect {
 
-class FaceDetector
+class FaceDetector: public QThread
 {
+Q_OBJECT
 public:
-	FaceDetector(NeuralNet *neuralNet);
+	FaceDetector(NeuralNet *neuralNet, QObject *parent = 0);
 	~FaceDetector();
-	void scanImage(const QImage &image);
+	QImage image() const;
+	void setImage(const QImage &image);
+	void setupSegmenter(const ImageSegmenter::Settings &settings);
+	void scanImage();
 
 private:
 	NeuralNet *m_neuralNet;
-	QImage m_sourceImage;
+	QSharedPointer<ImageSegmenter> m_segmenter;
+	ImageSegmenter::Settings m_settings;
+	/// Matica maximálnych nájdených hodnôt.
+	/// \warining Riadky a stĺpse sú prehodené.
+	LaGenMatFloat m_statistics;
 }; /* -----  end of class FaceDetector  ----- */
 
 } /* end of namespace FaceDetect */

@@ -10,6 +10,7 @@
 #ifndef FILESCANNER_BRQV7MA7
 #define FILESCANNER_BRQV7MA7
 
+#include <QMutex>
 #include <QThread>
 
 /**
@@ -176,6 +177,8 @@ private:
 	long m_totalDirs;
 	/// Celkový počet súborov.
 	long m_totalFiles;
+	/// Ochrana premennej stop.
+	QMutex m_stopMutex;
 	/// Indikátor zastavenia (pri najbližšom skenovanom súbore sa skenovanie zastaví).
 	bool m_stop;
 	/// Indikátor činnosti - ak práve prebieha skenovanie má hodnotu \e true.

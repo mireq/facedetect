@@ -9,6 +9,7 @@
 
 #include <QDir>
 #include <QFile>
+#include <QMutexLocker>
 #include "FileScanner.h"
 
 FileScanner::FileScanner(QObject *parent):
@@ -66,17 +67,18 @@ long FileScanner::totalFiles() const
 
 void FileScanner::stop()
 {
-	if (isRunning()) {
-		m_stop = true;
-		wait();
-		m_stop = false;
-	}
+	m_stopMutex.lock();
+	m_stop = true;
+	m_stopMutex.unlock();
+	wait();
 }
 
 void FileScanner::run()
 {
 	clearState();
 	scanDirectory(m_scanPath, 0.0, 1.0);
+	QMutexLocker lock(&m_stopMutex);
+	m_stop = false;
 }
 
 void FileScanner::onFinished()
@@ -97,8 +99,11 @@ void FileScanner::onStarted()
 
 void FileScanner::scanDirectory(const QString &directory, double progressFrom, double progressTo)
 {
-	if (m_stop) {
-		return;
+	{
+		QMutexLocker lock(&m_stopMutex);
+		if (m_stop) {
+			return;
+		}
 	}
 	// Vytvorenie zoznamu adresárov a súborov
 	QDir dir(directory);
@@ -119,8 +124,11 @@ void FileScanner::scanDirectory(const QString &directory, double progressFrom, d
 
 	// Spracovanie súborov v aktuálnom adresári
 	foreach (QFileInfo fileInfo, files) {
-		if (m_stop) {
-			return;
+		{
+			QMutexLocker lock(&m_stopMutex);
+			if (m_stop) {
+				return;
+			}
 		}
 		scanFile(fileInfo.absoluteFilePath());
 		m_progress += progressStep;
@@ -138,6 +146,7 @@ void FileScanner::clearState()
 	m_scannedFiles = 0;
 	m_totalDirs = 0;
 	m_totalFiles = 0;
+	QMutexLocker lock(&m_stopMutex);
 	m_stop = false;
 }
 
