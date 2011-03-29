@@ -10,7 +10,6 @@
 #include "ImageFilter.h"
 #include "FaceDetector.h"
 
-#include <QDebug>
 #include <QPainter>
 #include <QRectF>
 #include <QPolygonF>

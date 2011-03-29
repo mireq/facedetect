@@ -36,6 +36,7 @@ public:
 	virtual LaVectorDouble outputVector(std::size_t sample) const;
 	void addImage(const FaceDetect::FaceFileScanner::ImageInfo &image);
 	void addImage(const LaVectorDouble &input, const LaVectorDouble &output);
+	void setCacheDir(const QString &dir);
 	void shuffle();
 
 private:
@@ -60,6 +61,8 @@ private:
 	Align *m_aligner;
 	/// Zoznam trénovacích vzorov.
 	QVector<TrainingSample> m_samples;
+	/// Adresár s cachovanými fotografiami
+	QString m_cacheDir;
 	/// Filter pre prevod obrázku do odtieňov šedej a úpravu svetlosti.
 	ImageFilter m_imageFilter;
 	/// Pomocný obrázok používaný pred škálovaním.

@@ -66,6 +66,7 @@ private:
 
 	QString m_facesPath;
 	QString m_nonFacesPath;
+	QString m_faceCachePath;
 	QTextStream m_cout;
 	QSharedPointer<FaceDetect::FaceFileScanner> m_faceScanner;
 	QSharedPointer<FaceDetect::ImageFileScanner> m_nonfaceScanner;

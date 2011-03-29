@@ -24,6 +24,13 @@ ConsoleInterface::ConsoleInterface(QObject *parent):
 	m_cout(stdout),
 	m_trainingDatabase(new FaceDetect::TrainingImageDatabase(this))
 {
+	QSettings settings;
+	settings.beginGroup("paths");
+	m_facesPath = settings.value("faces").toString();
+	m_nonFacesPath = settings.value("nonfaces").toString();
+	m_faceCachePath = settings.value("facecache").toString();
+	settings.endGroup();
+
 	parseCommandline();
 	qRegisterMetaType<std::size_t>("std::size_t");
 	qRegisterMetaType<LaVectorDouble>("LaVectorDouble");
@@ -35,11 +42,7 @@ ConsoleInterface::~ConsoleInterface()
 
 void ConsoleInterface::run()
 {
-	QSettings settings;
-	settings.beginGroup("paths");
-	m_facesPath = settings.value("faces").toString();
-	m_nonFacesPath = settings.value("nonfaces").toString();
-	settings.endGroup();
+	m_trainingDatabase->setCacheDir(m_faceCachePath);
 	m_steps.append(ProcessStep(this, "startTraining"));
 	m_steps.append(ProcessStep(this, "detectFaces"));
 	m_steps.append(ProcessStep{qApp, "quit"});
@@ -131,6 +134,7 @@ void ConsoleInterface::trainNet()
 {
 	m_cout.flush();
 	m_trainingDatabase->shuffle();
+	m_neuralNet->setLearningSpeed(0.005);
 
 	m_cout << "\rStarting training\n";
 	connect(m_neuralNet.data(), SIGNAL(finished()), this, SLOT(onTrainingFinished()));
@@ -179,6 +183,7 @@ void ConsoleInterface::parseCommandline()
 	m_loadNetFile = getArgument(arguments, "--loadNet");
 	m_saveNetFile = getArgument(arguments, "--saveNet");
 	m_detectFiles = getArguments(arguments, "--detect");
+	m_faceCachePath = getArgument(arguments, "--faceCache");
 }
 
 QString ConsoleInterface::getArgument(const QStringList &arguments, const QString &argumentName)

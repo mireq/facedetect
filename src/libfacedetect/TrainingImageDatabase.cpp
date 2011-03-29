@@ -8,6 +8,9 @@
  */
 
 #include <algorithm>
+#include <QCryptographicHash>
+#include <QDir>
+#include <QFileInfo>
 #include <QPainter>
 #include <QPixmap>
 #include <QTransform>
@@ -105,6 +108,29 @@ void TrainingImageDatabase::addImage(const LaVectorDouble &input, const LaVector
 }
 
 /**
+ * Nastavenie adresára, v ktorom sa budú budú ukladať cachované spracované
+ * fotografie.
+ */
+void TrainingImageDatabase::setCacheDir(const QString &dir)
+{
+	m_cacheDir = dir;
+	if (!m_cacheDir.isEmpty()) {
+		QFileInfo info(m_cacheDir);
+		if (!info.exists()) {
+			QDir directory(dir);
+			if (!directory.mkpath(m_cacheDir)) {
+				m_cacheDir = QString();
+				return;
+			}
+		}
+		else if (!info.isDir() || !info.isReadable() || !info.isWritable()) {
+			m_cacheDir = QString();
+			return;
+		}
+	}
+}
+
+/**
  * Premiešanie vstupov.
  */
 void TrainingImageDatabase::shuffle()
@@ -126,10 +152,26 @@ inline void TrainingImageDatabase::calcVectors(std::size_t sample) const
 	bool hasFace = false;
 	if (imageInfo.faceEnd() - imageInfo.faceBegin() == 1) {
 		hasFace = true;
-		QTransform transform = m_aligner->getTransform(*imageInfo.faceBegin());
-		QPainter painter(&m_workingImage);
-		painter.setTransform(transform);
-		painter.drawImage(QPoint(0, 0), imageInfo.getImage());
+		QByteArray cacheFileName;
+		bool loaded = false;
+		if (!m_cacheDir.isEmpty()) {
+			cacheFileName = m_cacheDir.toUtf8() + "/" + QCryptographicHash::hash(imageInfo.url().toLocalFile().toAscii(), QCryptographicHash::Md4).toHex();
+			QImage loadedImg(cacheFileName.constData(), "PNG");
+			if (!loadedImg.isNull()) {
+				m_workingImage = loadedImg;
+				loaded = true;
+			}
+		}
+		if (!loaded) {
+			QTransform transform = m_aligner->getTransform(*imageInfo.faceBegin());
+			QPainter painter(&m_workingImage);
+			painter.setTransform(transform);
+			painter.drawImage(QPoint(0, 0), imageInfo.getImage());
+			painter.end();
+			if (!m_cacheDir.isEmpty()) {
+				m_workingImage.save(cacheFileName.constData(), "PNG");
+			}
+		}
 	}
 	else {
 		m_workingImage = imageInfo.getImage().scaled(QSize(ImageWidth, ImageHeight));
