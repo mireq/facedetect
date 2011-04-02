@@ -173,7 +173,7 @@ void ImageFilter::filterGrayscale(QImage &sourceImage) const
  */
 void ImageFilter::filterIllumination(QImage &sourceImage) const
 {
-	if (sourceImage.depth() == 1) {
+	if (sourceImage.depth() != 8) {
 		return;
 	}
 	int depth = sourceImage.depth() / 8;
@@ -241,29 +241,34 @@ void ImageFilter::filterIllumination(QImage &sourceImage) const
 	double a = m_illuminationPlane(0, 0);
 	double b = m_illuminationPlane(1, 0);
 	double c = m_illuminationPlane(2, 0);
-	int minValue = 255;
-	int maxValue = 0;
+	// Početnosť hodnoty pixelov
+	int frequencies[256];
+	for (int freq = 0; freq < 256; ++freq) {
+		frequencies[freq] = 0;
+	}
 	for (int yPos = 0; yPos < imgHeight; ++yPos) {
 		imgData = sourceImage.scanLine(yPos);
 		for (int xPos = 0; xPos < imgWidth; ++xPos) {
 			int ipVal = a * xPos + b * yPos + c;
 			for (int bitId = 0; bitId < depth; ++bitId) {
 				int bit = imgData[xPos] - ipVal + 127;
+				bit = qMin(qMax(bit, 0), 255);
 				if (m_illuminationPlaneOnly) {
 					imgData[xPos] = ipVal;
 				}
 				else {
-					bit = qMin(qMax(bit, 0), 255);
 					imgData[xPos] = bit;
 				}
-				if (bit < minValue) {
-					minValue = bit;
-				}
-				if (bit > maxValue) {
-					maxValue = bit;
-				}
+				frequencies[bit]++;
 			}
 		}
+	}
+
+	// Vypočet kumulatívnych početností
+	int cumulative = 0;
+	for (int freq = 0; freq < 256; ++freq) {
+		cumulative += frequencies[freq];
+		frequencies[freq] = cumulative;
 	}
 
 	if (m_illuminationPlaneOnly || !m_illuminationCorrectHistogram) {
@@ -271,13 +276,12 @@ void ImageFilter::filterIllumination(QImage &sourceImage) const
 	}
 
 	// Korekcia histogramu
-	double invInterval = 255.0 / (maxValue - minValue);
+	double alpha = 255.0 / (imgWidth * imgHeight);
 	for (int yPos = 0; yPos < imgHeight; ++yPos) {
 		imgData = sourceImage.scanLine(yPos);
 		for (int xPos = 0; xPos < imgWidth; ++xPos) {
 			for (int bit = 0; bit < depth; ++bit) {
-				int data = imgData[xPos];
-				imgData[xPos] = (data - minValue) * invInterval;
+				imgData[xPos] = frequencies[imgData[xPos]] * alpha;
 			}
 		}
 	}
