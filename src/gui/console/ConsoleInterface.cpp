@@ -21,6 +21,8 @@
 
 ConsoleInterface::ConsoleInterface(QObject *parent):
 	QObject(parent),
+	m_illuminationPlaneOnly(false),
+	m_noIlluminationCorrectHistogram(true),
 	m_quiet(false),
 	m_printAlign(false),
 	m_cout(stdout),
@@ -45,6 +47,9 @@ ConsoleInterface::~ConsoleInterface()
 void ConsoleInterface::run()
 {
 	m_trainingDatabase->setCacheDir(m_faceCachePath);
+	if (!m_filterImage.isEmpty()) {
+		m_steps.append(ProcessStep(this, "saveFilterImage"));
+	}
 	if (m_printAlign) {
 		m_steps.append(ProcessStep(this, "startPrintAlign"));
 		m_steps.append(ProcessStep(this, "printAlign"));
@@ -62,6 +67,25 @@ void ConsoleInterface::startNextStep()
 	}
 	ProcessStep step = m_steps.takeFirst();
 	QMetaObject::invokeMethod(step.object, step.method.constData(), Qt::QueuedConnection);
+}
+
+void ConsoleInterface::saveFilterImage()
+{
+	FaceDetect::ImageFilter filter;
+	FaceDetect::ImageFilter::Filters filterFlags;
+	filterFlags |= FaceDetect::ImageFilter::GrayscaleFilter;
+	filterFlags |= FaceDetect::ImageFilter::IlluminationFilter;
+	filter.setFilters(filterFlags);
+	filter.setIlluminationPlaneOnly(m_illuminationPlaneOnly);
+	filter.setIlluminationCorrectHistogram(!m_noIlluminationCorrectHistogram);
+
+	QImage inputImage(m_filterImage);
+	if (inputImage.isNull()) {
+		return;
+	}
+	QImage output = filter.filterImage(inputImage);
+	output.save(m_filterImage + ".tr.png", "PNG");
+	startNextStep();
 }
 
 void ConsoleInterface::startPrintAlign()
@@ -124,7 +148,6 @@ void ConsoleInterface::startTraining()
 		net = new FaceDetect::BPNeuralNet();
 	}
 	net->setTrainingDataReader(m_trainingDatabase);
-	net->setNumEpoch(300);
 	m_neuralNet = QSharedPointer<FaceDetect::NeuralNet>(net);
 
 	if (!unserialized) {
@@ -242,6 +265,9 @@ void ConsoleInterface::printTrainingSample(std::size_t sample, int epoch)
 void ConsoleInterface::parseCommandline()
 {
 	QStringList arguments = qApp->arguments();
+	m_filterImage = getArgument(arguments, "--filterImage");
+	m_illuminationPlaneOnly = getBoolArgument(arguments, "--illuminationPlaneOnly");
+	m_noIlluminationCorrectHistogram = getBoolArgument(arguments, "--noIlluminationCorrectHistogram");
 	m_loadNetFile = getArgument(arguments, "--loadNet");
 	m_saveNetFile = getArgument(arguments, "--saveNet");
 	m_detectFiles = getArguments(arguments, "--detect");

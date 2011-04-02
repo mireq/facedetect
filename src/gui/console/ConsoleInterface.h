@@ -33,6 +33,7 @@ public:
 private slots:
 	void startNextStep();
 
+	void saveFilterImage();
 	void startPrintAlign();
 	void printAlign();
 	void alignImageScanned(const FaceDetect::FaceFileScanner::ImageInfo &image);
@@ -66,6 +67,10 @@ private:
 	void printFaceFeaturesData(const FaceDetect::FaceFileScanner::FaceData &data, const QTransform &transform = QTransform()) const;
 
 private:
+	QString m_filterImage;
+	bool m_illuminationPlaneOnly;
+	bool m_noIlluminationCorrectHistogram;
+
 	QString m_loadNetFile;
 	QString m_saveNetFile;
 	QStringList m_detectFiles;

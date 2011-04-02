@@ -30,8 +30,9 @@ public:
 	 * Typy aktivovaných filtrov
 	 */
 	enum Filter {
-		NoFilter = 0x00,       /**< Žiaden filter                      */
-		GrayscaleFilter = 0x01 /**< Filter na prevod do odtieňov šedej */
+		NoFilter = 0x00,          /**< Žiaden filter                      */
+		GrayscaleFilter = 0x01,   /**< Filter na prevod do odtieňov šedej */
+		IlluminationFilter = 0x02 /**< Filtern na korekciu osvetlenia     */
 	};
 	Q_DECLARE_FLAGS(Filters, Filter)
 
@@ -44,15 +45,30 @@ public:
 	QImage filterImage(const QImage &sourceImage) const;
 	LaVectorDouble filterVector(const QImage &sourceImage) const;
 
+	// Len pre štatistické účely
+	void setIlluminationPlaneOnly(bool planeOnly);
+	void setIlluminationCorrectHistogram(bool correctHistogram);
+
 private:
 	void filterHelper(QImage &sourceImage) const;
 	void filterGrayscale(QImage &sourceImage) const;
+	void filterIllumination(QImage &sourceImage) const;
 
 private:
 	/// Aktivované filtre.
 	Filters m_filters;
+	/// Zobrazenie korekčnej iluminačnej plochy.
+	bool m_illuminationPlaneOnly;
+	/// Roztiahnutie svetlosti pri korekcii osvetlenia.
+	bool m_illuminationCorrectHistogram;
 	/// Gradient používaný pri prevode na odtiene "šedej".
 	QLinearGradient m_grayscaleGradient;
+	/// Parametre osvetľovacieho gradientu
+	mutable LaGenMatDouble m_illuminationPlane;
+	/// Matica koordinátov
+	mutable LaGenMatDouble m_imageCoordinateMatrix;
+	/// Spracovaná matica pre výpočet svetelnej korekcie
+	mutable LaGenMatDouble m_ilCorrectionMatrix;
 	/// Farebná paleta s farbami šedej od 0 po 255.
 	mutable QVector<QRgb> m_colorTable;
 	/// Počet odtieňov šedej
