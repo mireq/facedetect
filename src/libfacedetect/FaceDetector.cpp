@@ -18,6 +18,8 @@
 #include "utils/PolygonRasterizer.h"
 
 using std::memset;
+#include <QLabel>
+#include <QEventLoop>
 
 namespace FaceDetect {
 
@@ -44,6 +46,7 @@ QImage FaceDetector::image() const
 void FaceDetector::setImage(const QImage &image)
 {
 	m_segmenter = QSharedPointer<ImageSegmenter>(new ImageSegmenter(image, m_settings));
+	m_segmenter->setGrayscaleFilter(true);
 	m_statistics = LaGenMatFloat(image.height(), image.width());
 }
 
@@ -106,6 +109,29 @@ void FaceDetector::scanImage()
 			memBegin = statisticsWidth * y;
 		}
 	}
+
+	QImage outImage(m_segmenter->image().size(), QImage::Format_ARGB32);
+	for (std::size_t yPos = 0; yPos < statisticsHeight; ++yPos) {
+		for (std::size_t xPos = 0; xPos < statisticsWidth; ++xPos) {
+			float val = bitmapData[yPos * statisticsWidth + xPos];
+			int colorVal;
+			if (val < 0) {
+				colorVal = 0;
+			}
+			else if (val >= 1) {
+				colorVal = 255;
+			}
+			else {
+				colorVal = val * 255;
+			}
+			outImage.setPixel(QPoint(int(xPos), int(yPos)), qRgb(colorVal, colorVal, colorVal));
+		}
+	}
+	QLabel *label = new QLabel();
+	label->setPixmap(QPixmap::fromImage(outImage));
+	label->show();
+	QEventLoop loop(this);
+	loop.exec();
 }
 
 } /* end of namespace FaceDetect */

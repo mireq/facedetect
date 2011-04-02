@@ -213,6 +213,23 @@ QImage Align::getStatisticsImage() const
 }
 
 /**
+ * Vráti priemerné hodnoty vlastností po normalizácii.
+ */
+FaceFileScanner::FaceData Align::getAverageFeatures() const
+{
+	if (m_normalized) {
+		normalize();
+	}
+
+	FaceFileScanner::FaceData ret;
+	ret.leftEye = QPoint(m_normalizedFaceFeatures(0), m_normalizedFaceFeatures(1));
+	ret.rightEye = QPoint(m_normalizedFaceFeatures(2), m_normalizedFaceFeatures(3));
+	ret.nose = QPoint(m_normalizedFaceFeatures(4), m_normalizedFaceFeatures(5));
+	ret.mouth = QPoint(m_normalizedFaceFeatures(6), m_normalizedFaceFeatures(7));
+	return ret;
+}
+
+/**
  * Kontrola správnosti všetkých kontrolných bodov.
  */
 bool Align::checkControlPoints(const FaceFileScanner::FaceData &data) const
@@ -321,38 +338,20 @@ void Align::calcAvg() const
 void Align::normalize() const
 {
 	if (!m_normalized) {
-		// Výpočet vrchnej čiary pre orezávanie fotografií
-		// tX, tY - stred (ťažisko) kontrolných bodov
-		double tX = 0;
-		double tY = 0;
-		for (int i = 0; i < 4; ++i) {
-			tX += m_avgFaceFeatures(i*2);
-			tY += m_avgFaceFeatures(i*2 + 1);
-		}
-		tX /= 4.0;
-		tY /= 4.0;
-	
-		double diffX = 0;
-		double diffY = 0;
-		// Ľavý bod horného ohraničenia fotografie
-		diffX = (m_avgFaceFeatures(0) - tX) * 1.5;
-		diffY = (m_avgFaceFeatures(1) - tY) * 1.5;
-		LaVectorDouble topLine(4);
-		topLine(0) = tX + diffX;
-		topLine(1) = tY + diffY;
-		// Pravý bod horného ohraničenia fotografie
-		diffX = (m_avgFaceFeatures(2) - tX) * 1.5;
-		diffY = (m_avgFaceFeatures(3) - tY) * 1.5;
-		topLine(2) = tX + diffX;
-		topLine(3) = tY + diffY;
-
-		// Prepočet vlastností po normalizácii
+		// Virtuálna čiara vedená cez stred tváre od očí po ústa
+		LaVectorDouble centerLine(4);
+		centerLine(0) = (m_avgFaceFeatures(0) + m_avgFaceFeatures(2)) / 2.0;
+		centerLine(1) = (m_avgFaceFeatures(1) + m_avgFaceFeatures(3)) / 2.0;
+		centerLine(2) = m_avgFaceFeatures(6);
+		centerLine(3) = m_avgFaceFeatures(7);
+		// Cieľové hodnoty centrálnej čiary po transformácii
 		LaVectorDouble transformedLine(4);
-		transformedLine(0) = m_imageSize;
-		transformedLine(1) = 0;
-		transformedLine(2) = 0;
-		transformedLine(3) = 0;
-		LaGenMatDouble aMatrix = fillFeaturesMatrix(topLine);
+		transformedLine(0) = m_imageSize / 2;
+		transformedLine(1) = m_imageSize / 10;
+		transformedLine(2) = m_imageSize / 2;
+		transformedLine(3) = (m_imageSize * 9) / 10;
+
+		LaGenMatDouble aMatrix = fillFeaturesMatrix(centerLine);
 		LaVectorDouble tVector(4);
 		try {
 			LaLinearSolve(aMatrix, tVector, transformedLine);

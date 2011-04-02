@@ -36,6 +36,7 @@ public:
 	std::size_t faceCount() const;
 	QTransform getTransform(const FaceFileScanner::FaceData &face) const;
 	QImage getStatisticsImage() const;
+	FaceFileScanner::FaceData getAverageFeatures() const;
 
 private:
 	bool checkControlPoints(const FaceFileScanner::FaceData &data) const;

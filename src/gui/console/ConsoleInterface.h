@@ -33,6 +33,10 @@ public:
 private slots:
 	void startNextStep();
 
+	void startPrintAlign();
+	void printAlign();
+	void alignImageScanned(const FaceDetect::FaceFileScanner::ImageInfo &image);
+
 	void startTraining();
 	void detectFaces();
 
@@ -55,9 +59,11 @@ private slots:
 private:
 	void parseCommandline();
 	QString getArgument(const QStringList &arguments, const QString &argumentName);
+	bool getBoolArgument(const QStringList &arguments, const QString &argumentName);
 	QStringList getArguments(const QStringList &arguments, const QString &argumentName);
 	void saveNeuralNet();
 	void scanImageFile(const QString &file);
+	void printFaceFeaturesData(const FaceDetect::FaceFileScanner::FaceData &data, const QTransform &transform = QTransform()) const;
 
 private:
 	QString m_loadNetFile;
@@ -67,10 +73,14 @@ private:
 	QString m_facesPath;
 	QString m_nonFacesPath;
 	QString m_faceCachePath;
-	QTextStream m_cout;
+	bool m_quiet;
+	bool m_printAlign;
+	mutable QTextStream m_cout;
 	QSharedPointer<FaceDetect::FaceFileScanner> m_faceScanner;
 	QSharedPointer<FaceDetect::ImageFileScanner> m_nonfaceScanner;
 	QSharedPointer<FaceDetect::NeuralNet> m_neuralNet;
+	QSharedPointer<FaceDetect::Align> m_aligner;
+	QVector<FaceDetect::FaceFileScanner::FaceData> m_faceData;
 	FaceDetect::TrainingImageDatabase *m_trainingDatabase;
 	struct ProcessStep {
 		ProcessStep(QObject *o, const QByteArray &m): object(o), method(m) {};
