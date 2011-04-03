@@ -30,9 +30,10 @@ public:
 	 * Typy aktivovaných filtrov
 	 */
 	enum Filter {
-		NoFilter = 0x00,          /**< Žiaden filter                      */
-		GrayscaleFilter = 0x01,   /**< Filter na prevod do odtieňov šedej */
-		IlluminationFilter = 0x02 /**< Filtern na korekciu osvetlenia     */
+		NoFilter = 0x00,           /**< Žiaden filter                      */
+		GrayscaleFilter = 0x01,    /**< Filter na prevod do odtieňov šedej */
+		IlluminationFilter = 0x02, /**< Filtern na korekciu osvetlenia     */
+		SobelFilter = 0x04         /**< Filter sobel pre detekciu hrán     */
 	};
 	Q_DECLARE_FLAGS(Filters, Filter)
 
@@ -51,8 +52,11 @@ public:
 
 private:
 	void filterHelper(QImage &sourceImage) const;
+	void equalizeHistogram(QImage &sourceImage) const;
+	void normalizeImage(QImage &sourceImage) const;
 	void filterGrayscale(QImage &sourceImage) const;
 	void filterIllumination(QImage &sourceImage) const;
+	void filterSobel(QImage &sourceImage) const;
 
 private:
 	/// Aktivované filtre.

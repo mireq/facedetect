@@ -70,6 +70,9 @@ private:
 	QString m_filterImage;
 	bool m_illuminationPlaneOnly;
 	bool m_noIlluminationCorrectHistogram;
+	bool m_grayscaleFilter;
+	bool m_illuminationFilter;
+	bool m_sobelFilter;
 
 	QString m_loadNetFile;
 	QString m_saveNetFile;

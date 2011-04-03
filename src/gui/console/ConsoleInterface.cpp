@@ -23,6 +23,9 @@ ConsoleInterface::ConsoleInterface(QObject *parent):
 	QObject(parent),
 	m_illuminationPlaneOnly(false),
 	m_noIlluminationCorrectHistogram(true),
+	m_grayscaleFilter(false),
+	m_illuminationFilter(false),
+	m_sobelFilter(false),
 	m_quiet(false),
 	m_printAlign(false),
 	m_cout(stdout),
@@ -73,8 +76,15 @@ void ConsoleInterface::saveFilterImage()
 {
 	FaceDetect::ImageFilter filter;
 	FaceDetect::ImageFilter::Filters filterFlags;
-	filterFlags |= FaceDetect::ImageFilter::GrayscaleFilter;
-	filterFlags |= FaceDetect::ImageFilter::IlluminationFilter;
+	if (m_grayscaleFilter) {
+		filterFlags |= FaceDetect::ImageFilter::GrayscaleFilter;
+	}
+	if (m_illuminationFilter) {
+		filterFlags |= FaceDetect::ImageFilter::IlluminationFilter;
+	}
+	if (m_sobelFilter) {
+		filterFlags |= FaceDetect::ImageFilter::SobelFilter;
+	}
 	filter.setFilters(filterFlags);
 	filter.setIlluminationPlaneOnly(m_illuminationPlaneOnly);
 	filter.setIlluminationCorrectHistogram(!m_noIlluminationCorrectHistogram);
@@ -268,6 +278,9 @@ void ConsoleInterface::parseCommandline()
 	m_filterImage = getArgument(arguments, "--filterImage");
 	m_illuminationPlaneOnly = getBoolArgument(arguments, "--illuminationPlaneOnly");
 	m_noIlluminationCorrectHistogram = getBoolArgument(arguments, "--noIlluminationCorrectHistogram");
+	m_grayscaleFilter = getBoolArgument(arguments, "--grayscaleFilter");
+	m_illuminationFilter = getBoolArgument(arguments, "--illuminationFilter");
+	m_sobelFilter = getBoolArgument(arguments, "--sobelFilter");
 	m_loadNetFile = getArgument(arguments, "--loadNet");
 	m_saveNetFile = getArgument(arguments, "--saveNet");
 	m_detectFiles = getArguments(arguments, "--detect");
