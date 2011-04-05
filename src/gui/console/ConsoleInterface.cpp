@@ -15,7 +15,6 @@
 #include <QMetaType>
 #include <QSettings>
 #include "libfacedetect/FaceDetector.h"
-#include "libfacedetect/ImageFilter.h"
 #include "libfacedetect/ImageSegmenter.h"
 #include "ConsoleInterface.h"
 
@@ -26,6 +25,8 @@ ConsoleInterface::ConsoleInterface(QObject *parent):
 	m_grayscaleFilter(false),
 	m_illuminationFilter(false),
 	m_sobelFilter(false),
+	m_gaborFilter(false),
+	m_onlyGaborWavelet(false),
 	m_quiet(false),
 	m_printAlign(false),
 	m_cout(stdout),
@@ -85,9 +86,14 @@ void ConsoleInterface::saveFilterImage()
 	if (m_sobelFilter) {
 		filterFlags |= FaceDetect::ImageFilter::SobelFilter;
 	}
+	if (m_gaborFilter) {
+		filterFlags |= FaceDetect::ImageFilter::GaborFilter;
+	}
 	filter.setFilters(filterFlags);
 	filter.setIlluminationPlaneOnly(m_illuminationPlaneOnly);
 	filter.setIlluminationCorrectHistogram(!m_noIlluminationCorrectHistogram);
+	filter.setOnlyGaborWavelet(m_onlyGaborWavelet);
+	filter.setGaborParameters(m_gaborParameters);
 
 	QImage inputImage(m_filterImage);
 	if (inputImage.isNull()) {
@@ -281,6 +287,26 @@ void ConsoleInterface::parseCommandline()
 	m_grayscaleFilter = getBoolArgument(arguments, "--grayscaleFilter");
 	m_illuminationFilter = getBoolArgument(arguments, "--illuminationFilter");
 	m_sobelFilter = getBoolArgument(arguments, "--sobelFilter");
+	m_gaborFilter = getBoolArgument(arguments, "--gaborFilter");
+	m_onlyGaborWavelet = getBoolArgument(arguments, "--onlyGaborWavelet");
+	if (getBoolArgument(arguments, "--gaborLambda")) {
+		m_gaborParameters.lambda = getDoubleArgument(arguments, "--gaborLambda");
+	}
+	if (getBoolArgument(arguments, "--gaborTheta")) {
+		m_gaborParameters.theta = getDoubleArgument(arguments, "--gaborTheta");
+	}
+	if (getBoolArgument(arguments, "--gaborPsi")) {
+		m_gaborParameters.psi = getDoubleArgument(arguments, "--gaborPsi");
+	}
+	if (getBoolArgument(arguments, "--gaborSigma")) {
+		m_gaborParameters.sigma = getDoubleArgument(arguments, "--gaborSigma");
+	}
+	if (getBoolArgument(arguments, "--gaborGamma")) {
+		m_gaborParameters.gamma = getDoubleArgument(arguments, "--gaborGamma");
+	}
+	if (getBoolArgument(arguments, "--gaborLuminance")) {
+		m_gaborParameters.lum = getDoubleArgument(arguments, "--gaborLuminance");
+	}
 	m_loadNetFile = getArgument(arguments, "--loadNet");
 	m_saveNetFile = getArgument(arguments, "--saveNet");
 	m_detectFiles = getArguments(arguments, "--detect");
@@ -307,6 +333,21 @@ QString ConsoleInterface::getArgument(const QStringList &arguments, const QStrin
 bool ConsoleInterface::getBoolArgument(const QStringList &arguments, const QString &argumentName)
 {
 	return arguments.contains(argumentName);
+}
+
+double ConsoleInterface::getDoubleArgument(const QStringList &arguments, const QString &argumentName)
+{
+	int argumentIdx = arguments.indexOf(argumentName);
+	if (argumentIdx < 0) {
+		return 0;
+	}
+
+	// Za názvom argumentu musí nasledovať hodnota
+	if (argumentIdx + 1 >= arguments.count()) {
+		return 0;
+	}
+
+	return arguments.at(argumentIdx + 1).toDouble();
 }
 
 QStringList ConsoleInterface::getArguments(const QStringList &arguments, const QString &argumentName)

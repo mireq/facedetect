@@ -20,6 +20,7 @@
 #include "libfacedetect/BPNeuralNet.h"
 #include "libfacedetect/FaceFileScanner.h"
 #include "libfacedetect/ImageFileScanner.h"
+#include "libfacedetect/ImageFilter.h"
 #include "libfacedetect/TrainingImageDatabase.h"
 
 class ConsoleInterface: public QObject
@@ -61,6 +62,7 @@ private:
 	void parseCommandline();
 	QString getArgument(const QStringList &arguments, const QString &argumentName);
 	bool getBoolArgument(const QStringList &arguments, const QString &argumentName);
+	double getDoubleArgument(const QStringList &arguments, const QString &argumentName);
 	QStringList getArguments(const QStringList &arguments, const QString &argumentName);
 	void saveNeuralNet();
 	void scanImageFile(const QString &file);
@@ -73,6 +75,9 @@ private:
 	bool m_grayscaleFilter;
 	bool m_illuminationFilter;
 	bool m_sobelFilter;
+	bool m_gaborFilter;
+	bool m_onlyGaborWavelet;
+	FaceDetect::ImageFilter::GaborParameters m_gaborParameters;
 
 	QString m_loadNetFile;
 	QString m_saveNetFile;

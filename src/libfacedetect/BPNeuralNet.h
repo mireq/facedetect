@@ -40,7 +40,7 @@ public:
 
 private:
 	/// Počet stredných neurónov
-	static const int m_stredNeuronov = 200;
+	static const int m_stredNeuronov = 20;
 
 	/// Váhy medzi vstupnou vrstvou a skrytou vrstvou.
 	LaGenMatDouble m_w;
