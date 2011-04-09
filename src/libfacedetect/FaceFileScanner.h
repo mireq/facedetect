@@ -34,6 +34,8 @@ public:
 		QPoint rightEye; /**< Pozícia pravého oka. */
 		QPoint nose;     /**< Pozícia nosa.        */
 		QPoint mouth;    /**< Pozícia úst.         */
+		QString pose;    /**< Póza.                */
+		bool isFrontal() const;
 	};
 
 /**
@@ -76,8 +78,10 @@ public:
 
 	explicit FaceFileScanner(QObject *parent = 0);
 	~FaceFileScanner();
-	QUrl basePath();
+	QUrl basePath() const;
 	void setBasePath(const QUrl &url);
+	bool filterFrontal() const;
+	void setFilterFrontal(bool filter);
 	virtual void scanFile(const QString &fileName);
 	ImageInfo readFile(const QString &fileName);
 
@@ -103,6 +107,8 @@ private:
 	};
 	/// URL základného adresára.
 	QUrl m_basePath;
+	/// Filtrovanie fotografií zpredu.
+	bool m_filterFrontal;
 }; /* -----  end of class FaceFileScanner  ----- */
 
 } /* end of namespace FaceDetect */

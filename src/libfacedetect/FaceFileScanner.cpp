@@ -20,6 +20,19 @@ using std::fclose;
 
 namespace FaceDetect {
 
+bool FaceFileScanner::FaceData::isFrontal() const
+{
+	if (pose.isEmpty()) {
+		return false;
+	}
+	if (pose[0] == 'f') {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
 FaceFileScanner::ImageInfo::ImageInfo():
 	m_valid(false)
 {
@@ -182,7 +195,8 @@ void FaceFileScanner::ImageInfo::setFaceData(const QVector<FaceData> &faceData)
  * \econstruct
  */
 FaceFileScanner::FaceFileScanner(QObject *parent):
-	FileScanner(parent)
+	FileScanner(parent),
+	m_filterFrontal(false)
 {
 }
 
@@ -194,7 +208,7 @@ FaceFileScanner::~FaceFileScanner()
  * Vráti cestu k základnému adresáru.
  * \sa setBasePath()
  */
-QUrl FaceFileScanner::basePath()
+QUrl FaceFileScanner::basePath() const
 {
 	return m_basePath;
 }
@@ -212,6 +226,22 @@ void FaceFileScanner::setBasePath(const QUrl &url)
 		path.takeLast();
 	}
 	setScanPath(path.join("/") + "/data/ground_truths/xml/");
+}
+
+/**
+ * Vráti stav filtrovania tvárí odfotených zpredu.
+ */
+bool FaceFileScanner::filterFrontal() const
+{
+	return m_filterFrontal;
+}
+
+/**
+ * Nastavenie filtrovania tvárí na \a filter.
+ */
+void FaceFileScanner::setFilterFrontal(bool filter)
+{
+	m_filterFrontal = filter;
 }
 
 void FaceFileScanner::scanFile(const QString &fileName)
@@ -292,7 +322,6 @@ FaceFileScanner::ImageInfo FaceFileScanner::readFile(const QString &fileName)
 							}
 							inf.setFile(inf.absolutePath() + "/" + inf.baseName() + ".png");
 							ret.setUrl(inf.absoluteFilePath());
-							//ret.setUrl(basePath().toLocalFile() + "/" + definitionReader.attributes().value("relative").toString());
 						}
 						break;
 					case SubjectState:
@@ -326,6 +355,11 @@ FaceFileScanner::ImageInfo FaceFileScanner::readFile(const QString &fileName)
 								faceData.mouth.setY(y.toInt());
 							}
 						}
+						else if (definitionReader.attributes().hasAttribute("name")) {
+							if (definitionReader.qualifiedName() == "Pose") {
+								faceData.pose = definitionReader.attributes().value("name").toString();
+							}
+						}
 						break;
 					default:
 						break;
@@ -337,9 +371,18 @@ FaceFileScanner::ImageInfo FaceFileScanner::readFile(const QString &fileName)
 					case FaceState:
 						if (definitionReader.qualifiedName() == "Face") {
 							state = ApplicationState;
-							data << faceData;
+							bool filtered = false;
+							if (m_filterFrontal) {
+								if (!faceData.isFrontal()) {
+									filtered = true;
+								}
+							}
+							if (!filtered) {
+								data << faceData;
+							}
 							faceData.leftEye = QPoint();
 							faceData.rightEye = QPoint();
+							faceData.pose = "";
 						}
 						break;
 					case ApplicationState:

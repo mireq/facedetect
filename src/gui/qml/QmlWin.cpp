@@ -43,6 +43,7 @@ QmlWin::QmlWin(QWidget *parent):
 	m_aligner->setCollectStatistics(true);
 	m_faceBrowserModel = new FaceBrowserModel(m_aligner, this);
 	m_faceFileScanner = new FaceFileScanner(this);
+	m_faceFileScanner->setFilterFrontal(true);
 	imageProvider->bindScanner(m_faceFileScanner);
 	imageProvider->bindAlign(m_aligner);
 	rootContext()->setContextProperty("runtime", this);

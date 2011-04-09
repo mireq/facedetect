@@ -114,6 +114,7 @@ void ConsoleInterface::startPrintAlign()
 	m_aligner = QSharedPointer<FaceDetect::Align>(new FaceDetect::Align());
 	m_aligner->setImageSize(128);
 	m_faceScanner = QSharedPointer<FaceDetect::FaceFileScanner>(new FaceDetect::FaceFileScanner());
+	m_faceScanner->setFilterFrontal(true);
 	m_faceScanner->setBasePath(m_facesPath);
 	connect(m_faceScanner.data(), SIGNAL(progressChanged(double)), this, SLOT(updateProgress(double)));
 	connect(m_faceScanner.data(), SIGNAL(finished()), SLOT(startNextStep()));
@@ -189,6 +190,7 @@ void ConsoleInterface::scanFaceDatabase()
 		m_cout.flush();
 	}
 	m_faceScanner = QSharedPointer<FaceDetect::FaceFileScanner>(new FaceDetect::FaceFileScanner());
+	m_faceScanner->setFilterFrontal(true);
 	m_faceScanner->setBasePath(m_facesPath);
 	connect(m_faceScanner.data(), SIGNAL(progressChanged(double)), this, SLOT(updateProgress(double)));
 	connect(m_faceScanner.data(), SIGNAL(finished()), SLOT(onFaceScanningFinished()));
@@ -226,7 +228,8 @@ void ConsoleInterface::onNonFaceScanningFinished()
 void ConsoleInterface::trainNet()
 {
 	m_trainingDatabase->shuffle();
-	m_neuralNet->setLearningSpeed(0.005);
+	m_neuralNet->setLearningSpeed(0.0004);
+	m_neuralNet->setNumEpoch(50);
 
 	if (!m_quiet) {
 		m_cout << "\rStarting training\n";

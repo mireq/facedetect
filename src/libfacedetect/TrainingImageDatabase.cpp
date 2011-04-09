@@ -27,7 +27,8 @@ TrainingImageDatabase::TrainingImageDatabase(QObject *parent):
 {
 	m_aligner->setImageSize(128);
 	m_aligner->setCollectStatistics(false);
-	m_imageFilter.setFilters(FaceDetect::ImageFilter::GrayscaleFilter);
+	m_imageFilter.setFilters(FaceDetect::ImageFilter::GrayscaleFilter | FaceDetect::ImageFilter::IlluminationFilter);
+	//m_imageFilter.setFilters(FaceDetect::ImageFilter::GrayscaleFilter);
 }
 
 TrainingImageDatabase::~TrainingImageDatabase()
@@ -85,13 +86,17 @@ void TrainingImageDatabase::addImage(const FaceDetect::FaceFileScanner::ImageInf
 		foreach (const FaceFileScanner::ImageInfo &img, images) {
 			TrainingSample sample;
 			sample.info = QSharedPointer<FaceFileScanner::ImageInfo>(new FaceFileScanner::ImageInfo(img));
-			m_samples.append(sample);
+			if (sample.info->isValid()) {
+				m_samples.append(sample);
+			}
 		}
 	}
-	else {
+	else if (image.faceEnd() - image.faceBegin() == 1) {
 		TrainingSample sample;
 		sample.info = QSharedPointer<FaceFileScanner::ImageInfo>(new FaceFileScanner::ImageInfo(image));
-		m_samples.append(sample);
+		if (sample.info->isValid()) {
+			m_samples.append(sample);
+		}
 	}
 }
 
@@ -181,6 +186,10 @@ inline void TrainingImageDatabase::calcVectors(std::size_t sample) const
 	m_samples[sample].input = m_imageFilter.filterVector(m_workingImage.scaled(QSize(ImageWidth, ImageHeight), Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
 	m_samples[sample].output = LaVectorDouble(1);
 	m_samples[sample].output(0) = hasFace;
+
+	static int i = 0;
+	i++;
+	m_imageFilter.filterImage(m_workingImage.scaled(QSize(ImageWidth, ImageHeight), Qt::IgnoreAspectRatio, Qt::SmoothTransformation)).save(QString("/dev/shm/pict%1.png").arg(i), "PNG");
 }
 
 } /* end of namespace FaceDetect */

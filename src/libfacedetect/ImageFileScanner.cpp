@@ -11,6 +11,8 @@
 #include <QFileInfo>
 #include <QImage>
 #include <QImageReader>
+#include "ImageFilter.h"
+#include "ImageSegmenter.h"
 #include "ImageFileScanner.h"
 
 namespace FaceDetect {
@@ -52,6 +54,17 @@ void ImageFileScanner::scanFile(const QString &fileName)
 	// Výstup pre fotografie bez tváre je vždy 0
 	outVector(0) = 0;
 
+	ImageFilter filter;
+	filter.setFilters(FaceDetect::ImageFilter::GrayscaleFilter | FaceDetect::ImageFilter::IlluminationFilter);
+	ImageSegmenter segmenter(image);
+	segmenter.setSegmentSize(QSize(ImageWidth, ImageHeight));
+	segmenter.setStep(ImageWidth / 2, ImageHeight / 2);
+	for (int segment = 0; segment < segmenter.segmentCount(); ++segment) {
+		QImage segmentImage = segmenter.segmentImage(segment);
+		inVector = filter.filterVector(segmentImage);
+		emit imageScanned(inVector, outVector);
+	}
+	/*
 	// Výpočet počtu segmentov
 	int xCount = image.width() / ImageWidth;
 	int yCount = image.height() / ImageHeight;
@@ -70,7 +83,7 @@ void ImageFileScanner::scanFile(const QString &fileName)
 			}
 			emit imageScanned(inVector, outVector);
 		}
-	}
+	}*/
 }
 
 } /* end of namespace FaceDetect */
