@@ -12,6 +12,7 @@
 
 #include <QImage>
 #include <QSharedPointer>
+#include <QThread>
 #include <lapackpp/gmf.h>
 #include "ImageSegmenter.h"
 #include "NeuralNet.h"

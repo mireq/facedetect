@@ -35,7 +35,7 @@ public:
 		QPoint nose;     /**< Pozícia nosa.        */
 		QPoint mouth;    /**< Pozícia úst.         */
 		QString pose;    /**< Póza.                */
-		bool isFrontal() const;
+		bool isFrontal() const; /**< Vráti \e true, ak je osoba fotografovaná zpredu */
 	};
 
 /**

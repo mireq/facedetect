@@ -32,7 +32,7 @@ BPNeuralNet::~BPNeuralNet()
 LaVectorDouble BPNeuralNet::calcOutput(const LaVectorDouble &input)
 {
 	// Výstupný vektor
-	LaGenMatDouble ret(trainingDataReader()->outputVectorSize(), 1);
+	LaGenMatDouble ret(outputVectorSize(), 1);
 	// Násobenie matice a vektoru $\vect{u}^{stred} = \matr{W} \times \vect{x}$
 	Blas_Mat_Mat_Mult(m_w, input, m_stred, false, false);
 	// Výpočet $o_j = \Psi(u_j^{stred})$
@@ -73,7 +73,7 @@ void BPNeuralNet::trainSample(const LaVectorDouble &input, const LaVectorDouble 
 
 void BPNeuralNet::initializeTraining()
 {
-	m_w = LaGenMatDouble(m_stredNeuronov, trainingDataReader()->inputVectorSize());
+	m_w = LaGenMatDouble(m_stredNeuronov, inputVectorSize());
 	m_v = LaGenMatDouble(m_stredNeuronov, 1);
 	initializeMatrix(m_w, -0.5, 0.5);
 	initializeMatrix(m_v, -0.5, 0.5);

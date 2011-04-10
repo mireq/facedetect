@@ -57,6 +57,7 @@ set(facedetect_SRCS
 	src/libfacedetect/ImageFileScanner.cpp
 	src/libfacedetect/ImageFilter.cpp
 	src/libfacedetect/ImageSegmenter.cpp
+	src/libfacedetect/NetTrainer.cpp
 	src/libfacedetect/NeuralNet.cpp
 	src/libfacedetect/TrainingDataReader.cpp
 	src/libfacedetect/TrainingImageDatabase.cpp
@@ -81,6 +82,7 @@ set(facedetect_MOC_HDRS
 	src/libfacedetect/FaceFileScanner.h
 	src/libfacedetect/FileScanner.h
 	src/libfacedetect/ImageFileScanner.h
+	src/libfacedetect/NetTrainer.h
 	src/libfacedetect/NeuralNet.h
 	src/libfacedetect/TrainingDataReader.h
 	src/libfacedetect/TrainingImageDatabase.h

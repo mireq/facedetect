@@ -10,21 +10,18 @@
 #ifndef NEURALNET_9RUG4BT8
 #define NEURALNET_9RUG4BT8
 
-#include <QMutex>
-#include <QSharedPointer>
-#include <QThread>
+#include <QObject>
 #include <boost/serialization/access.hpp>
 #include <lapackpp/gmd.h>
 #include <lapackpp/lavd.h>
 
 namespace FaceDetect {
-
-class TrainingDataReader;
+class NetTrainer;
 
 /**
  * \brief Všeobecná neurónová sieť.
  */
-class NeuralNet: public QThread
+class NeuralNet: public QObject
 {
 Q_OBJECT
 /**
@@ -32,10 +29,6 @@ Q_OBJECT
  * eta (η) konkrétnej implementácie neurónovej siete.
  */
 Q_PROPERTY(double learningSpeed READ learningSpeed WRITE setLearningSpeed);
-/**
- * Počet epoch učenia neurónovej siete.
- */
-Q_PROPERTY(int numEpoch READ numEpoch WRITE setNumEpoch);
 public:
 	explicit NeuralNet(QObject *parent = 0);
 	virtual ~NeuralNet();
@@ -48,43 +41,28 @@ public:
 	 */
 	void setLearningSpeed(double learningSpeed);
 	/**
-	 * Vráti počet epoch učenia.
-	 */
-	int numEpoch() const;
-	/**
-	 * Nastavenie počtu epochu učenia na hodnotu \a numEpoch.
-	 */
-	void setNumEpoch(int numEpoch);
-	TrainingDataReader *trainingDataReader() const;
-	void setTrainingDataReader(TrainingDataReader *reader);
-	int inputVectorSize() const;
-	int outputVectorSize() const;
-	void stop();
-	/**
 	 * Výpočet výstupu pre vstup \a input. Výstup je návratovou hodnotou.
 	 */
 	virtual LaVectorDouble calcOutput(const LaVectorDouble &input) = 0;
+	/**
+	 * Vráti veľkosť vstupného vektoru siete.
+	 */
+	int inputVectorSize() const { return m_inputVectorSize; };
+	/**
+	 * Vráti veľkosť výstupného vektoru siete.
+	 */
+	int outputVectorSize() const { return m_outputVectorSize; };
+	void setInputVectorSize(int size);
+	void setOutputVectorSize(int size);
 	/**
 	 * Serializácia dát neurónovej siete.
 	 */
 	template<class Archive> void serialize(Archive &ar, const unsigned int version) {
 		Q_UNUSED(version);
 		ar & m_learningSpeed;
-		ar & m_numEpoch;
+		ar & m_inputVectorSize;
+		ar & m_outputVectorSize;
 	}
-
-signals:
-	/**
-	 * Signál o dokončení tréningu pre vzorku slúži len pre informatívne účely.
-	 * Vyšle sa štandardne raz za niekoľko vzoriek. Argumentom \a sample je číslo
-	 * vzorky a \a epoch je číslo aktuálnej epochy.
-	 */
-	void sampleFinished(std::size_t sample, int epoch);
-	/**
-	 * Signál sa vyšle po ukončení tréningovej epochy. Argument \a epoch je číslom
-	 * epochy a \a mse je chyba v tejto epoche.
-	 */
-	void epochFinished(int epoch, double mse);
 
 protected:
 	/**
@@ -100,23 +78,15 @@ protected:
 	void initializeMatrix(LaGenMatDouble &matrix, double min, double max) const;
 
 private:
-	void run();
-	double calcMse();
-
-private:
-	/// Ak je táto premenná \e true tréning sa ukončí hneď po dokončení vzorky.
-	bool m_stop;
-	/// Ochrana premennej stop.
-	QMutex m_stopMutex;
 	/// Rýchlosť učenia neurónovej siete - eta (η).
 	double m_learningSpeed;
-	/// Počet tréningových epoch.
-	int m_numEpoch;
-	/// Objekt čítajúci tréningové vzorky.
-	TrainingDataReader *m_reader;
-	Q_DISABLE_COPY(NeuralNet)
+	/// Veľkosť vstupného vektoru.
+	int m_inputVectorSize;
+	/// Veľkosť výstupného vektoru.
+	int m_outputVectorSize;
 
 friend class boost::serialization::access;
+friend class FaceDetect::NetTrainer;
 }; /* -----  end of class NeuralNet  ----- */
 
 } /* end of namespace FaceDetect */

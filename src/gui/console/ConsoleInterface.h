@@ -21,6 +21,7 @@
 #include "libfacedetect/FaceFileScanner.h"
 #include "libfacedetect/ImageFileScanner.h"
 #include "libfacedetect/ImageFilter.h"
+#include "libfacedetect/NetTrainer.h"
 #include "libfacedetect/TrainingImageDatabase.h"
 
 class ConsoleInterface: public QObject
@@ -55,7 +56,7 @@ private slots:
 
 	// Výpisy
 	void updateProgress(double progress);
-	void printTrainingEpoch(int epoch, double mse);
+	void printTrainingEpoch(int epoch, double msea, double msee);
 	void printTrainingSample(std::size_t sample, int epoch);
 
 private:
@@ -93,6 +94,7 @@ private:
 	QSharedPointer<FaceDetect::ImageFileScanner> m_nonfaceScanner;
 	QSharedPointer<FaceDetect::NeuralNet> m_neuralNet;
 	QSharedPointer<FaceDetect::Align> m_aligner;
+	QSharedPointer<FaceDetect::NetTrainer> m_trainer;
 	QVector<FaceDetect::FaceFileScanner::FaceData> m_faceData;
 	FaceDetect::TrainingImageDatabase *m_trainingDatabase;
 	struct ProcessStep {

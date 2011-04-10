@@ -164,7 +164,6 @@ void ConsoleInterface::startTraining()
 	if (net == 0) {
 		net = new FaceDetect::BPNeuralNet();
 	}
-	net->setTrainingDataReader(m_trainingDatabase);
 	m_neuralNet = QSharedPointer<FaceDetect::NeuralNet>(net);
 
 	if (!unserialized) {
@@ -228,23 +227,26 @@ void ConsoleInterface::onNonFaceScanningFinished()
 void ConsoleInterface::trainNet()
 {
 	m_trainingDatabase->shuffle();
+	m_trainer = QSharedPointer<FaceDetect::NetTrainer>(new FaceDetect::NetTrainer);
+	m_trainer->setNumEpoch(50);
+	m_trainer->setTrainingDataReader(m_trainingDatabase);
 	m_neuralNet->setLearningSpeed(0.0004);
-	m_neuralNet->setNumEpoch(50);
 
 	if (!m_quiet) {
 		m_cout << "\rStarting training\n";
 		m_cout.flush();
 	}
-	connect(m_neuralNet.data(), SIGNAL(finished()), this, SLOT(onTrainingFinished()));
-	connect(m_neuralNet.data(), SIGNAL(terminated()), this, SLOT(onTrainingFinished()));
-	connect(m_neuralNet.data(), SIGNAL(epochFinished(int,double)), this, SLOT(printTrainingEpoch(int,double)));
-	connect(m_neuralNet.data(), SIGNAL(sampleFinished(std::size_t,int)), this, SLOT(printTrainingSample(std::size_t,int)));
-	m_neuralNet->start();
+	connect(m_trainer.data(), SIGNAL(finished()), this, SLOT(onTrainingFinished()));
+	connect(m_trainer.data(), SIGNAL(terminated()), this, SLOT(onTrainingFinished()));
+	connect(m_trainer.data(), SIGNAL(epochFinished(int,double,double)), this, SLOT(printTrainingEpoch(int,double,double)));
+	connect(m_trainer.data(), SIGNAL(sampleFinished(std::size_t,int)), this, SLOT(printTrainingSample(std::size_t,int)));
+	m_trainer->trainNet(m_neuralNet.data());
 }
 
 void ConsoleInterface::onTrainingFinished()
 {
 	saveNeuralNet();
+	m_trainer = QSharedPointer<FaceDetect::NetTrainer>(0);
 	startNextStep();
 }
 
@@ -266,10 +268,10 @@ void ConsoleInterface::updateProgress(double progress)
 	}
 }
 
-void ConsoleInterface::printTrainingEpoch(int epoch, double mse)
+void ConsoleInterface::printTrainingEpoch(int epoch, double msea, double msee)
 {
 	if (!m_quiet) {
-		m_cout << "\rEpoch: " << epoch << ", MSE: " << mse << "\n";
+		m_cout << "\rEpoch: " << epoch << ", MSEA: " << msea << ", MSEE:" << msee << "\n";
 		m_cout.flush();
 	}
 }
