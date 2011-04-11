@@ -7,10 +7,14 @@
  * =====================================================================
  */
 
+#include <QList>
 #include <QMutexLocker>
+#include <QPair>
 #include "NeuralNet.h"
 #include "TrainingDataReader.h"
 #include "NetTrainer.h"
+
+#include <QDebug>
 
 namespace FaceDetect {
 
@@ -22,7 +26,8 @@ NetTrainer::NetTrainer(QObject *parent):
 	m_reader(0),
 	m_stop(false),
 	m_numEpoch(100),
-	m_net(0)
+	m_net(0),
+	m_trainingSetSize(0)
 {
 }
 
@@ -38,6 +43,16 @@ int NetTrainer::numEpoch() const
 void NetTrainer::setNumEpoch(int numEpoch)
 {
 	m_numEpoch = numEpoch;
+}
+
+std::size_t NetTrainer::trainingSetSize() const
+{
+	return m_trainingSetSize;
+}
+
+void NetTrainer::setTrainingSetSize(std::size_t size)
+{
+	m_trainingSetSize = size;
 }
 
 /**
@@ -107,7 +122,11 @@ void NetTrainer::run()
 	// V každej trénovacej epoche sa vyšle signál epochFinished
 	for (int epoch = 0; epoch < m_numEpoch; ++epoch) {
 		// Pre každú vzorku sa volá trainSample
-		for (std::size_t sample = 0; sample < m_reader->trainingSetSize(); ++sample) {
+		std::size_t trainingSetSize = qMin(m_reader->trainingSetSize(), m_trainingSetSize);
+		if (trainingSetSize == 0) {
+			m_trainingSetSize = m_reader->trainingSetSize();
+		}
+		for (std::size_t sample = 0; sample < trainingSetSize; ++sample) {
 			{
 				QMutexLocker lock(&m_stopMutex);
 				if (m_stop) {
@@ -122,8 +141,12 @@ void NetTrainer::run()
 			}
 		}
 		emit sampleFinished(m_reader->trainingSetSize(), epoch);
-		double mse = calcMse();
-		emit epochFinished(epoch, mse, mse);
+		double msea = calcMse(0, trainingSetSize);
+		double msee = msea;
+		if (trainingSetSize != m_reader->trainingSetSize()) {
+			msee = calcMse(trainingSetSize, m_reader->trainingSetSize(), true);
+		}
+		emit epochFinished(epoch, msea, msee);
 	}
 	{
 		QMutexLocker lock(&m_stopMutex);
@@ -135,16 +158,51 @@ void NetTrainer::run()
  * Výpočet MSE neurónovej siete.
  * \sa calcOutput
  */
-double NetTrainer::calcMse()
+double NetTrainer::calcMse(std::size_t from, std::size_t to, bool binary)
 {
 	double errorSum = 0;
-	for (std::size_t sample = 0; sample < m_reader->trainingSetSize(); ++sample) {
+	typedef QPair<double,double> OutT;
+	QList<OutT> outData;
+	for (std::size_t sample = from; sample < to; ++sample) {
 		double out = m_net->calcOutput(m_reader->inputVector(sample))(0);
 		double expected = m_reader->outputVector(sample)(0);
-		double diff = out - expected;
-		errorSum += diff * diff;
+		if (binary) {
+			outData << QPair<double,double>(out, expected);
+		}
+		else {
+			double diff = out - expected;
+			errorSum += diff * diff;
+		}
 	}
-	return errorSum / static_cast<double>(m_reader->trainingSetSize());
+	if (binary) {
+		long badSum = 0;
+		qSort(outData.begin(), outData.end(), [](OutT x, OutT y) { return x.first < y.first; });
+		double threshold = 0;
+		for (auto sample = outData.begin(); sample != outData.end(); ++sample) {
+			double expected = sample->second;
+			double out = 1.0; // Pre hranicu 0
+			if (expected != out) {
+				badSum++;
+			}
+		}
+		long best = badSum;
+		long bestThres = threshold;
+		for (auto sample = outData.begin(); sample != outData.end(); ++sample) {
+			threshold = sample->first;
+			if (sample->second == 1) {
+				badSum++;
+			}
+			else {
+				badSum--;
+			}
+			if (badSum < best) {
+				best = badSum;
+				bestThres = threshold;
+			}
+		}
+		errorSum = best;
+	}
+	return errorSum / static_cast<double>(to - from);
 }
 
 } /* end of namespace FaceDetect */

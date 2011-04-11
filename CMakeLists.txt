@@ -49,7 +49,7 @@ set(facedetect_SRCS
 	src/main.cpp
 	src/core/FaceBrowserModel.cpp
 	src/core/FaceImageProvider.cpp
-	src/libfacedetect/Align.cpp
+	ac/libfacedetect/Align.cpp
 	src/libfacedetect/BPNeuralNet.cpp
 	src/libfacedetect/FaceDetector.cpp
 	src/libfacedetect/FaceFileScanner.cpp

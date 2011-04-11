@@ -27,8 +27,11 @@ ConsoleInterface::ConsoleInterface(QObject *parent):
 	m_sobelFilter(false),
 	m_gaborFilter(false),
 	m_onlyGaborWavelet(false),
+	m_trainingSetPercent(100),
 	m_quiet(false),
 	m_printAlign(false),
+	m_faceCount(0),
+	m_nonFaceCount(0),
 	m_cout(stdout),
 	m_trainingDatabase(new FaceDetect::TrainingImageDatabase(this))
 {
@@ -216,20 +219,31 @@ void ConsoleInterface::onFaceScanningFinished()
 {
 	m_faceScanner = QSharedPointer<FaceDetect::FaceFileScanner>(0);
 	startNextStep();
+	m_faceCount = m_trainingDatabase->trainingSetSize() - m_nonFaceCount;
+	if (!m_quiet) {
+		m_cout << "\rFace count: " << m_faceCount << "\n";
+		m_cout.flush();
+	}
 }
 
 void ConsoleInterface::onNonFaceScanningFinished()
 {
 	m_nonfaceScanner = QSharedPointer<FaceDetect::ImageFileScanner>(0);
 	startNextStep();
+	m_nonFaceCount = m_trainingDatabase->trainingSetSize() - m_faceCount;
+	if (!m_quiet) {
+		m_cout << "\rNon face count: " << m_nonFaceCount << "\n";
+		m_cout.flush();
+	}
 }
 
 void ConsoleInterface::trainNet()
 {
 	m_trainingDatabase->shuffle();
 	m_trainer = QSharedPointer<FaceDetect::NetTrainer>(new FaceDetect::NetTrainer);
-	m_trainer->setNumEpoch(50);
+	m_trainer->setNumEpoch(55);
 	m_trainer->setTrainingDataReader(m_trainingDatabase);
+	m_trainer->setTrainingSetSize(m_trainingDatabase->trainingSetSize() * (static_cast<double>(m_trainingSetPercent) / 100.0));
 	m_neuralNet->setLearningSpeed(0.0004);
 
 	if (!m_quiet) {
@@ -318,6 +332,7 @@ void ConsoleInterface::parseCommandline()
 	m_faceCachePath = getArgument(arguments, "--faceCache");
 	m_quiet = getBoolArgument(arguments, "--quiet");
 	m_printAlign = getBoolArgument(arguments, "--printAlign");
+	m_trainingSetPercent = getIntArgument(arguments, "--trainingSetPercent");
 }
 
 QString ConsoleInterface::getArgument(const QStringList &arguments, const QString &argumentName)
@@ -353,6 +368,19 @@ double ConsoleInterface::getDoubleArgument(const QStringList &arguments, const Q
 	}
 
 	return arguments.at(argumentIdx + 1).toDouble();
+}
+
+int ConsoleInterface::getIntArgument(const QStringList &arguments, const QString &argumentName)
+{
+	int argumentIdx = arguments.indexOf(argumentName);
+	if (argumentIdx < 0) {
+		return 0;
+	}
+	if (argumentIdx + 1 >= arguments.count()) {
+		return 0;
+	}
+
+	return arguments.at(argumentIdx + 1).toInt();
 }
 
 QStringList ConsoleInterface::getArguments(const QStringList &arguments, const QString &argumentName)

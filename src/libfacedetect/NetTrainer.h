@@ -35,6 +35,14 @@ public:
 	 * Nastavenie počtu epochu učenia na hodnotu \a numEpoch.
 	 */
 	void setNumEpoch(int numEpoch);
+	/**
+	 * Vráti veľkosť tréningovej množiny.
+	 */
+	std::size_t trainingSetSize() const;
+	/**
+	 * Nastavenie veľkosti tréningovej množiny na \a size.
+	 */
+	void setTrainingSetSize(std::size_t size);
 	TrainingDataReader *trainingDataReader() const;
 	void setTrainingDataReader(TrainingDataReader *reader);
 	void stop();
@@ -57,7 +65,7 @@ signals:
 private:
 	using QThread::start;
 	void run();
-	double calcMse();
+	double calcMse(std::size_t from, std::size_t to, bool binary = false);
 
 private:
 	/// Objekt čítajúci tréningové vzorky.
@@ -70,6 +78,8 @@ private:
 	int m_numEpoch;
 	/// Neurónova sieť, ktorá sa má natrénovať.
 	NeuralNet *m_net;
+	/// Veľkosť tréningovej množiny.
+	std::size_t m_trainingSetSize;
 
 	Q_DISABLE_COPY(NetTrainer)
 }; /* -----  end of class NetTrainer  ----- */

@@ -64,6 +64,7 @@ private:
 	QString getArgument(const QStringList &arguments, const QString &argumentName);
 	bool getBoolArgument(const QStringList &arguments, const QString &argumentName);
 	double getDoubleArgument(const QStringList &arguments, const QString &argumentName);
+	int getIntArgument(const QStringList &arguments, const QString &argumentName);
 	QStringList getArguments(const QStringList &arguments, const QString &argumentName);
 	void saveNeuralNet();
 	void scanImageFile(const QString &file);
@@ -78,6 +79,7 @@ private:
 	bool m_sobelFilter;
 	bool m_gaborFilter;
 	bool m_onlyGaborWavelet;
+	int m_trainingSetPercent;
 	FaceDetect::ImageFilter::GaborParameters m_gaborParameters;
 
 	QString m_loadNetFile;
@@ -89,6 +91,8 @@ private:
 	QString m_faceCachePath;
 	bool m_quiet;
 	bool m_printAlign;
+	std::size_t m_faceCount;
+	std::size_t m_nonFaceCount;
 	mutable QTextStream m_cout;
 	QSharedPointer<FaceDetect::FaceFileScanner> m_faceScanner;
 	QSharedPointer<FaceDetect::ImageFileScanner> m_nonfaceScanner;
