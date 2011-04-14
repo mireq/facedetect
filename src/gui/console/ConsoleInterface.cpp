@@ -39,7 +39,7 @@ ConsoleInterface::ConsoleInterface(QObject *parent):
 	settings.beginGroup("paths");
 	m_facesPath = settings.value("faces").toString();
 	m_nonFacesPath = settings.value("nonfaces").toString();
-	m_faceCachePath = settings.value("facecache").toString();
+	m_faceCachePath = settings.value("faceCache").toString();
 	settings.endGroup();
 
 	parseCommandline();

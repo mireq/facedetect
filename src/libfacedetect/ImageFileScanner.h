@@ -26,6 +26,8 @@ Q_OBJECT
 public:
 	ImageFileScanner(QObject *parent = 0);
 	~ImageFileScanner();
+
+protected:
 	virtual void scanFile(const QString &fileName);
 
 signals:

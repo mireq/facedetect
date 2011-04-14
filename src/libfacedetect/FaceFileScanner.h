@@ -82,8 +82,10 @@ public:
 	void setBasePath(const QUrl &url);
 	bool filterFrontal() const;
 	void setFilterFrontal(bool filter);
-	virtual void scanFile(const QString &fileName);
 	ImageInfo readFile(const QString &fileName);
+
+protected:
+	virtual void scanFile(const QString &fileName);
 
 signals:
 /**
