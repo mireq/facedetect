@@ -11,6 +11,7 @@
 #define NEURALNET_9RUG4BT8
 
 #include <QObject>
+#include <string>
 #include <boost/serialization/access.hpp>
 #include <lapackpp/gmd.h>
 #include <lapackpp/lavd.h>
@@ -62,7 +63,15 @@ public:
 		ar & m_learningSpeed;
 		ar & m_inputVectorSize;
 		ar & m_outputVectorSize;
-	}
+	};
+	/**
+	 * Serializácia do reťazca.
+	 */
+	virtual std::string saveText() const = 0;
+	/**
+	 * Deserializácia z reťazca.
+	 */
+	virtual void restoreText(const std::string &data) = 0;
 
 protected:
 	/**

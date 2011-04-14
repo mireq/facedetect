@@ -58,14 +58,15 @@ signals:
 	/**
 	 * Signál sa vyšle po ukončení tréningovej epochy. Argument \a epoch je číslom
 	 * epochy, \a msea je chyba na tréningovej množine a \a msee je chyba na
-	 * validačnej množine.
+	 * validačnej množine. Binárne varianty chyby rozdeľujú vstup podľa nejakej
+	 * hranice threshold na hodnoty 0 a 1.
 	 */
-	void epochFinished(int epoch, double msea, double msee);
+	void epochFinished(int epoch, double msea, double msee, double msebina = 0, double msebine = 0, double thresholda = 0, double thresholde = 0);
 
 private:
 	using QThread::start;
 	void run();
-	double calcMse(std::size_t from, std::size_t to, bool binary = false);
+	double calcMse(std::size_t from, std::size_t to, bool binary = false, double *thresholdOut = 0);
 
 private:
 	/// Objekt čítajúci tréningové vzorky.

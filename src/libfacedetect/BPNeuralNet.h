@@ -36,7 +36,9 @@ public:
 		ar & boost::serialization::base_object<NeuralNet>(*this);
 		ar & m_w;
 		ar & m_v;
-	}
+	};
+	std::string saveText() const;
+	void restoreText(const std::string &data);
 
 private:
 	/// Počet stredných neurónov

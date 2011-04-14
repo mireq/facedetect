@@ -30,6 +30,7 @@ ConsoleInterface::ConsoleInterface(QObject *parent):
 	m_trainingSetPercent(100),
 	m_quiet(false),
 	m_printAlign(false),
+	m_printTraining(false),
 	m_faceCount(0),
 	m_nonFaceCount(0),
 	m_cout(stdout),
@@ -241,7 +242,7 @@ void ConsoleInterface::trainNet()
 {
 	m_trainingDatabase->shuffle();
 	m_trainer = QSharedPointer<FaceDetect::NetTrainer>(new FaceDetect::NetTrainer);
-	m_trainer->setNumEpoch(55);
+	m_trainer->setNumEpoch(60);
 	m_trainer->setTrainingDataReader(m_trainingDatabase);
 	m_trainer->setTrainingSetSize(m_trainingDatabase->trainingSetSize() * (static_cast<double>(m_trainingSetPercent) / 100.0));
 	m_neuralNet->setLearningSpeed(0.0004);
@@ -252,7 +253,7 @@ void ConsoleInterface::trainNet()
 	}
 	connect(m_trainer.data(), SIGNAL(finished()), this, SLOT(onTrainingFinished()));
 	connect(m_trainer.data(), SIGNAL(terminated()), this, SLOT(onTrainingFinished()));
-	connect(m_trainer.data(), SIGNAL(epochFinished(int,double,double)), this, SLOT(printTrainingEpoch(int,double,double)));
+	connect(m_trainer.data(), SIGNAL(epochFinished(int,double,double,double,double,double,double)), this, SLOT(printTrainingEpoch(int,double,double,double,double,double,double)));
 	connect(m_trainer.data(), SIGNAL(sampleFinished(std::size_t,int)), this, SLOT(printTrainingSample(std::size_t,int)));
 	m_trainer->trainNet(m_neuralNet.data());
 }
@@ -282,12 +283,22 @@ void ConsoleInterface::updateProgress(double progress)
 	}
 }
 
-void ConsoleInterface::printTrainingEpoch(int epoch, double msea, double msee)
+void ConsoleInterface::printTrainingEpoch(int epoch, double msea, double msee, double msebina, double msebine, double thresholda, double thresholde)
 {
 	if (!m_quiet) {
-		m_cout << "\rEpoch: " << epoch << ", MSEA: " << msea << ", MSEE:" << msee << "\n";
-		m_cout.flush();
+		m_cout << "\r";
 	}
+	if (m_printTraining) {
+		char sep = ' ';
+		if (m_quiet) {
+			sep = '\t';
+		}
+		m_cout << epoch << sep << msea << sep << msee  << sep<< msebina  << sep<< msebine  << sep<< thresholda  << sep<< thresholde << '\n';
+	}
+	else if (!m_quiet) {
+		m_cout << '\r' << "Epoch: " << epoch << ", MSEA: " << msea << ", MSEE:" << msee << '\n';
+	}
+	m_cout.flush();
 }
 
 void ConsoleInterface::printTrainingSample(std::size_t sample, int epoch)
@@ -332,6 +343,7 @@ void ConsoleInterface::parseCommandline()
 	m_faceCachePath = getArgument(arguments, "--faceCache");
 	m_quiet = getBoolArgument(arguments, "--quiet");
 	m_printAlign = getBoolArgument(arguments, "--printAlign");
+	m_printTraining = getBoolArgument(arguments, "--printTraining");
 	m_trainingSetPercent = getIntArgument(arguments, "--trainingSetPercent");
 }
 

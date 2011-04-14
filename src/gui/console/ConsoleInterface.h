@@ -56,7 +56,7 @@ private slots:
 
 	// Výpisy
 	void updateProgress(double progress);
-	void printTrainingEpoch(int epoch, double msea, double msee);
+	void printTrainingEpoch(int epoch, double msea, double msee, double msebina = 0, double msebine = 0, double thresholda = 0, double thresholde = 0);
 	void printTrainingSample(std::size_t sample, int epoch);
 
 private:
@@ -91,6 +91,7 @@ private:
 	QString m_faceCachePath;
 	bool m_quiet;
 	bool m_printAlign;
+	bool m_printTraining;
 	std::size_t m_faceCount;
 	std::size_t m_nonFaceCount;
 	mutable QTextStream m_cout;

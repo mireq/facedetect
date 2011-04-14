@@ -10,11 +10,18 @@
 #include <QList>
 #include <QMutexLocker>
 #include <QPair>
+#include <limits>
+#include "BPNeuralNet.h"
 #include "NeuralNet.h"
 #include "TrainingDataReader.h"
 #include "NetTrainer.h"
 
 #include <QDebug>
+
+using std::numeric_limits;
+using std::ostringstream;
+using std::istringstream;
+using std::string;
 
 namespace FaceDetect {
 
@@ -119,6 +126,10 @@ void NetTrainer::run()
 	}
 	// Inicializácia váh
 	m_net->initializeTraining();
+	// Doteraz najlepšie nájdené MSE
+	double bestMse = numeric_limits<double>::max();
+	// Doteraz najlepšie nájdené hodnoty neurónovej siete
+	string bestNet = m_net->saveText();
 	// V každej trénovacej epoche sa vyšle signál epochFinished
 	for (int epoch = 0; epoch < m_numEpoch; ++epoch) {
 		// Pre každú vzorku sa volá trainSample
@@ -143,11 +154,21 @@ void NetTrainer::run()
 		emit sampleFinished(m_reader->trainingSetSize(), epoch);
 		double msea = calcMse(0, trainingSetSize);
 		double msee = msea;
+		double thresholda = 0;
+		double msebina = calcMse(0, trainingSetSize, true, &thresholda);
+		double thresholde = thresholda;
+		double msebine = msebina;
 		if (trainingSetSize != m_reader->trainingSetSize()) {
-			msee = calcMse(trainingSetSize, m_reader->trainingSetSize(), true);
+			msee = calcMse(trainingSetSize, m_reader->trainingSetSize());
+			msebine = calcMse(trainingSetSize, m_reader->trainingSetSize(), true, &thresholde);
 		}
-		emit epochFinished(epoch, msea, msee);
+		if (msebine < bestMse) {
+			bestMse = msee;
+			bestNet = m_net->saveText();
+		}
+		emit epochFinished(epoch, msea, msee, msebina, msebine, thresholda, thresholde);
 	}
+	m_net->restoreText(bestNet);
 	{
 		QMutexLocker lock(&m_stopMutex);
 		m_stop = false;
@@ -158,7 +179,7 @@ void NetTrainer::run()
  * Výpočet MSE neurónovej siete.
  * \sa calcOutput
  */
-double NetTrainer::calcMse(std::size_t from, std::size_t to, bool binary)
+double NetTrainer::calcMse(std::size_t from, std::size_t to, bool binary, double *thresholdOut)
 {
 	double errorSum = 0;
 	typedef QPair<double,double> OutT;
@@ -201,6 +222,9 @@ double NetTrainer::calcMse(std::size_t from, std::size_t to, bool binary)
 			}
 		}
 		errorSum = best;
+		if (thresholdOut != 0) {
+			*thresholdOut = threshold;
+		}
 	}
 	return errorSum / static_cast<double>(to - from);
 }

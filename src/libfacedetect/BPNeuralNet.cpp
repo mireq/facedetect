@@ -10,8 +10,14 @@
 #include <lapackpp/blas3pp.h>
 #include <lapackpp/blas1pp.h>
 #include <lapackpp/blaspp.h>
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/archive/text_oarchive.hpp>
+#include <sstream>
 #include "TrainingDataReader.h"
 #include "BPNeuralNet.h"
+
+using std::istringstream;
+using std::ostringstream;
 
 namespace FaceDetect {
 
@@ -75,8 +81,8 @@ void BPNeuralNet::initializeTraining()
 {
 	m_w = LaGenMatDouble(m_stredNeuronov, inputVectorSize());
 	m_v = LaGenMatDouble(m_stredNeuronov, 1);
-	initializeMatrix(m_w, -0.5, 0.5);
-	initializeMatrix(m_v, -0.5, 0.5);
+	initializeMatrix(m_w, -1.0, 1.0);
+	initializeMatrix(m_v, -1.0, 1.0);
 }
 
 /**
@@ -95,6 +101,24 @@ inline double BPNeuralNet::derivAktivFunkcia(const double &potencial) const
 	double pom = exp(-potencial);
 	double pom1 = 1.0 + pom;
 	return pom/(pom1 * pom1);
+}
+
+std::string BPNeuralNet::saveText() const
+{
+	ostringstream saveStream;
+	{
+		boost::archive::text_oarchive oa(saveStream);
+		oa << *this;
+	}
+	saveStream.flush();
+	return saveStream.str();
+}
+
+void BPNeuralNet::restoreText(const std::string &data)
+{
+	istringstream restoreStream(data);
+	boost::archive::text_iarchive ia(restoreStream);
+	ia >> *this;
 }
 
 } /* end of namespace FaceDetect */
