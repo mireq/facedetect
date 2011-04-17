@@ -7,6 +7,8 @@
  * =====================================================================
  */
 
+#include "BPNeuralNet.h"
+#include "FaceStructuredNet.h"
 #include "NeuralNet.h"
 
 namespace FaceDetect {
@@ -47,6 +49,23 @@ void NeuralNet::setInputVectorSize(int size)
 void NeuralNet::setOutputVectorSize(int size)
 {
 	m_outputVectorSize = size;
+}
+
+/**
+ * Vytvorenie inštancie neurónovej siete typu \a type. Ak neurónová sieť nie je
+ * podporovaná vráti 0.
+ */
+NeuralNet *NeuralNet::create(const std::string &type, QObject *parent)
+{
+	if (type == "bp") {
+		return new BPNeuralNet(parent);
+	}
+	else if (type == "fs") {
+		return new FaceStructuredNet(parent);
+	}
+	else {
+		return 0;
+	}
 }
 
 /**

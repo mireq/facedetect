@@ -16,6 +16,7 @@
 #include "TrainingDataReader.h"
 #include "BPNeuralNet.h"
 
+#include <QDebug>
 using std::istringstream;
 using std::ostringstream;
 
@@ -25,9 +26,11 @@ namespace FaceDetect {
  * \econstruct
  */
 BPNeuralNet::BPNeuralNet(QObject *parent):
-	NeuralNet(parent)
+	NeuralNet(parent),
+	m_uOut(0)
 {
 	m_stred = LaGenMatDouble(m_stredNeuronov, 1);
+	m_uStred = LaGenMatDouble(m_stredNeuronov, 1);
 	m_delta = LaGenMatDouble(m_stredNeuronov, 1);
 }
 
@@ -40,14 +43,15 @@ LaVectorDouble BPNeuralNet::calcOutput(const LaVectorDouble &input)
 	// Výstupný vektor
 	LaGenMatDouble ret(outputVectorSize(), 1);
 	// Násobenie matice a vektoru $\vect{u}^{stred} = \matr{W} \times \vect{x}$
-	Blas_Mat_Mat_Mult(m_w, input, m_stred, false, false);
+	Blas_Mat_Mat_Mult(m_w, input, m_uStred, false, false);
 	// Výpočet $o_j = \Psi(u_j^{stred})$
 	for (int row = 0; row < m_stred.rows(); ++row) {
-		m_stred(row) = aktivFunkcia(m_stred(row));
+		m_stred(row) = sigmoid(m_uStred(row));
 	}
 	// Výpočet $\hat{y} = \vect{x}^T \times \vect{v}$
 	Blas_Mat_Mat_Mult(m_stred, m_v, ret, true);
-	ret(0, 0) = aktivFunkcia(ret(0, 0));
+	m_uOut = ret(0, 0);
+	ret(0, 0) = sigmoid(ret(0, 0));
 	return ret;
 }
 
@@ -57,18 +61,18 @@ void BPNeuralNet::trainSample(const LaVectorDouble &input, const LaVectorDouble 
 	double n = learningSpeed();
 	// Výpočet $\hat{y}$
 	double out = calcOutput(input)(0);
+	qDebug() << out;
 	// Výpočet chyby $e = y - \hat{y}$
 	double chyba = expectedOutput(0) - out;
 	// Výpočet delta výstupného neurónu $\Delta = \Psi^\prime(u)$
-	double delta = chyba * derivAktivFunkcia(out);
+	double delta = chyba * derivSigmoid(m_uOut);
 	// Adaptácia váh $\vect{v} = \vect{v} + \vect{o}\eta\Delta$
 	Blas_Add_Mult(m_v, (n * delta), m_stred);
 
 	// Adaptácia váh stredných neurónov
 	// Výpočet $\Psi^\prime(u_j)$
-	// Ako dočasné úložište sa používa hodnota stredných neurónov
 	for (int row = 0; row < m_stred.rows(); ++row) {
-		m_delta(row) = derivAktivFunkcia(m_stred(row));
+		m_delta(row) = derivSigmoid(m_uStred(row));
 	}
 	// Výpočet $\Delta_j=\Psi^\prime(u_j)v_j^T\Delta$
 	Blas_Mat_Mat_Trans_Mult(m_delta, m_v, m_delta);
@@ -81,26 +85,8 @@ void BPNeuralNet::initializeTraining()
 {
 	m_w = LaGenMatDouble(m_stredNeuronov, inputVectorSize());
 	m_v = LaGenMatDouble(m_stredNeuronov, 1);
-	initializeMatrix(m_w, -1.0, 1.0);
-	initializeMatrix(m_v, -1.0, 1.0);
-}
-
-/**
- * Vypočíta aktivačnú funkciu (výstupnú hodnotu) pre potenciál \a potencial.
- */
-inline double BPNeuralNet::aktivFunkcia(const double &potencial) const
-{
-	return 1.0 / (1.0 + exp(-potencial));
-}
-
-/**
- * Vypočíta deriváciu aktivačnej funkcie pre potenciál \a potencial.
- */
-inline double BPNeuralNet::derivAktivFunkcia(const double &potencial) const
-{
-	double pom = exp(-potencial);
-	double pom1 = 1.0 + pom;
-	return pom/(pom1 * pom1);
+	initializeMatrix(m_w, -0.5, 0.5);
+	initializeMatrix(m_v, -0.5, 0.5);
 }
 
 std::string BPNeuralNet::saveText() const

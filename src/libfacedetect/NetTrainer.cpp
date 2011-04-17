@@ -11,7 +11,6 @@
 #include <QMutexLocker>
 #include <QPair>
 #include <limits>
-#include "BPNeuralNet.h"
 #include "NeuralNet.h"
 #include "TrainingDataReader.h"
 #include "NetTrainer.h"
@@ -40,6 +39,7 @@ NetTrainer::NetTrainer(QObject *parent):
 
 NetTrainer::~NetTrainer()
 {
+	stop();
 }
 
 int NetTrainer::numEpoch() const
@@ -162,13 +162,14 @@ void NetTrainer::run()
 			msee = calcMse(trainingSetSize, m_reader->trainingSetSize());
 			msebine = calcMse(trainingSetSize, m_reader->trainingSetSize(), true, &thresholde);
 		}
-		if (msebine < bestMse) {
-			bestMse = msee;
+		double mseCombined = qMax(thresholde, 1.0 - thresholde) * msebine;
+		if (mseCombined < bestMse) {
+			bestMse = mseCombined;
 			bestNet = m_net->saveText();
 		}
 		emit epochFinished(epoch, msea, msee, msebina, msebine, thresholda, thresholde);
 	}
-	m_net->restoreText(bestNet);
+	//m_net->restoreText(bestNet);
 	{
 		QMutexLocker lock(&m_stopMutex);
 		m_stop = false;

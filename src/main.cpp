@@ -9,12 +9,15 @@
 
 #include <QApplication>
 #include <QDebug>
+#include <stdlib.h>
+#include <time.h>
 #include "gui/console/ConsoleInterface.h"
 #include "gui/qml/QmlWin.h"
 #include "libfacedetect/FaceFileScanner.h"
 
 int main(int argc, char *argv[])
 {
+	srand(time(0));
 	qRegisterMetaType<FaceDetect::FaceFileScanner::ImageInfo>("FaceDetect::FaceFileScanner::ImageInfo");
 	QApplication::setApplicationName("Face detector");
 	QApplication::setOrganizationDomain("linuxos.sk");

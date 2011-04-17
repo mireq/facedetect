@@ -70,7 +70,8 @@ void FaceDetector::scanImage()
 
 	Utils::PolygonRasterizer rasterizer;
 	ImageFilter filter;
-	filter.setFilters(FaceDetect::ImageFilter::GrayscaleFilter | FaceDetect::ImageFilter::IlluminationFilter);
+	filter.enableIlluminationFilter();
+	filter.enableGrayscaleFilter();
 	// Inverzia transformácie obrazu
 	QTransform rectTransform = m_settings.transform.inverted();
 	int segmentCount = m_segmenter->segmentCount();

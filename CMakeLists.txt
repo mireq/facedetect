@@ -53,12 +53,17 @@ set(facedetect_SRCS
 	src/libfacedetect/BPNeuralNet.cpp
 	src/libfacedetect/FaceDetector.cpp
 	src/libfacedetect/FaceFileScanner.cpp
+	src/libfacedetect/FaceStructuredNet.cpp
 	src/libfacedetect/FileScanner.cpp
+	src/libfacedetect/GaborFilter.cpp
+	src/libfacedetect/GrayscaleFilter.cpp
+	src/libfacedetect/IlluminationFilter.cpp
 	src/libfacedetect/ImageFileScanner.cpp
 	src/libfacedetect/ImageFilter.cpp
 	src/libfacedetect/ImageSegmenter.cpp
 	src/libfacedetect/NetTrainer.cpp
 	src/libfacedetect/NeuralNet.cpp
+	src/libfacedetect/SobelFilter.cpp
 	src/libfacedetect/TrainingDataReader.cpp
 	src/libfacedetect/TrainingImageDatabase.cpp
 	src/libfacedetect/utils/PolygonRasterizer.cpp
@@ -68,8 +73,13 @@ set(facedetect_SRCS
 
 set(facedetect_HDRS
 	src/core/FaceImageProvider.h
+	src/libfacedetect/GaborFilter.h
+	src/libfacedetect/GrayscaleFilter.h
+	src/libfacedetect/IlluminationFilter.h
 	src/libfacedetect/ImageFilter.h
+	src/libfacedetect/ImageFilterBase.h
 	src/libfacedetect/ImageSegmenter.h
+	src/libfacedetect/SobelFilter.h
 	src/libfacedetect/utils/LapackSerialization.h
 	src/libfacedetect/utils/PolygonRasterizer.h
 )
@@ -80,6 +90,7 @@ set(facedetect_MOC_HDRS
 	src/libfacedetect/BPNeuralNet.h
 	src/libfacedetect/FaceDetector.h
 	src/libfacedetect/FaceFileScanner.h
+	src/libfacedetect/FaceStructuredNet.h
 	src/libfacedetect/FileScanner.h
 	src/libfacedetect/ImageFileScanner.h
 	src/libfacedetect/NetTrainer.h

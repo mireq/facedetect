@@ -153,10 +153,10 @@ void ImageSegmenter::setGrayscaleFilter(bool filter)
 {
 	if (filter != grayscaleFilter()) {
 		if (filter) {
-			m_grayscaleFilter.setFilters(ImageFilter::GrayscaleFilter);
+			m_grayscaleFilter.enableGrayscaleFilter();
 		}
 		else {
-			m_grayscaleFilter.setFilters(ImageFilter::NoFilter);
+			m_grayscaleFilter.disableGrayscaleFilter();
 		}
 		if (!m_transformedImage.isNull()) {
 			m_dirtyImage = true;

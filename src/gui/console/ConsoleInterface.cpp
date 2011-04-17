@@ -12,8 +12,11 @@
 #include <cstdio>
 #include <fstream>
 #include <QApplication>
+#include <QDebug>
 #include <QMetaType>
 #include <QSettings>
+#include "libfacedetect/BPNeuralNet.h"
+#include "libfacedetect/FaceStructuredNet.h"
 #include "libfacedetect/FaceDetector.h"
 #include "libfacedetect/ImageSegmenter.h"
 #include "ConsoleInterface.h"
@@ -28,6 +31,7 @@ ConsoleInterface::ConsoleInterface(QObject *parent):
 	m_gaborFilter(false),
 	m_onlyGaborWavelet(false),
 	m_trainingSetPercent(100),
+	m_netType("bp"),
 	m_quiet(false),
 	m_printAlign(false),
 	m_printTraining(false),
@@ -80,20 +84,18 @@ void ConsoleInterface::startNextStep()
 void ConsoleInterface::saveFilterImage()
 {
 	FaceDetect::ImageFilter filter;
-	FaceDetect::ImageFilter::Filters filterFlags;
 	if (m_grayscaleFilter) {
-		filterFlags |= FaceDetect::ImageFilter::GrayscaleFilter;
+		filter.enableGrayscaleFilter();
 	}
 	if (m_illuminationFilter) {
-		filterFlags |= FaceDetect::ImageFilter::IlluminationFilter;
+		filter.enableIlluminationFilter();
 	}
 	if (m_sobelFilter) {
-		filterFlags |= FaceDetect::ImageFilter::SobelFilter;
+		filter.enableSobelFilter();
 	}
 	if (m_gaborFilter) {
-		filterFlags |= FaceDetect::ImageFilter::GaborFilter;
+		filter.enableGaborFilter();
 	}
-	filter.setFilters(filterFlags);
 	filter.setIlluminationPlaneOnly(m_illuminationPlaneOnly);
 	filter.setIlluminationCorrectHistogram(!m_noIlluminationCorrectHistogram);
 	filter.setOnlyGaborWavelet(m_onlyGaborWavelet);
@@ -155,18 +157,23 @@ void ConsoleInterface::alignImageScanned(const FaceDetect::FaceFileScanner::Imag
 void ConsoleInterface::startTraining()
 {
 	bool unserialized = false;
-	FaceDetect::BPNeuralNet *net = 0;
+	FaceDetect::NeuralNet *net = 0;
 	if (!m_loadNetFile.isEmpty()) {
 		QByteArray fileName = m_loadNetFile.toUtf8();
 		std::ifstream ifs(fileName.constData());
 		if (ifs.is_open()) {
 			boost::archive::text_iarchive ia(ifs);
+			ia.register_type<FaceDetect::BPNeuralNet>();
+			ia.register_type<FaceDetect::FaceStructuredNet>();
 			ia >> net;
 			unserialized = true;
 		}
 	}
 	if (net == 0) {
-		net = new FaceDetect::BPNeuralNet();
+		net = FaceDetect::NeuralNet::create(m_netType);
+	}
+	if (net == 0) {
+		qFatal("Net not created");
 	}
 	m_neuralNet = QSharedPointer<FaceDetect::NeuralNet>(net);
 
@@ -242,7 +249,7 @@ void ConsoleInterface::trainNet()
 {
 	m_trainingDatabase->shuffle();
 	m_trainer = QSharedPointer<FaceDetect::NetTrainer>(new FaceDetect::NetTrainer);
-	m_trainer->setNumEpoch(60);
+	m_trainer->setNumEpoch(100);
 	m_trainer->setTrainingDataReader(m_trainingDatabase);
 	m_trainer->setTrainingSetSize(m_trainingDatabase->trainingSetSize() * (static_cast<double>(m_trainingSetPercent) / 100.0));
 	m_neuralNet->setLearningSpeed(0.0004);
@@ -277,6 +284,9 @@ void ConsoleInterface::onImageScanned(const LaVectorDouble &input, const LaVecto
 
 void ConsoleInterface::updateProgress(double progress)
 {
+	if (!m_faceScanner.isNull()) {
+		//m_faceScanner->stop();
+	}
 	if (!m_quiet) {
 		m_cout << "\r" << QString("%1%").arg(progress * 100, 5, 'f', 1);
 		m_cout.flush();
@@ -345,6 +355,7 @@ void ConsoleInterface::parseCommandline()
 	m_printAlign = getBoolArgument(arguments, "--printAlign");
 	m_printTraining = getBoolArgument(arguments, "--printTraining");
 	m_trainingSetPercent = getIntArgument(arguments, "--trainingSetPercent");
+	m_netType = getArgument(arguments, "--netType").toUtf8().constData();
 }
 
 QString ConsoleInterface::getArgument(const QStringList &arguments, const QString &argumentName)
@@ -423,7 +434,9 @@ void ConsoleInterface::saveNeuralNet()
 	std::ofstream ofs(fileName.constData());
 	if (ofs.is_open()) {
 		boost::archive::text_oarchive oa(ofs);
-		FaceDetect::BPNeuralNet *net = dynamic_cast<FaceDetect::BPNeuralNet*>(m_neuralNet.data());
+		oa.register_type<FaceDetect::BPNeuralNet>();
+		oa.register_type<FaceDetect::FaceStructuredNet>();
+		const FaceDetect::NeuralNet *net = m_neuralNet.data();
 		oa << net;
 	}
 }

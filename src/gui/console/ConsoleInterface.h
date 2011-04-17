@@ -16,8 +16,8 @@
 #include <QSharedPointer>
 #include <QStringList>
 #include <QTextStream>
+#include <string>
 #include <lapackpp/lavd.h>
-#include "libfacedetect/BPNeuralNet.h"
 #include "libfacedetect/FaceFileScanner.h"
 #include "libfacedetect/ImageFileScanner.h"
 #include "libfacedetect/ImageFilter.h"
@@ -80,7 +80,8 @@ private:
 	bool m_gaborFilter;
 	bool m_onlyGaborWavelet;
 	int m_trainingSetPercent;
-	FaceDetect::ImageFilter::GaborParameters m_gaborParameters;
+	FaceDetect::GaborFilter::GaborParameters m_gaborParameters;
+	std::string m_netType;
 
 	QString m_loadNetFile;
 	QString m_saveNetFile;

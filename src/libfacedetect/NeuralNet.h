@@ -13,6 +13,7 @@
 #include <QObject>
 #include <string>
 #include <boost/serialization/access.hpp>
+#include <cmath>
 #include <lapackpp/gmd.h>
 #include <lapackpp/lavd.h>
 
@@ -72,6 +73,7 @@ public:
 	 * Deserializácia z reťazca.
 	 */
 	virtual void restoreText(const std::string &data) = 0;
+	static NeuralNet *create(const std::string &type, QObject *parent = 0);
 
 protected:
 	/**
@@ -85,6 +87,12 @@ protected:
 	 */
 	virtual void initializeTraining() = 0;
 	void initializeMatrix(LaGenMatDouble &matrix, double min, double max) const;
+	double sigmoid(const double &potencial) const { return 1.0 / (1.0 + std::exp(-potencial)); }
+	double derivSigmoid(const double &potencial) const {
+		double pom = exp(-potencial);
+		double pom1 = 1.0 + pom;
+		return pom/(pom1 * pom1);
+	};
 
 private:
 	/// Rýchlosť učenia neurónovej siete - eta (η).

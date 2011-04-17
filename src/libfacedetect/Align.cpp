@@ -13,7 +13,7 @@
 #include <lapackpp/laslv.h>
 #include <lapackpp/lavli.h>
 #include <lapackpp/laexcp.h>
-#include "ImageFilter.h"
+#include "GrayscaleFilter.h"
 #include "Align.h"
 
 namespace FaceDetect {
@@ -205,10 +205,9 @@ QImage Align::getStatisticsImage() const
 	imgGradient.setColorAt(0.1, Qt::green);
 	imgGradient.setColorAt(0.2, Qt::yellow);
 	imgGradient.setColorAt(1.0, Qt::red);
-	ImageFilter filter;
-	filter.setFilters(FaceDetect::ImageFilter::GrayscaleFilter);
+	GrayscaleFilter filter;
 	filter.setGrayscaleGradient(imgGradient);
-	image = filter.filterImage(image);
+	filter.filter(image);
 	return image;
 }
 

@@ -27,8 +27,8 @@ TrainingImageDatabase::TrainingImageDatabase(QObject *parent):
 {
 	m_aligner->setImageSize(128);
 	m_aligner->setCollectStatistics(false);
-	m_imageFilter.setFilters(FaceDetect::ImageFilter::GrayscaleFilter | FaceDetect::ImageFilter::IlluminationFilter);
-	//m_imageFilter.setFilters(FaceDetect::ImageFilter::GrayscaleFilter);
+	m_imageFilter.enableIlluminationFilter();
+	m_imageFilter.enableGrayscaleFilter();
 }
 
 TrainingImageDatabase::~TrainingImageDatabase()

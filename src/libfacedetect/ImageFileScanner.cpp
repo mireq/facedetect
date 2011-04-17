@@ -55,11 +55,13 @@ void ImageFileScanner::scanFile(const QString &fileName)
 	outVector(0) = 0;
 
 	ImageFilter filter;
-	filter.setFilters(FaceDetect::ImageFilter::GrayscaleFilter | FaceDetect::ImageFilter::IlluminationFilter);
+	filter.enableIlluminationFilter();
+	filter.enableGrayscaleFilter();
 	ImageSegmenter segmenter(image);
 	segmenter.setGrayscaleFilter(true);
 	segmenter.setSegmentSize(QSize(ImageWidth, ImageHeight));
-	segmenter.setStep(ImageWidth / 2, ImageHeight / 3);
+	segmenter.setStep(ImageWidth / 2, ImageHeight / 2);
+	//segmenter.setStep(ImageWidth, ImageHeight);
 	for (int segment = 0; segment < segmenter.segmentCount(); ++segment) {
 		QImage segmentImage = segmenter.segmentImage(segment);
 		inVector = filter.filterVector(segmentImage);

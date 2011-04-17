@@ -7,10 +7,15 @@
  * =====================================================================
  */
 
+#ifndef LAPACKSERIALIZATION_GY0F0E7V
+#define LAPACKSERIALIZATION_GY0F0E7V
+
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
+#include <boost/serialization/split_free.hpp>
 #include <lapackpp/gmd.h>
 #include <lapackpp/lavd.h>
+#include <QVector>
 
 /**
  * \file
@@ -23,7 +28,7 @@ namespace serialization {
 /**
  * Serializácia generickej matice.
  */
-template <class Archive> void save(Archive &ar, const LaGenMatDouble &data, unsigned int /* version */)
+template <class Archive> void save(Archive &ar, const LaGenMatDouble &data, const uint /* version */)
 {
 	int cols = data.cols();
 	int rows = data.rows();
@@ -39,7 +44,7 @@ template <class Archive> void save(Archive &ar, const LaGenMatDouble &data, unsi
 /**
  * Deserializácia generickej matice.
  */
-template <class Archive> void load(Archive &ar, LaGenMatDouble &data, unsigned int /* version */)
+template <class Archive> void load(Archive &ar, LaGenMatDouble &data, const uint /* version */)
 {
 	int cols;
 	int rows;
@@ -56,9 +61,17 @@ template <class Archive> void load(Archive &ar, LaGenMatDouble &data, unsigned i
 }
 
 /**
+ * Serializácia a deserializácia generickej matice.
+ */
+template <class Archive> void serialize(Archive &ar, LaGenMatDouble &data, const uint version)
+{
+	split_free(ar, data, version);
+}
+
+/**
  * Serializácia a deserializácia vektoru.
  */
-template <class Archive> void serialize(Archive &ar, LaVectorDouble &data, unsigned int /*version*/)
+template <class Archive> void serialize(Archive &ar, LaVectorDouble &data, const uint /*version*/)
 {
 	ar & boost::serialization::base_object<LaGenMatDouble>(data);
 }
@@ -66,5 +79,5 @@ template <class Archive> void serialize(Archive &ar, LaVectorDouble &data, unsig
 } /* end of namespace serialization */
 } /* end of namespace boost */
 
-BOOST_SERIALIZATION_SPLIT_FREE(LaGenMatDouble)
+#endif /* end of include guard: LAPACKSERIALIZATION_GY0F0E7V */
 

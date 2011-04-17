@@ -29,8 +29,6 @@ public:
 	virtual LaVectorDouble calcOutput(const LaVectorDouble &input);
 	virtual void trainSample(const LaVectorDouble &input, const LaVectorDouble &expectedOutput);
 	virtual void initializeTraining();
-	double aktivFunkcia(const double &potencial) const;
-	double derivAktivFunkcia(const double &potencial) const;
 	template<class Archive> void serialize(Archive &ar, const unsigned int version) {
 		Q_UNUSED(version);
 		ar & boost::serialization::base_object<NeuralNet>(*this);
@@ -49,6 +47,10 @@ private:
 	/// Váhy medzi skrytou vrstvou a výstupnou vrstvou.
 	LaVectorDouble m_v;
 	/// Potenciály v strednej vrstve.
+	LaVectorDouble m_uStred;
+	/// Potenciál výstupnej vrstvy.
+	double m_uOut;
+	/// Výstup strednej vrstvy
 	LaVectorDouble m_stred;
 	/// Vektor delta.
 	LaVectorDouble m_delta;
