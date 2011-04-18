@@ -162,9 +162,11 @@ void NetTrainer::run()
 			msee = calcMse(trainingSetSize, m_reader->trainingSetSize());
 			msebine = calcMse(trainingSetSize, m_reader->trainingSetSize(), true, &thresholde);
 		}
-		double mseCombined = qMax(thresholde, 1.0 - thresholde) * msebine;
-		if (mseCombined < bestMse) {
-			bestMse = mseCombined;
+		//double mseCombined = qMax(thresholde, 1.0 - thresholde) * msebine;
+		//if (mseCombined <= bestMse) {
+		if (msebine <= bestMse) {
+			//bestMse = mseCombined;
+			bestMse = msebine;
 			bestNet = m_net->saveText();
 		}
 		emit epochFinished(epoch, msea, msee, msebina, msebine, thresholda, thresholde);
@@ -200,6 +202,7 @@ double NetTrainer::calcMse(std::size_t from, std::size_t to, bool binary, double
 		long badSum = 0;
 		qSort(outData.begin(), outData.end(), [](OutT x, OutT y) { return x.first < y.first; });
 		double threshold = 0;
+		double prevThresh = 0;
 		for (auto sample = outData.begin(); sample != outData.end(); ++sample) {
 			double expected = sample->second;
 			double out = 1.0; // Pre hranicu 0
@@ -219,8 +222,9 @@ double NetTrainer::calcMse(std::size_t from, std::size_t to, bool binary, double
 			}
 			if (badSum < best) {
 				best = badSum;
-				bestThres = threshold;
+				bestThres = (threshold + prevThresh) / 2.0;
 			}
+			prevThresh = threshold;
 		}
 		errorSum = best;
 		if (thresholdOut != 0) {

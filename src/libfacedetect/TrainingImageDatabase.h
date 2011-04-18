@@ -63,8 +63,10 @@ private:
 	QVector<TrainingSample> m_samples;
 	/// Adresár s cachovanými fotografiami
 	QString m_cacheDir;
-	/// Filter pre prevod obrázku do odtieňov šedej a úpravu svetlosti.
-	ImageFilter m_imageFilter;
+	/// Globálne filtre.
+	ImageFilter m_globalFilter;
+	/// Lokálne filtre vzťahujúce sa na detekčné okno.
+	ImageFilter m_localFilter;
 	/// Pomocný obrázok používaný pred škálovaním.
 	mutable QImage m_workingImage;
 }; /* -----  end of class TrainingImageDatabase  ----- */

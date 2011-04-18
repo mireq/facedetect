@@ -60,7 +60,7 @@ void ImageFileScanner::scanFile(const QString &fileName)
 	ImageSegmenter segmenter(image);
 	segmenter.setGrayscaleFilter(true);
 	segmenter.setSegmentSize(QSize(ImageWidth, ImageHeight));
-	segmenter.setStep(ImageWidth / 2, ImageHeight / 2);
+	segmenter.setStep(ImageWidth / 2, ImageHeight / 3);
 	//segmenter.setStep(ImageWidth, ImageHeight);
 	for (int segment = 0; segment < segmenter.segmentCount(); ++segment) {
 		QImage segmentImage = segmenter.segmentImage(segment);

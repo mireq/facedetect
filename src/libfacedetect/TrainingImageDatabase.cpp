@@ -27,8 +27,8 @@ TrainingImageDatabase::TrainingImageDatabase(QObject *parent):
 {
 	m_aligner->setImageSize(128);
 	m_aligner->setCollectStatistics(false);
-	m_imageFilter.enableIlluminationFilter();
-	m_imageFilter.enableGrayscaleFilter();
+	m_globalFilter.enableGrayscaleFilter();
+	m_localFilter.enableIlluminationFilter();
 }
 
 TrainingImageDatabase::~TrainingImageDatabase()
@@ -169,6 +169,8 @@ inline void TrainingImageDatabase::calcVectors(std::size_t sample) const
 		}
 		if (!loaded) {
 			QTransform transform = m_aligner->getTransform(*imageInfo.faceBegin());
+			transform *= QTransform::fromScale(0.5, 0.5);
+			transform *= QTransform::fromTranslate(32, 32);
 			QPainter painter(&m_workingImage);
 			painter.setTransform(transform);
 			painter.drawImage(QPoint(0, 0), imageInfo.getImage());
@@ -182,14 +184,11 @@ inline void TrainingImageDatabase::calcVectors(std::size_t sample) const
 		m_workingImage = imageInfo.getImage().scaled(QSize(ImageWidth, ImageHeight));
 	}
 
+	QImage filtredImage = m_globalFilter.filterImage(m_workingImage.scaled(QSize(ImageWidth * 2, ImageHeight * 2), Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
 	m_samples[sample].info.clear();
-	m_samples[sample].input = m_imageFilter.filterVector(m_workingImage.scaled(QSize(ImageWidth, ImageHeight), Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
+	m_samples[sample].input = m_localFilter.filterVector(filtredImage.copy(ImageWidth / 2, ImageHeight / 2, ImageWidth, ImageHeight));
 	m_samples[sample].output = LaVectorDouble(1);
 	m_samples[sample].output(0) = hasFace;
-
-	static int i = 0;
-	i++;
-	m_imageFilter.filterImage(m_workingImage.scaled(QSize(ImageWidth, ImageHeight), Qt::IgnoreAspectRatio, Qt::SmoothTransformation)).save(QString("/dev/shm/pict%1.png").arg(i), "PNG");
 }
 
 } /* end of namespace FaceDetect */

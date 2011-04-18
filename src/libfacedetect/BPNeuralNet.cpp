@@ -16,7 +16,6 @@
 #include "TrainingDataReader.h"
 #include "BPNeuralNet.h"
 
-#include <QDebug>
 using std::istringstream;
 using std::ostringstream;
 
@@ -40,14 +39,14 @@ BPNeuralNet::~BPNeuralNet()
 
 LaVectorDouble BPNeuralNet::calcOutput(const LaVectorDouble &input)
 {
-	// Výstupný vektor
-	LaGenMatDouble ret(outputVectorSize(), 1);
 	// Násobenie matice a vektoru $\vect{u}^{stred} = \matr{W} \times \vect{x}$
 	Blas_Mat_Mat_Mult(m_w, input, m_uStred, false, false);
 	// Výpočet $o_j = \Psi(u_j^{stred})$
 	for (int row = 0; row < m_stred.rows(); ++row) {
 		m_stred(row) = sigmoid(m_uStred(row));
 	}
+	// Výstupný vektor
+	LaGenMatDouble ret(outputVectorSize(), 1);
 	// Výpočet $\hat{y} = \vect{x}^T \times \vect{v}$
 	Blas_Mat_Mat_Mult(m_stred, m_v, ret, true);
 	m_uOut = ret(0, 0);
@@ -61,7 +60,6 @@ void BPNeuralNet::trainSample(const LaVectorDouble &input, const LaVectorDouble 
 	double n = learningSpeed();
 	// Výpočet $\hat{y}$
 	double out = calcOutput(input)(0);
-	qDebug() << out;
 	// Výpočet chyby $e = y - \hat{y}$
 	double chyba = expectedOutput(0) - out;
 	// Výpočet delta výstupného neurónu $\Delta = \Psi^\prime(u)$

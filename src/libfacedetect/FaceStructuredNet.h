@@ -41,9 +41,9 @@ public:
 
 private:
 	/// Počet neurónov prvej vrstvy
-	static const int m_1Neuronov = 20;
+	static const int m_1Neuronov = 5;
 	/// Počet neurónov druhej vrstvy
-	static const int m_2Neuronov = 10;
+	static const int m_2Neuronov = 2;
 	/// Pošet častí obrazu
 	static const int PartCount = 5;
 	/// Vstup rozdelený na samostatné časti

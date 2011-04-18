@@ -249,10 +249,10 @@ void ConsoleInterface::trainNet()
 {
 	m_trainingDatabase->shuffle();
 	m_trainer = QSharedPointer<FaceDetect::NetTrainer>(new FaceDetect::NetTrainer);
-	m_trainer->setNumEpoch(100);
+	m_trainer->setNumEpoch(200);
 	m_trainer->setTrainingDataReader(m_trainingDatabase);
 	m_trainer->setTrainingSetSize(m_trainingDatabase->trainingSetSize() * (static_cast<double>(m_trainingSetPercent) / 100.0));
-	m_neuralNet->setLearningSpeed(0.0004);
+	m_neuralNet->setLearningSpeed(0.08);
 
 	if (!m_quiet) {
 		m_cout << "\rStarting training\n";
