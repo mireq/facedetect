@@ -11,7 +11,6 @@
 #include <QFileInfo>
 #include <QImage>
 #include <QImageReader>
-#include "ImageFilter.h"
 #include "ImageSegmenter.h"
 #include "ImageFileScanner.h"
 
@@ -27,6 +26,22 @@ ImageFileScanner::ImageFileScanner(QObject *parent):
 
 ImageFileScanner::~ImageFileScanner()
 {
+}
+
+/**
+ * Nastavenie filtra pre celý obraz.
+ */
+void ImageFileScanner::setGlobalFilter(const ImageFilter &filter)
+{
+	m_globalFilter = filter;
+}
+
+/**
+ * Nastavenie lokálneho filtra pre časť obrazu.
+ */
+void ImageFileScanner::setLocalFilter(const ImageFilter &filter)
+{
+	m_localFilter = filter;
 }
 
 /**
@@ -54,17 +69,13 @@ void ImageFileScanner::scanFile(const QString &fileName)
 	// Výstup pre fotografie bez tváre je vždy 0
 	outVector(0) = 0;
 
-	ImageFilter filter;
-	filter.enableIlluminationFilter();
-	filter.enableGrayscaleFilter();
 	ImageSegmenter segmenter(image);
-	segmenter.setGrayscaleFilter(true);
+	segmenter.setGlobalFilter(m_globalFilter);
 	segmenter.setSegmentSize(QSize(ImageWidth, ImageHeight));
-	segmenter.setStep(ImageWidth / 2, ImageHeight / 3);
-	//segmenter.setStep(ImageWidth, ImageHeight);
+	segmenter.setStep(ImageWidth / 4, ImageHeight / 4);
 	for (int segment = 0; segment < segmenter.segmentCount(); ++segment) {
 		QImage segmentImage = segmenter.segmentImage(segment);
-		inVector = filter.filterVector(segmentImage);
+		inVector = m_localFilter.filterVector(segmentImage);
 		emit imageScanned(inVector, outVector);
 	}
 	/*

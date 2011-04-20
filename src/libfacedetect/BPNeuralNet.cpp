@@ -16,6 +16,7 @@
 #include "TrainingDataReader.h"
 #include "BPNeuralNet.h"
 
+#include <QDebug>
 using std::istringstream;
 using std::ostringstream;
 

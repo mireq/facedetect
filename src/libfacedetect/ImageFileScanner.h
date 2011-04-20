@@ -13,6 +13,7 @@
 #include <lapackpp/lavd.h>
 #include <QImage>
 #include <QVector>
+#include "ImageFilter.h"
 #include "FileScanner.h"
 
 namespace FaceDetect {
@@ -26,6 +27,8 @@ Q_OBJECT
 public:
 	ImageFileScanner(QObject *parent = 0);
 	~ImageFileScanner();
+	void setGlobalFilter(const ImageFilter &filter);
+	void setLocalFilter(const ImageFilter &filter);
 
 protected:
 	virtual void scanFile(const QString &fileName);
@@ -45,6 +48,10 @@ private:
 	static const int ImageHeight = 20;
 	/// Veľkosť vstupného vektoru (každý pixel má samostatnú položku).
 	static const int InputVectorSize = ImageWidth * ImageHeight;
+	/// Filter aplikovaný na celý obraz.
+	ImageFilter m_globalFilter;
+	/// Filter aplikovaný na časť obrazu.
+	ImageFilter m_localFilter;
 }; /* -----  end of class ImageFileScanner  ----- */
 
 } /* end of namespace FaceDetect */

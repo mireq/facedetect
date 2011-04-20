@@ -13,7 +13,8 @@
 #include <QImage>
 #include <QSharedPointer>
 #include <QThread>
-#include <lapackpp/gmf.h>
+#include <valarray>
+#include "ImageFilter.h"
 #include "ImageSegmenter.h"
 #include "NeuralNet.h"
 
@@ -29,14 +30,17 @@ public:
 	void setImage(const QImage &image);
 	void setupSegmenter(const ImageSegmenter::Settings &settings);
 	void scanImage();
+	void setLocalFilter(const ImageFilter &localFilter);
+	void setGlobalFilter(const ImageFilter &globalFilter);
 
 private:
 	NeuralNet *m_neuralNet;
 	QSharedPointer<ImageSegmenter> m_segmenter;
 	ImageSegmenter::Settings m_settings;
-	/// Matica maximálnych nájdených hodnôt.
-	/// \warining Riadky a stĺpse sú prehodené.
-	LaGenMatFloat m_statistics;
+	/// Štatistiky pre obraz.
+	std::valarray<float> m_statistics;
+	/// Lokálny filter.
+	ImageFilter m_localFilter;
 }; /* -----  end of class FaceDetector  ----- */
 
 } /* end of namespace FaceDetect */

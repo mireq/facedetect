@@ -38,6 +38,8 @@ public:
 	void addImage(const LaVectorDouble &input, const LaVectorDouble &output);
 	void setCacheDir(const QString &dir);
 	void shuffle();
+	void setLocalFilter(const ImageFilter &filter);
+	void setGlobalFilter(const ImageFilter &filter);
 
 private:
 	/**
@@ -56,7 +58,7 @@ private:
 	/// Výška obrázku.
 	static const int ImageHeight = 20;
 	/// Veľkosť vstupného vektoru.
-	static const int InputVecotrSize = ImageWidth * ImageHeight;
+	int m_inputVectorSize;
 	/// Objekt na zarovnávanie fotografií.
 	Align *m_aligner;
 	/// Zoznam trénovacích vzorov.

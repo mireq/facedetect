@@ -131,7 +131,7 @@ void NetTrainer::run()
 	// Doteraz najlepšie nájdené hodnoty neurónovej siete
 	string bestNet = m_net->saveText();
 	// V každej trénovacej epoche sa vyšle signál epochFinished
-	for (int epoch = 0; epoch < m_numEpoch; ++epoch) {
+	for (int epoch = 1; epoch <= m_numEpoch; ++epoch) {
 		// Pre každú vzorku sa volá trainSample
 		std::size_t trainingSetSize = qMin(m_reader->trainingSetSize(), m_trainingSetSize);
 		if (trainingSetSize == 0) {
@@ -152,24 +152,7 @@ void NetTrainer::run()
 			}
 		}
 		emit sampleFinished(m_reader->trainingSetSize(), epoch);
-		double msea = calcMse(0, trainingSetSize);
-		double msee = msea;
-		double thresholda = 0;
-		double msebina = calcMse(0, trainingSetSize, true, &thresholda);
-		double thresholde = thresholda;
-		double msebine = msebina;
-		if (trainingSetSize != m_reader->trainingSetSize()) {
-			msee = calcMse(trainingSetSize, m_reader->trainingSetSize());
-			msebine = calcMse(trainingSetSize, m_reader->trainingSetSize(), true, &thresholde);
-		}
-		//double mseCombined = qMax(thresholde, 1.0 - thresholde) * msebine;
-		//if (mseCombined <= bestMse) {
-		if (msebine <= bestMse) {
-			//bestMse = mseCombined;
-			bestMse = msebine;
-			bestNet = m_net->saveText();
-		}
-		emit epochFinished(epoch, msea, msee, msebina, msebine, thresholda, thresholde);
+		finishEpoch(epoch, bestNet, bestMse);
 	}
 	//m_net->restoreText(bestNet);
 	{
@@ -184,6 +167,8 @@ void NetTrainer::run()
  */
 double NetTrainer::calcMse(std::size_t from, std::size_t to, bool binary, double *thresholdOut)
 {
+	static const int positiveError = 1000;
+	static const int negativeError = 1;
 	double errorSum = 0;
 	typedef QPair<double,double> OutT;
 	QList<OutT> outData;
@@ -200,6 +185,8 @@ double NetTrainer::calcMse(std::size_t from, std::size_t to, bool binary, double
 	}
 	if (binary) {
 		long badSum = 0;
+		long falsePositive = 0;
+		long falseNegative = 0;
 		qSort(outData.begin(), outData.end(), [](OutT x, OutT y) { return x.first < y.first; });
 		double threshold = 0;
 		double prevThresh = 0;
@@ -207,31 +194,61 @@ double NetTrainer::calcMse(std::size_t from, std::size_t to, bool binary, double
 			double expected = sample->second;
 			double out = 1.0; // Pre hranicu 0
 			if (expected != out) {
+				falsePositive++;
 				badSum++;
 			}
 		}
-		long best = badSum;
-		long bestThres = threshold;
+		long best = positiveError * falsePositive + negativeError * falseNegative;
+		double bestThres = threshold;
 		for (auto sample = outData.begin(); sample != outData.end(); ++sample) {
 			threshold = sample->first;
 			if (sample->second == 1) {
+				falseNegative++;
 				badSum++;
 			}
 			else {
+				falsePositive--;
 				badSum--;
 			}
-			if (badSum < best) {
-				best = badSum;
+			long badVazene = positiveError * falsePositive + negativeError * falseNegative;
+			if (badVazene < best) {
+				best = badVazene;
 				bestThres = (threshold + prevThresh) / 2.0;
 			}
 			prevThresh = threshold;
 		}
 		errorSum = best;
 		if (thresholdOut != 0) {
-			*thresholdOut = threshold;
+			*thresholdOut = bestThres;
 		}
 	}
 	return errorSum / static_cast<double>(to - from);
+}
+
+/**
+ * Emitovanie signálov pri ukončení epochy a vrátenie doteraz najlepšej siete.
+ */
+void NetTrainer::finishEpoch(int epoch, std::string &bestNet, double &bestMse)
+{
+	double msea = calcMse(0, m_trainingSetSize);
+	double msee = msea;
+	double thresholda = 0;
+	double msebina = calcMse(0, m_trainingSetSize, true, &thresholda);
+	double thresholde = thresholda;
+	double msebine = msebina;
+	if (m_trainingSetSize != m_reader->trainingSetSize()) {
+		msee = calcMse(m_trainingSetSize, m_reader->trainingSetSize());
+		msebine = calcMse(m_trainingSetSize, m_reader->trainingSetSize(), true, &thresholde);
+	}
+	m_net->setBinaryThreshold(thresholde);
+	//double mseCombined = qMax(thresholde, 1.0 - thresholde) * msebine;
+	//if (mseCombined <= bestMse) {
+	if (msebine <= bestMse) {
+		//bestMse = mseCombined;
+		bestMse = msebine;
+		bestNet = m_net->saveText();
+	}
+	emit epochFinished(epoch, msea, msee, msebina, msebine, thresholda, thresholde);
 }
 
 } /* end of namespace FaceDetect */

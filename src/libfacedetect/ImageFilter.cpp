@@ -8,6 +8,10 @@
  */
 
 #include "ImageFilter.h"
+#include <cstring>
+#include <QDebug>
+
+using std::memcpy;
 
 namespace FaceDetect {
 
@@ -15,6 +19,7 @@ ImageFilter::ImageFilter():
 	ImageFilterBase(),
 	m_filters(NoFilter)
 {
+	m_gaborFilters.resize(1);
 }
 
 /**
@@ -125,7 +130,7 @@ LaVectorDouble ImageFilter::filterVector(const QImage &src) const
 {
 	const QImage *sourceImage = &src;
 	QImage img;
-	if (m_filters != NoFilter || sourceImage->depth() % 8 != 0) {
+	if (m_filters != NoFilter) {
 		img = src;
 		filter(img);
 		sourceImage = &img;
@@ -139,12 +144,11 @@ LaVectorDouble ImageFilter::filterVector(const QImage &src) const
 	int rows = sourceImage->height();
 	int cols = sourceImage->width() * (sourceImage->depth() / 8);
 	LaVectorDouble vect(rows * cols, 1);
-	double *data = vect.addr();
 	int addr = 0;
 	for (int row = 0; row < rows; ++row) {
 		const uchar *line = sourceImage->scanLine(row);
 		for (int col = 0; col < cols; ++col) {
-			data[addr] = static_cast<double>(line[col]) / 256.0;
+			vect(addr) = static_cast<double>(line[col]) / 256.0;
 			++addr;
 		}
 	}
@@ -175,7 +179,10 @@ void ImageFilter::setIlluminationCorrectHistogram(bool correctHistogram)
  */
 void ImageFilter::setOnlyGaborWavelet(bool wavelet)
 {
-	m_gaborFilter.setOnlyGaborWavelet(wavelet);
+	//m_gaborFilter.setOnlyGaborWavelet(wavelet);
+	for (auto filter = m_gaborFilters.begin(); filter != m_gaborFilters.end(); ++filter) {
+		filter->setOnlyGaborWavelet(wavelet);
+	}
 }
 
 /**
@@ -184,7 +191,26 @@ void ImageFilter::setOnlyGaborWavelet(bool wavelet)
  */
 void ImageFilter::setGaborParameters(const GaborFilter::GaborParameters &parameters)
 {
-	m_gaborFilter.setGaborParameters(parameters);
+	//m_gaborFilter.setGaborParameters(parameters);
+	if (m_gaborFilters.count() != 1) {
+		m_gaborFilters.resize(1);
+	}
+	m_gaborFilters.first().setGaborParameters(parameters);
+}
+
+/**
+ * Nastavenie množiny gaborovych filtrov.
+ */
+void ImageFilter::setGaborParameters(const QList<GaborFilter::GaborParameters> &parameters)
+{
+	if (m_gaborFilters.count() != parameters.count()) {
+		m_gaborFilters.resize(parameters.count());
+	}
+	auto gaborIt = m_gaborFilters.begin();
+	for (auto parameterIt = parameters.begin(); parameterIt != parameters.end(); ++parameterIt) {
+		gaborIt->setGaborParameters(*parameterIt);
+		++gaborIt;
+	}
 }
 
 /**
@@ -203,7 +229,42 @@ void ImageFilter::filter(QImage &sourceImage) const
 		m_sobelFilter.filter(sourceImage);
 	}
 	if (m_filters & GaborFilter) {
-		m_gaborFilter.filter(sourceImage);
+		if (m_gaborFilters.count() == 1) {
+			m_gaborFilters.first().filter(sourceImage);
+		}
+		else {
+			QImage copy = sourceImage;
+			sourceImage = sourceImage.scaled(sourceImage.width(), sourceImage.height() * m_gaborFilters.count());
+			QImage workingImage;
+			int lineOffset = 0;
+			int lineSkip = m_gaborFilters.count();
+			int sourceHeight = copy.height();
+			for (auto filter = m_gaborFilters.begin(); filter != m_gaborFilters.end(); ++filter) {
+				workingImage = copy;
+				filter->filter(workingImage);
+				int targetLine = lineOffset;
+				for (int sourceLine = 0; sourceLine < sourceHeight; ++sourceLine) {
+					uchar *src = workingImage.scanLine(sourceLine);
+					uchar *target = sourceImage.scanLine(targetLine);
+					memcpy(target, src, workingImage.bytesPerLine());
+					targetLine += lineSkip;
+				}
+				lineOffset++;
+			}
+		}
+	}
+}
+
+/**
+ * Vráti kombinovaný počet obrázkov, ktoré vráti filter.
+ */
+int ImageFilter::subImageCount() const
+{
+	if (m_filters & ImageFilter::GaborFilter) {
+		return m_gaborFilters.count();
+	}
+	else {
+		return 1;
 	}
 }
 

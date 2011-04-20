@@ -23,12 +23,11 @@ namespace FaceDetect {
  */
 TrainingImageDatabase::TrainingImageDatabase(QObject *parent):
 	TrainingDataReader(parent),
+	m_inputVectorSize(ImageWidth * ImageHeight),
 	m_aligner(new Align(this))
 {
 	m_aligner->setImageSize(128);
 	m_aligner->setCollectStatistics(false);
-	m_globalFilter.enableGrayscaleFilter();
-	m_localFilter.enableIlluminationFilter();
 }
 
 TrainingImageDatabase::~TrainingImageDatabase()
@@ -37,7 +36,7 @@ TrainingImageDatabase::~TrainingImageDatabase()
 
 int TrainingImageDatabase::inputVectorSize() const
 {
-	return InputVecotrSize;
+	return m_inputVectorSize;
 }
 
 int TrainingImageDatabase::outputVectorSize() const
@@ -144,6 +143,24 @@ void TrainingImageDatabase::shuffle()
 }
 
 /**
+ * Nastavenie lokálneho filtra.
+ */
+void TrainingImageDatabase::setLocalFilter(const ImageFilter &filter)
+{
+	m_localFilter = filter;
+	m_inputVectorSize = ImageWidth * ImageHeight * m_localFilter.subImageCount() * m_globalFilter.subImageCount();
+}
+
+/**
+ * Nastavenie globálneho filtra.
+ */
+void TrainingImageDatabase::setGlobalFilter(const ImageFilter &filter)
+{
+	m_globalFilter = filter;
+	m_inputVectorSize = ImageWidth * ImageHeight * m_localFilter.subImageCount() * m_globalFilter.subImageCount();
+}
+
+/**
  * Prevod obrázku vo vzorke \a sample na vektor. Výstup sa zapisuje do premennej
  * m_samples.
  */
@@ -186,9 +203,15 @@ inline void TrainingImageDatabase::calcVectors(std::size_t sample) const
 
 	QImage filtredImage = m_globalFilter.filterImage(m_workingImage.scaled(QSize(ImageWidth * 2, ImageHeight * 2), Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
 	m_samples[sample].info.clear();
-	m_samples[sample].input = m_localFilter.filterVector(filtredImage.copy(ImageWidth / 2, ImageHeight / 2, ImageWidth, ImageHeight));
+	m_samples[sample].input = m_localFilter.filterVector(filtredImage.copy(ImageWidth / 2, filtredImage.height() / 4, filtredImage.width() / 2, filtredImage.height() / 2));
 	m_samples[sample].output = LaVectorDouble(1);
 	m_samples[sample].output(0) = hasFace;
+
+	/*
+	static int i = 0;
+	i++;
+	m_localFilter.filterImage(filtredImage.copy(ImageWidth / 2, filtredImage.height() / 4, filtredImage.width() / 2, filtredImage.height() / 2)).save(QString("/dev/shm/pict%1.png").arg(i), "PNG");
+	*/
 }
 
 } /* end of namespace FaceDetect */

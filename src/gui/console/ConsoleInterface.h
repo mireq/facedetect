@@ -61,6 +61,7 @@ private slots:
 
 private:
 	void parseCommandline();
+	void setupFilters();
 	QString getArgument(const QStringList &arguments, const QString &argumentName);
 	bool getBoolArgument(const QStringList &arguments, const QString &argumentName);
 	double getDoubleArgument(const QStringList &arguments, const QString &argumentName);
@@ -79,8 +80,10 @@ private:
 	bool m_sobelFilter;
 	bool m_gaborFilter;
 	bool m_onlyGaborWavelet;
+	double m_learningSpeed;
+	int m_numEpoch;
 	int m_trainingSetPercent;
-	FaceDetect::GaborFilter::GaborParameters m_gaborParameters;
+	QVector<FaceDetect::GaborFilter::GaborParameters> m_gaborParameters;
 	std::string m_netType;
 
 	QString m_loadNetFile;
@@ -103,6 +106,8 @@ private:
 	QSharedPointer<FaceDetect::NetTrainer> m_trainer;
 	QVector<FaceDetect::FaceFileScanner::FaceData> m_faceData;
 	FaceDetect::TrainingImageDatabase *m_trainingDatabase;
+	FaceDetect::ImageFilter m_localFilter;
+	FaceDetect::ImageFilter m_globalFilter;
 	struct ProcessStep {
 		ProcessStep(QObject *o, const QByteArray &m): object(o), method(m) {};
 		QObject *object;

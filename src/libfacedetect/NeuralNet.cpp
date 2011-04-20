@@ -17,7 +17,8 @@ namespace FaceDetect {
  * Vytvorenie inštancie neurónovej siete.
  */
 NeuralNet::NeuralNet(QObject *parent):
-	QObject(parent)
+	QObject(parent),
+	m_binaryThreshold(0.5)
 {
 }
 
@@ -33,6 +34,27 @@ double NeuralNet::learningSpeed() const
 void NeuralNet::setLearningSpeed(double learningSpeed)
 {
 	m_learningSpeed = learningSpeed;
+}
+
+double NeuralNet::binaryThreshold() const
+{
+	return m_binaryThreshold;
+}
+
+void NeuralNet::setBinaryThreshold(double threshold)
+{
+	m_binaryThreshold = threshold;
+}
+
+bool NeuralNet::calcBinaryOutput(const LaVectorDouble &input)
+{
+	LaVectorDouble out = calcOutput(input);
+	if (out.size() != 1) {
+		return false;
+	}
+	else {
+		return out(0) >= m_binaryThreshold;
+	}
 }
 
 /**

@@ -18,7 +18,6 @@
 #include "libfacedetect/BPNeuralNet.h"
 #include "libfacedetect/FaceStructuredNet.h"
 #include "libfacedetect/FaceDetector.h"
-#include "libfacedetect/ImageSegmenter.h"
 #include "ConsoleInterface.h"
 
 ConsoleInterface::ConsoleInterface(QObject *parent):
@@ -30,6 +29,8 @@ ConsoleInterface::ConsoleInterface(QObject *parent):
 	m_sobelFilter(false),
 	m_gaborFilter(false),
 	m_onlyGaborWavelet(false),
+	m_learningSpeed(0.01),
+	m_numEpoch(100),
 	m_trainingSetPercent(100),
 	m_netType("bp"),
 	m_quiet(false),
@@ -48,6 +49,7 @@ ConsoleInterface::ConsoleInterface(QObject *parent):
 	settings.endGroup();
 
 	parseCommandline();
+	setupFilters();
 	qRegisterMetaType<std::size_t>("std::size_t");
 	qRegisterMetaType<LaVectorDouble>("LaVectorDouble");
 }
@@ -59,6 +61,8 @@ ConsoleInterface::~ConsoleInterface()
 void ConsoleInterface::run()
 {
 	m_trainingDatabase->setCacheDir(m_faceCachePath);
+	m_trainingDatabase->setGlobalFilter(m_globalFilter);
+	m_trainingDatabase->setLocalFilter(m_localFilter);
 	if (!m_filterImage.isEmpty()) {
 		m_steps.append(ProcessStep(this, "saveFilterImage"));
 	}
@@ -83,6 +87,7 @@ void ConsoleInterface::startNextStep()
 
 void ConsoleInterface::saveFilterImage()
 {
+	/*
 	FaceDetect::ImageFilter filter;
 	if (m_grayscaleFilter) {
 		filter.enableGrayscaleFilter();
@@ -99,14 +104,16 @@ void ConsoleInterface::saveFilterImage()
 	filter.setIlluminationPlaneOnly(m_illuminationPlaneOnly);
 	filter.setIlluminationCorrectHistogram(!m_noIlluminationCorrectHistogram);
 	filter.setOnlyGaborWavelet(m_onlyGaborWavelet);
-	filter.setGaborParameters(m_gaborParameters);
+	filter.setGaborParameters(m_gaborParameters.toList());
+	*/
 
 	QImage inputImage(m_filterImage);
 	if (inputImage.isNull()) {
 		return;
 	}
-	QImage output = filter.filterImage(inputImage);
-	output.save(m_filterImage + ".tr.png", "PNG");
+	m_globalFilter.filter(inputImage);
+	m_localFilter.filter(inputImage);
+	inputImage.save(m_filterImage + ".tr.png", "PNG");
 	startNextStep();
 }
 
@@ -217,6 +224,8 @@ void ConsoleInterface::scanNonFaceDatabase()
 	}
 	m_nonfaceScanner = QSharedPointer<FaceDetect::ImageFileScanner>(new FaceDetect::ImageFileScanner());
 	m_nonfaceScanner->setScanPath(m_nonFacesPath);
+	m_nonfaceScanner->setLocalFilter(m_localFilter);
+	m_nonfaceScanner->setGlobalFilter(m_globalFilter);
 	connect(m_nonfaceScanner.data(), SIGNAL(finished()), SLOT(onNonFaceScanningFinished()));
 	connect(m_nonfaceScanner.data(), SIGNAL(terminated()), SLOT(onNonFaceScanningFinished()));
 	connect(m_nonfaceScanner.data(), SIGNAL(imageScanned(LaVectorDouble,LaVectorDouble)), SLOT(onImageScanned(LaVectorDouble,LaVectorDouble)));
@@ -249,10 +258,10 @@ void ConsoleInterface::trainNet()
 {
 	m_trainingDatabase->shuffle();
 	m_trainer = QSharedPointer<FaceDetect::NetTrainer>(new FaceDetect::NetTrainer);
-	m_trainer->setNumEpoch(200);
+	m_trainer->setNumEpoch(m_numEpoch);
 	m_trainer->setTrainingDataReader(m_trainingDatabase);
 	m_trainer->setTrainingSetSize(m_trainingDatabase->trainingSetSize() * (static_cast<double>(m_trainingSetPercent) / 100.0));
-	m_neuralNet->setLearningSpeed(0.08);
+	m_neuralNet->setLearningSpeed(m_learningSpeed);
 
 	if (!m_quiet) {
 		m_cout << "\rStarting training\n";
@@ -329,24 +338,60 @@ void ConsoleInterface::parseCommandline()
 	m_sobelFilter = getBoolArgument(arguments, "--sobelFilter");
 	m_gaborFilter = getBoolArgument(arguments, "--gaborFilter");
 	m_onlyGaborWavelet = getBoolArgument(arguments, "--onlyGaborWavelet");
+
+	QVector<QString> gaborLambdaStr;
+	QVector<QString> gaborThetaStr;
+	QVector<QString> gaborPsiStr;
+	QVector<QString> gaborSigmaStr;
+	QVector<QString> gaborGammaStr;
+	QVector<QString> gaborLuminanceStr;
 	if (getBoolArgument(arguments, "--gaborLambda")) {
-		m_gaborParameters.lambda = getDoubleArgument(arguments, "--gaborLambda");
+		gaborLambdaStr = getArgument(arguments, "--gaborLambda").split(":").toVector();
 	}
 	if (getBoolArgument(arguments, "--gaborTheta")) {
-		m_gaborParameters.theta = getDoubleArgument(arguments, "--gaborTheta");
+		gaborThetaStr = getArgument(arguments, "--gaborTheta").split(":").toVector();
 	}
 	if (getBoolArgument(arguments, "--gaborPsi")) {
-		m_gaborParameters.psi = getDoubleArgument(arguments, "--gaborPsi");
+		gaborPsiStr = getArgument(arguments, "--gaborPsi").split(":").toVector();
 	}
 	if (getBoolArgument(arguments, "--gaborSigma")) {
-		m_gaborParameters.sigma = getDoubleArgument(arguments, "--gaborSigma");
+		gaborSigmaStr = getArgument(arguments, "--gaborSigma").split(":").toVector();
 	}
 	if (getBoolArgument(arguments, "--gaborGamma")) {
-		m_gaborParameters.gamma = getDoubleArgument(arguments, "--gaborGamma");
+		gaborGammaStr = getArgument(arguments, "--gaborGamma").split(":").toVector();
 	}
 	if (getBoolArgument(arguments, "--gaborLuminance")) {
-		m_gaborParameters.lum = getDoubleArgument(arguments, "--gaborLuminance");
+		gaborLuminanceStr = getArgument(arguments, "--gaborLuminance").split(":").toVector();
 	}
+	int numGaborFilters = 1;
+	numGaborFilters = qMax(gaborLambdaStr.count(), numGaborFilters);
+	numGaborFilters = qMax(gaborThetaStr.count(), numGaborFilters);
+	numGaborFilters = qMax(gaborPsiStr.count(), numGaborFilters);
+	numGaborFilters = qMax(gaborSigmaStr.count(), numGaborFilters);
+	numGaborFilters = qMax(gaborGammaStr.count(), numGaborFilters);
+	numGaborFilters = qMax(gaborLuminanceStr.count(), numGaborFilters);
+	m_gaborParameters.resize(numGaborFilters);
+	for (int filter = 0; filter < numGaborFilters; ++filter) {
+		if (gaborLambdaStr.count() > filter) {
+			m_gaborParameters[filter].lambda = gaborLambdaStr[filter].toDouble();
+		}
+		if (gaborThetaStr.count() > filter) {
+			m_gaborParameters[filter].theta = gaborThetaStr[filter].toDouble();
+		}
+		if (gaborPsiStr.count() > filter) {
+			m_gaborParameters[filter].psi = gaborPsiStr[filter].toDouble();
+		}
+		if (gaborSigmaStr.count() > filter) {
+			m_gaborParameters[filter].sigma = gaborSigmaStr[filter].toDouble();
+		}
+		if (gaborGammaStr.count() > filter) {
+			m_gaborParameters[filter].gamma = gaborGammaStr[filter].toDouble();
+		}
+		if (gaborLuminanceStr.count() > filter) {
+			m_gaborParameters[filter].lum = gaborLuminanceStr[filter].toDouble();
+		}
+	}
+
 	m_loadNetFile = getArgument(arguments, "--loadNet");
 	m_saveNetFile = getArgument(arguments, "--saveNet");
 	m_detectFiles = getArguments(arguments, "--detect");
@@ -354,8 +399,30 @@ void ConsoleInterface::parseCommandline()
 	m_quiet = getBoolArgument(arguments, "--quiet");
 	m_printAlign = getBoolArgument(arguments, "--printAlign");
 	m_printTraining = getBoolArgument(arguments, "--printTraining");
+	m_learningSpeed = getDoubleArgument(arguments, "--learningSpeed");
+	m_numEpoch = getIntArgument(arguments, "--numEpoch");
 	m_trainingSetPercent = getIntArgument(arguments, "--trainingSetPercent");
 	m_netType = getArgument(arguments, "--netType").toUtf8().constData();
+}
+
+void ConsoleInterface::setupFilters()
+{
+	if (m_grayscaleFilter) {
+		m_globalFilter.enableGrayscaleFilter();
+	}
+	if (m_illuminationFilter) {
+		m_localFilter.enableIlluminationFilter();
+	}
+	if (m_sobelFilter) {
+		m_globalFilter.enableSobelFilter();
+	}
+	if (m_gaborFilter) {
+		m_globalFilter.enableGaborFilter();
+	}
+	m_localFilter.setIlluminationPlaneOnly(m_illuminationPlaneOnly);
+	m_localFilter.setIlluminationCorrectHistogram(!m_noIlluminationCorrectHistogram);
+	m_globalFilter.setOnlyGaborWavelet(m_onlyGaborWavelet);
+	m_globalFilter.setGaborParameters(m_gaborParameters.toList());
 }
 
 QString ConsoleInterface::getArgument(const QStringList &arguments, const QString &argumentName)
@@ -458,6 +525,8 @@ void ConsoleInterface::scanImageFile(const QString &file)
 	settings.xStep = 1;
 	settings.yStep = 1;
 	settings.segmentSize = QSize(20, 20);
+	detector.setLocalFilter(m_localFilter);
+	detector.setGlobalFilter(m_globalFilter);
 	detector.setupSegmenter(settings);
 	detector.scanImage();
 }

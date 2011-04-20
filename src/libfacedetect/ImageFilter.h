@@ -10,6 +10,7 @@
 #ifndef IMAGEFILTER_FKHAR0M2
 #define IMAGEFILTER_FKHAR0M2
 
+#include <QList>
 #include "GrayscaleFilter.h"
 #include "IlluminationFilter.h"
 #include "SobelFilter.h"
@@ -60,7 +61,10 @@ public:
 	void setOnlyGaborWavelet(bool wavelet);
 
 	void setGaborParameters(const GaborFilter::GaborParameters &parameters);
+	void setGaborParameters(const QList<GaborFilter::GaborParameters> &parameters);
 	void filter(QImage &sourceImage) const;
+
+	int subImageCount() const;
 
 private:
 	void normalizeImage(QImage &sourceImage) const;
@@ -74,8 +78,8 @@ private:
 	FaceDetect::IlluminationFilter m_illuminationFilter;
 	/// Filter pre detekciu hrán - sobel
 	FaceDetect::SobelFilter m_sobelFilter;
-	/// Filter pre detekciu hrán - gabor
-	FaceDetect::GaborFilter m_gaborFilter;
+	/// Filtre pre detekciu hrán - gabor
+	QVector<FaceDetect::GaborFilter> m_gaborFilters;
 }; /* -----  end of class ImageFilter  ----- */
 
 } /* end of namespace FaceDetect */

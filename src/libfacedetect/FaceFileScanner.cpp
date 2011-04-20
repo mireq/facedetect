@@ -244,6 +244,21 @@ void FaceFileScanner::setFilterFrontal(bool filter)
 	m_filterFrontal = filter;
 }
 
+void FaceFileScanner::scanFile(const QString &fileName)
+{
+	// Zaujímajú ma len xml súbory
+	QFileInfo fileInfo(fileName);
+	if (fileInfo.suffix() != QLatin1String("xml")) {
+		return;
+	}
+
+	ImageInfo img = readFile(fileName);
+	if (!img.isValid()) {
+		return;
+	}
+	emit imageScanned(img);
+}
+
 /**
  * Načítanie informácií o definičnom súbore \a fileName.
  */
@@ -419,21 +434,6 @@ FaceFileScanner::ImageInfo FaceFileScanner::readFile(const QString &fileName)
 	}
 	ret.setFaceData(data);
 	return ret;
-}
-
-void FaceFileScanner::scanFile(const QString &fileName)
-{
-	// Zaujímajú ma len xml súbory
-	QFileInfo fileInfo(fileName);
-	if (fileInfo.suffix() != QLatin1String("xml")) {
-		return;
-	}
-
-	ImageInfo img = readFile(fileName);
-	if (!img.isValid()) {
-		return;
-	}
-	emit imageScanned(img);
 }
 
 } /* end of namespace FaceDetect */

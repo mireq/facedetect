@@ -52,8 +52,7 @@ public:
 	int yStep();
 	void setYStep(int step);
 	void setStep(int xStep, int yStep);
-	bool grayscaleFilter() const;
-	void setGrayscaleFilter(bool filter);
+	void setGlobalFilter(const ImageFilter &filter);
 	QRect boundingRect() const;
 	int segmentCount() const;
 	QRect segmentRect(int segment) const;
@@ -89,9 +88,12 @@ private:
 	/// Počet segmentov v obrázku
 	mutable int m_segmentCount;
 	/// Filter pre prevod do odtieňov šedej
-	FaceDetect::ImageFilter m_grayscaleFilter;
 	/// Maximálne rozlíšenie transformovaného obrázku
 	static const long MaxImageResolution = 4096l * 4096l;
+	/// Filter aplikovaný na celý obraz.
+	ImageFilter m_globalFilter;
+	/// Počet subobrázkov v 1 obrázku
+	mutable int m_subimages;
 }; /* -----  end of class ImageSegmenter  ----- */
 
 } /* end of namespace FaceDetect */

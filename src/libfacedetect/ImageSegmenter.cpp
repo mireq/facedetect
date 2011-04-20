@@ -13,6 +13,7 @@
 #include "utils/PolygonRasterizer.h"
 #include "ImageSegmenter.h"
 
+#include <QDebug>
 namespace FaceDetect {
 
 /**
@@ -22,7 +23,8 @@ ImageSegmenter::ImageSegmenter(const QImage &image, const ImageSegmenter::Settin
 	m_sourceImage(image),
 	m_dirty(true),
 	m_dirtyImage(false),
-	m_segmentCount(0)
+	m_segmentCount(0),
+	m_subimages(1)
 {
 	setupSegmenter(settings);
 }
@@ -139,29 +141,11 @@ void ImageSegmenter::setStep(int xStep, int yStep)
 }
 
 /**
- * Vráti \e true, ak je povolený filter pre prevod do odtieňov šedej.
+ * Nastavenie globálneho filtra aplikovaného na celý obraz.
  */
-bool ImageSegmenter::grayscaleFilter() const
+void ImageSegmenter::setGlobalFilter(const ImageFilter &filter)
 {
-	return m_grayscaleFilter.filters() & ImageFilter::GrayscaleFilter;
-}
-
-/**
- * Nastavenie filtrovania odtieňov šedej.
- */
-void ImageSegmenter::setGrayscaleFilter(bool filter)
-{
-	if (filter != grayscaleFilter()) {
-		if (filter) {
-			m_grayscaleFilter.enableGrayscaleFilter();
-		}
-		else {
-			m_grayscaleFilter.disableGrayscaleFilter();
-		}
-		if (!m_transformedImage.isNull()) {
-			m_dirtyImage = true;
-		}
-	}
+	m_globalFilter = filter;
 }
 
 /**
@@ -213,11 +197,14 @@ QImage ImageSegmenter::segmentImage(int segment) const
 	Q_ASSERT(segment < m_segmentCount);
 
 	QRect rect = segmentRect(segment);
+	rect.moveTo(rect.x(), rect.y() * m_subimages);
+	rect.setHeight(rect.height() * m_subimages);
 
 	if (m_transformedImage.isNull()) {
 		QImage image(m_segmentSize, QImage::Format_ARGB32);
 		image.fill(qRgb(0, 0, 0));
 		QPainter painter(&image);
+		painter.setRenderHint(QPainter::Antialiasing, true);
 		// Aplikujeme rovnakú transformáciu ako na obrázok a posunieme podľa
 		// koordinátov regiónu
 		QTransform transform = m_transform;
@@ -227,12 +214,8 @@ QImage ImageSegmenter::segmentImage(int segment) const
 		painter.drawImage(QPoint(0, 0), m_sourceImage);
 		painter.end();
 
-		if (grayscaleFilter()) {
-			return m_grayscaleFilter.filterImage(image);
-		}
-		else {
-			return image;
-		}
+		m_globalFilter.filter(image);
+		return image;
 	}
 	else {
 		return m_transformedImage.copy(rect.translated(-m_boundingRect.topLeft()));
@@ -306,14 +289,15 @@ inline void ImageSegmenter::repaintImage() const
 	m_transformedImage = QImage(m_boundingRect.size(), QImage::Format_ARGB32);
 	m_transformedImage.fill(qRgb(0, 0, 0));
 	QPainter imagePainter(&m_transformedImage);
+	imagePainter.setRenderHint(QPainter::Antialiasing, true);
 	QTransform transform = m_transform;
 	transform *= QTransform::fromTranslate(-m_boundingRect.left(), -m_boundingRect.top());
 	imagePainter.setTransform(transform);
 	imagePainter.drawImage(QPoint(0, 0), m_sourceImage);
 	imagePainter.end();
-	if (grayscaleFilter()) {
-		m_transformedImage = m_grayscaleFilter.filterImage(m_transformedImage);
-	}
+	int oldHeight = m_transformedImage.height();
+	m_globalFilter.filter(m_transformedImage);
+	m_subimages = m_transformedImage.height() / oldHeight;
 	m_dirtyImage = false;
 }
 

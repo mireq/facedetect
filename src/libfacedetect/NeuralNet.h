@@ -31,6 +31,11 @@ Q_OBJECT
  * eta (η) konkrétnej implementácie neurónovej siete.
  */
 Q_PROPERTY(double learningSpeed READ learningSpeed WRITE setLearningSpeed);
+/**
+ * Hodnota, po ktorú v prípade binárneho výstupu vráthi \e false nad ktorou
+ * vráti \e true. V prípade rovnosti vráti tiež \e true.
+ */
+Q_PROPERTY(double binaryThreshold READ binaryThreshold WRITE setBinaryThreshold);
 public:
 	explicit NeuralNet(QObject *parent = 0);
 	virtual ~NeuralNet();
@@ -43,9 +48,21 @@ public:
 	 */
 	void setLearningSpeed(double learningSpeed);
 	/**
+	 * Vráti hodnotu hranice pre binárny výstup.
+	 */
+	double binaryThreshold() const;
+	/**
+	 * Nastavenie hranice pre binárny výstup.
+	 */
+	void setBinaryThreshold(double threshold);
+	/**
 	 * Výpočet výstupu pre vstup \a input. Výstup je návratovou hodnotou.
 	 */
 	virtual LaVectorDouble calcOutput(const LaVectorDouble &input) = 0;
+	/**
+	 * Výpočet binárneho výstupu pomocou binaryThreshold.
+	 */
+	bool calcBinaryOutput(const LaVectorDouble &input);
 	/**
 	 * Vráti veľkosť vstupného vektoru siete.
 	 */
@@ -64,6 +81,7 @@ public:
 		ar & m_learningSpeed;
 		ar & m_inputVectorSize;
 		ar & m_outputVectorSize;
+		ar & m_binaryThreshold;
 	};
 	/**
 	 * Serializácia do reťazca.
@@ -101,6 +119,8 @@ private:
 	int m_inputVectorSize;
 	/// Veľkosť výstupného vektoru.
 	int m_outputVectorSize;
+	/// Hranica pre prevod do binárnych hodnôt.
+	double m_binaryThreshold;
 
 friend class boost::serialization::access;
 friend class FaceDetect::NetTrainer;

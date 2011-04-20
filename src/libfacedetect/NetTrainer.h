@@ -67,6 +67,7 @@ private:
 	using QThread::start;
 	void run();
 	double calcMse(std::size_t from, std::size_t to, bool binary = false, double *thresholdOut = 0);
+	void finishEpoch(int epoch, std::string &bestNet, double &bestMse);
 
 private:
 	/// Objekt čítajúci tréningové vzorky.
