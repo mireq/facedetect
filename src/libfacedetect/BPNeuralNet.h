@@ -23,6 +23,7 @@ namespace FaceDetect {
 class BPNeuralNet: public NeuralNet
 {
 Q_OBJECT
+Q_PROPERTY(int stredNeuronov READ stredNeuronov WRITE setStredNeuronov);
 public:
 	BPNeuralNet(QObject *parent = 0);
 	~BPNeuralNet();
@@ -34,13 +35,18 @@ public:
 		ar & boost::serialization::base_object<NeuralNet>(*this);
 		ar & m_w;
 		ar & m_v;
+		int neur = m_stredNeuronov;
+		ar & neur;
+		setStredNeuronov(neur);
 	};
 	std::string saveText() const;
 	void restoreText(const std::string &data);
+	int stredNeuronov() const;
+	void setStredNeuronov(int neuronov);
 
 private:
 	/// Počet stredných neurónov
-	static const int m_stredNeuronov = 80;
+	int m_stredNeuronov;
 
 	/// Váhy medzi vstupnou vrstvou a skrytou vrstvou.
 	LaGenMatDouble m_w;

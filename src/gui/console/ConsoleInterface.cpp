@@ -49,6 +49,7 @@ ConsoleInterface::ConsoleInterface(QObject *parent):
 	settings.endGroup();
 
 	parseCommandline();
+	parseNetSettings();
 	setupFilters();
 	qRegisterMetaType<std::size_t>("std::size_t");
 	qRegisterMetaType<LaVectorDouble>("LaVectorDouble");
@@ -178,6 +179,9 @@ void ConsoleInterface::startTraining()
 	}
 	if (net == 0) {
 		net = FaceDetect::NeuralNet::create(m_netType);
+		for (auto prop = m_netProperties.begin(); prop != m_netProperties.end(); ++prop) {
+			net->setProperty(prop.key().toLatin1(), prop.value());
+		}
 	}
 	if (net == 0) {
 		qFatal("Net not created");
@@ -403,6 +407,24 @@ void ConsoleInterface::parseCommandline()
 	m_numEpoch = getIntArgument(arguments, "--numEpoch");
 	m_trainingSetPercent = getIntArgument(arguments, "--trainingSetPercent");
 	m_netType = getArgument(arguments, "--netType").toUtf8().constData();
+}
+
+void ConsoleInterface::parseNetSettings()
+{
+	QStringList arguments = qApp->arguments();
+	for (auto argument = arguments.begin(); argument != arguments.end(); ++argument) {
+		if (argument->startsWith("--net:")) {
+			QString propName = argument->right(argument->length() - 6);
+			auto nextArg = argument;
+			nextArg++;
+			// Nenasleduje hodnota argumentu
+			if (nextArg == arguments.end()) {
+				continue;
+			}
+			QString propValue = *nextArg;
+			m_netProperties[propName] = propValue;
+		}
+	}
 }
 
 void ConsoleInterface::setupFilters()

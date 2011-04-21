@@ -12,6 +12,7 @@
 
 #include <QByteArray>
 #include <QList>
+#include <QMap>
 #include <QObject>
 #include <QSharedPointer>
 #include <QStringList>
@@ -61,6 +62,7 @@ private slots:
 
 private:
 	void parseCommandline();
+	void parseNetSettings();
 	void setupFilters();
 	QString getArgument(const QStringList &arguments, const QString &argumentName);
 	bool getBoolArgument(const QStringList &arguments, const QString &argumentName);
@@ -114,6 +116,7 @@ private:
 		QByteArray method;
 	};
 	QList<ProcessStep> m_steps;
+	QMap<QString,QString> m_netProperties;
 }; /* -----  end of class ConsoleInterface  ----- */
 
 #endif /* end of include guard: CONSOLEINTERFACE_9JAL83V */

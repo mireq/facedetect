@@ -108,9 +108,14 @@ set(facedetect_QRCS
 	src/gui/qml/qml.qrc
 )
 
+set(facedetect_LANG
+	locale/facedetect_sk_SK.ts
+)
+
 qt4_wrap_cpp(facedetect_MOC_SRCS ${facedetect_MOC_HDRS})
 qt4_wrap_ui(facedetect_UI_SRCS ${facedetect_UIS})
 qt4_add_resources(facedetect_QRC_SRCS ${facedetect_QRCS})
+qt4_add_translation(facedetect_LANG_SRCS ${facedetect_LANG})
 
 add_executable(
 	facedetect
@@ -122,6 +127,7 @@ add_executable(
 	${facedetect_UI_SRCS}
 	${facedetect_QRCS}
 	${facedetect_QRC_SRCS}
+	${facedetect_LANG_SRCS}
 )
 
 target_link_libraries(facedetect

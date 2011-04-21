@@ -27,11 +27,10 @@ namespace FaceDetect {
  */
 BPNeuralNet::BPNeuralNet(QObject *parent):
 	NeuralNet(parent),
+	m_stredNeuronov(0),
 	m_uOut(0)
 {
-	m_stred = LaGenMatDouble(m_stredNeuronov, 1);
-	m_uStred = LaGenMatDouble(m_stredNeuronov, 1);
-	m_delta = LaGenMatDouble(m_stredNeuronov, 1);
+	setStredNeuronov(80);
 }
 
 BPNeuralNet::~BPNeuralNet()
@@ -104,6 +103,21 @@ void BPNeuralNet::restoreText(const std::string &data)
 	istringstream restoreStream(data);
 	boost::archive::text_iarchive ia(restoreStream);
 	ia >> *this;
+}
+
+int BPNeuralNet::stredNeuronov() const
+{
+	return m_stredNeuronov;
+}
+
+void BPNeuralNet::setStredNeuronov(int neuronov)
+{
+	if (neuronov != m_stredNeuronov) {
+		m_stredNeuronov = neuronov;
+		m_stred = LaGenMatDouble(m_stredNeuronov, 1);
+		m_uStred = LaGenMatDouble(m_stredNeuronov, 1);
+		m_delta = LaGenMatDouble(m_stredNeuronov, 1);
+	}
 }
 
 } /* end of namespace FaceDetect */
