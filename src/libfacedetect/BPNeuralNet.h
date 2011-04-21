@@ -30,6 +30,10 @@ public:
 	virtual LaVectorDouble calcOutput(const LaVectorDouble &input);
 	virtual void trainSample(const LaVectorDouble &input, const LaVectorDouble &expectedOutput);
 	virtual void initializeTraining();
+	int stredNeuronov() const;
+	void setStredNeuronov(int neuronov);
+
+private:
 	template<class Archive> void serialize(Archive &ar, const unsigned int version) {
 		Q_UNUSED(version);
 		ar & boost::serialization::base_object<NeuralNet>(*this);
@@ -39,12 +43,7 @@ public:
 		ar & neur;
 		setStredNeuronov(neur);
 	};
-	std::string saveText() const;
-	void restoreText(const std::string &data);
-	int stredNeuronov() const;
-	void setStredNeuronov(int neuronov);
 
-private:
 	/// Počet stredných neurónov
 	int m_stredNeuronov;
 

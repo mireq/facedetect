@@ -171,8 +171,6 @@ void ConsoleInterface::startTraining()
 		std::ifstream ifs(fileName.constData());
 		if (ifs.is_open()) {
 			boost::archive::text_iarchive ia(ifs);
-			ia.register_type<FaceDetect::BPNeuralNet>();
-			ia.register_type<FaceDetect::FaceStructuredNet>();
 			ia >> net;
 			unserialized = true;
 		}
@@ -180,7 +178,10 @@ void ConsoleInterface::startTraining()
 	if (net == 0) {
 		net = FaceDetect::NeuralNet::create(m_netType);
 		for (auto prop = m_netProperties.begin(); prop != m_netProperties.end(); ++prop) {
-			net->setProperty(prop.key().toLatin1(), prop.value());
+			bool ok = net->setProperty(prop.key().toLatin1(), prop.value());
+			if (!ok) {
+				qWarning() << tr("Property %1 does not exist.").arg(prop.key());
+			}
 		}
 	}
 	if (net == 0) {
@@ -523,8 +524,6 @@ void ConsoleInterface::saveNeuralNet()
 	std::ofstream ofs(fileName.constData());
 	if (ofs.is_open()) {
 		boost::archive::text_oarchive oa(ofs);
-		oa.register_type<FaceDetect::BPNeuralNet>();
-		oa.register_type<FaceDetect::FaceStructuredNet>();
 		const FaceDetect::NeuralNet *net = m_neuralNet.data();
 		oa << net;
 	}

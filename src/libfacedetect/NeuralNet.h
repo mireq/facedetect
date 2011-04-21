@@ -83,14 +83,6 @@ public:
 		ar & m_outputVectorSize;
 		ar & m_binaryThreshold;
 	};
-	/**
-	 * Serializácia do reťazca.
-	 */
-	virtual std::string saveText() const = 0;
-	/**
-	 * Deserializácia z reťazca.
-	 */
-	virtual void restoreText(const std::string &data) = 0;
 	static NeuralNet *create(const std::string &type, QObject *parent = 0);
 
 protected:

@@ -11,6 +11,11 @@
 #include <QMutexLocker>
 #include <QPair>
 #include <limits>
+#include <boost/serialization/access.hpp>
+#include <boost/serialization/base_object.hpp>
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/archive/text_oarchive.hpp>
+#include <sstream>
 #include "NeuralNet.h"
 #include "TrainingDataReader.h"
 #include "NetTrainer.h"
@@ -129,7 +134,8 @@ void NetTrainer::run()
 	// Doteraz najlepšie nájdené MSE
 	double bestMse = numeric_limits<double>::max();
 	// Doteraz najlepšie nájdené hodnoty neurónovej siete
-	string bestNet = m_net->saveText();
+	string bestNet;
+	saveNet(bestNet);
 	// V každej trénovacej epoche sa vyšle signál epochFinished
 	for (int epoch = 1; epoch <= m_numEpoch; ++epoch) {
 		// Pre každú vzorku sa volá trainSample
@@ -154,7 +160,8 @@ void NetTrainer::run()
 		emit sampleFinished(m_reader->trainingSetSize(), epoch);
 		finishEpoch(epoch, bestNet, bestMse);
 	}
-	//m_net->restoreText(bestNet);
+	// Obnovenie najlepších nastavení
+	restoreNet(bestNet);
 	{
 		QMutexLocker lock(&m_stopMutex);
 		m_stop = false;
@@ -246,10 +253,34 @@ void NetTrainer::finishEpoch(int epoch, std::string &bestNet, double &bestMse)
 	if (msebine <= bestMse) {
 		//bestMse = mseCombined;
 		bestMse = msebine;
-		bestNet = m_net->saveText();
+		saveNet(bestNet);
 	}
 	emit epochFinished(epoch, msea, msee, msebina, msebine, thresholda, thresholde);
 }
+
+/**
+ * Uloženie neurónovej siete do reťazca \a net.
+ */
+void NetTrainer::saveNet(std::string &net)
+{
+	ostringstream saveStream;
+	{
+		boost::archive::text_oarchive oa(saveStream);
+		oa << *const_cast<const FaceDetect::NeuralNet *>(m_net);
+	}
+	net = saveStream.str();
+}
+
+/**
+ * Obnovenie neurónovej siete z reťazca \a net.
+ */
+void NetTrainer::restoreNet(const std::string &net)
+{
+	istringstream restoreStream(net);
+	boost::archive::text_iarchive ia(restoreStream);
+	ia >> *m_net;
+}
+
 
 } /* end of namespace FaceDetect */
 

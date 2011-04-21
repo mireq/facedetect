@@ -12,11 +12,11 @@
 #include <lapackpp/blaspp.h>
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
+#include <boost/serialization/export.hpp>
 #include <sstream>
 #include "TrainingDataReader.h"
 #include "BPNeuralNet.h"
 
-#include <QDebug>
 using std::istringstream;
 using std::ostringstream;
 
@@ -87,24 +87,6 @@ void BPNeuralNet::initializeTraining()
 	initializeMatrix(m_v, -0.5, 0.5);
 }
 
-std::string BPNeuralNet::saveText() const
-{
-	ostringstream saveStream;
-	{
-		boost::archive::text_oarchive oa(saveStream);
-		oa << *this;
-	}
-	saveStream.flush();
-	return saveStream.str();
-}
-
-void BPNeuralNet::restoreText(const std::string &data)
-{
-	istringstream restoreStream(data);
-	boost::archive::text_iarchive ia(restoreStream);
-	ia >> *this;
-}
-
 int BPNeuralNet::stredNeuronov() const
 {
 	return m_stredNeuronov;
@@ -121,4 +103,6 @@ void BPNeuralNet::setStredNeuronov(int neuronov)
 }
 
 } /* end of namespace FaceDetect */
+
+BOOST_CLASS_EXPORT_GUID(FaceDetect::BPNeuralNet, "FaceDetect::BPNeuralNet")
 

@@ -12,6 +12,7 @@
 #include <lapackpp/blaspp.h>
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
+#include <boost/serialization/export.hpp>
 #include <sstream>
 #include "FaceStructuredNet.h"
 
@@ -22,20 +23,10 @@ namespace FaceDetect {
 
 FaceStructuredNet::FaceStructuredNet(QObject *parent):
 	NeuralNet(parent),
+	m_1Neuronov(0),
 	m_uOut(0)
 {
-	// Inicializácia výstupov stredných neurónov
-	m_stred1.resize(PartCount);
-	m_uStred1.resize(PartCount);
-	m_delta1.resize(PartCount);
-	for (int part = 0; part < PartCount; ++part) {
-		m_stred1[part] = LaVectorDouble(m_1Neuronov);
-		m_uStred1[part] = LaVectorDouble(m_1Neuronov);
-		m_delta1[part] = LaVectorDouble(m_1Neuronov);
-	}
-	m_stred2 = LaVectorDouble(PartCount);
-	m_uStred2 = LaVectorDouble(PartCount);
-	m_delta2 = LaVectorDouble(PartCount);
+	setS1Neuronov(10);
 }
 
 FaceStructuredNet::~FaceStructuredNet()
@@ -150,23 +141,31 @@ void FaceStructuredNet::initializeTraining()
 	initializeMatrix(m_w3, matrixInitMin, matrixInitMax);
 }
 
-std::string FaceStructuredNet::saveText() const
+int FaceStructuredNet::s1Neuronov() const
 {
-	ostringstream saveStream;
-	{
-		boost::archive::text_oarchive oa(saveStream);
-		oa << *this;
-	}
-	saveStream.flush();
-	return saveStream.str();
+	return m_1Neuronov;
 }
 
-void FaceStructuredNet::restoreText(const std::string &data)
+void FaceStructuredNet::setS1Neuronov(int neuronov)
 {
-	istringstream restoreStream(data);
-	boost::archive::text_iarchive ia(restoreStream);
-	ia >> *this;
+	if (m_1Neuronov != neuronov) {
+		m_1Neuronov = neuronov;
+		// Inicializácia výstupov stredných neurónov
+		m_stred1.resize(PartCount);
+		m_uStred1.resize(PartCount);
+		m_delta1.resize(PartCount);
+		for (int part = 0; part < PartCount; ++part) {
+			m_stred1[part] = LaVectorDouble(m_1Neuronov);
+			m_uStred1[part] = LaVectorDouble(m_1Neuronov);
+			m_delta1[part] = LaVectorDouble(m_1Neuronov);
+		}
+		m_stred2 = LaVectorDouble(PartCount);
+		m_uStred2 = LaVectorDouble(PartCount);
+		m_delta2 = LaVectorDouble(PartCount);
+	}
 }
 
 } /* end of namespace FaceDetectt */
+
+BOOST_CLASS_EXPORT_GUID(FaceDetect::FaceStructuredNet, "FaceDetect::FaceStructuredNet")
 

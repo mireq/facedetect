@@ -23,27 +23,29 @@ namespace FaceDetect {
 class FaceStructuredNet: public NeuralNet
 {
 Q_OBJECT
+Q_PROPERTY(int s1Neuronov READ s1Neuronov WRITE setS1Neuronov);
 public:
 	FaceStructuredNet(QObject *parent = 0);
 	~FaceStructuredNet();
 	virtual LaVectorDouble calcOutput(const LaVectorDouble &input);
 	virtual void trainSample(const LaVectorDouble &input, const LaVectorDouble &expectedOutput);
 	virtual void initializeTraining();
+	int s1Neuronov() const;
+	void setS1Neuronov(int neuronov);
+
+private:
 	template<class Archive> void serialize(Archive &ar, const unsigned int version) {
 		Q_UNUSED(version);
 		ar & boost::serialization::base_object<NeuralNet>(*this);
 		ar & m_w1;
 		ar & m_w2;
 		ar & m_w3;
+		int neuronov = m_1Neuronov;
+		ar & neuronov;
+		setS1Neuronov(neuronov);
 	};
-	std::string saveText() const;
-	void restoreText(const std::string &data);
-
-private:
 	/// Počet neurónov prvej vrstvy
-	static const int m_1Neuronov = 10;
-	/// Počet neurónov druhej vrstvy
-	static const int m_2Neuronov = 5;
+	int m_1Neuronov;
 	/// Pošet častí obrazu
 	static const int PartCount = 5;
 	/// Vstup rozdelený na samostatné časti
