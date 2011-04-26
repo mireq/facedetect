@@ -13,8 +13,12 @@
 #include <fstream>
 #include <QApplication>
 #include <QDebug>
+#include <QFont>
+#include <QFontMetrics>
 #include <QMetaType>
+#include <QPainter>
 #include <QSettings>
+#include <QSvgGenerator>
 #include "libfacedetect/BPNeuralNet.h"
 #include "libfacedetect/FaceStructuredNet.h"
 #include "libfacedetect/FaceDetector.h"
@@ -29,13 +33,19 @@ ConsoleInterface::ConsoleInterface(QObject *parent):
 	m_sobelFilter(false),
 	m_gaborFilter(false),
 	m_onlyGaborWavelet(false),
+	m_colorizeOut(false),
+	m_svgOut(false),
+	m_outImgValues(false),
 	m_learningSpeed(0.01),
+	m_falsePositiveHandicap(-1),
+	m_falseNegativeHandicap(-1),
 	m_numEpoch(100),
 	m_trainingSetPercent(100),
 	m_netType("bp"),
 	m_quiet(false),
 	m_printAlign(false),
 	m_printTraining(false),
+	m_printThreshold(false),
 	m_faceCount(0),
 	m_nonFaceCount(0),
 	m_cout(stdout),
@@ -266,15 +276,30 @@ void ConsoleInterface::trainNet()
 	m_trainer->setNumEpoch(m_numEpoch);
 	m_trainer->setTrainingDataReader(m_trainingDatabase);
 	m_trainer->setTrainingSetSize(m_trainingDatabase->trainingSetSize() * (static_cast<double>(m_trainingSetPercent) / 100.0));
+	if (m_falsePositiveHandicap >= 0) {
+		m_trainer->setFalsePositiveHandicap(m_falsePositiveHandicap);
+	}
+	if (m_falseNegativeHandicap >= 0) {
+		m_trainer->setFalseNegativeHandicap(m_falseNegativeHandicap);
+	}
 	m_neuralNet->setLearningSpeed(m_learningSpeed);
 
 	if (!m_quiet) {
 		m_cout << "\rStarting training\n";
-		m_cout.flush();
 	}
+	if (m_printTraining) {
+		m_cout << "Epoch" << '\t'
+		       << "MSEA" << '\t'
+		       << "MSEE" << '\t'
+		       << "MSEBinA" << '\t'
+		       << "MSEBinE" << '\t'
+		       << "ThreshA" << '\t'
+		       << "ThreshE" << '\n';
+	}
+	m_cout.flush();
 	connect(m_trainer.data(), SIGNAL(finished()), this, SLOT(onTrainingFinished()));
 	connect(m_trainer.data(), SIGNAL(terminated()), this, SLOT(onTrainingFinished()));
-	connect(m_trainer.data(), SIGNAL(epochFinished(int,double,double,double,double,double,double)), this, SLOT(printTrainingEpoch(int,double,double,double,double,double,double)));
+	connect(m_trainer.data(), SIGNAL(epochFinished(FaceDetect::NetTrainer::EpochStats)), this, SLOT(printTrainingEpoch(FaceDetect::NetTrainer::EpochStats)));
 	connect(m_trainer.data(), SIGNAL(sampleFinished(std::size_t,int)), this, SLOT(printTrainingSample(std::size_t,int)));
 	m_trainer->trainNet(m_neuralNet.data());
 }
@@ -282,7 +307,30 @@ void ConsoleInterface::trainNet()
 void ConsoleInterface::onTrainingFinished()
 {
 	saveNeuralNet();
+	FaceDetect::NetTrainer::EpochStats stats = m_trainer->bestEpochStats();
 	m_trainer = QSharedPointer<FaceDetect::NetTrainer>(0);
+
+	m_cout << "Training set size: " << stats.sizeA << '\n';
+	m_cout << "Faces: " << stats.facesA << ", Non faces: " << (stats.sizeA - stats.facesA) << '\n';
+	m_cout << "False negative: " << stats.falseNegativeA << ", False positive: " << stats.falsePositiveA << '\n';
+	// výpis štatistík tréningovej množiny
+	if (m_printThreshold) {
+		foreach (const FaceDetect::NetTrainer::MatchStat &stat, stats.matchStatA) {
+			m_cout << stat.threshold << '\t' << stat.falseNegative << '\t' << stat.falsePositive << '\n';
+			m_cout.flush();
+		}
+	}
+
+	m_cout << "Validation set size: " << stats.sizeE << '\n';
+	m_cout << "Faces: " << stats.facesE << ", Non faces: " << (stats.sizeE - stats.facesE) << '\n';
+	m_cout << "False negative: " << stats.falseNegativeE << ", False positive: " << stats.falsePositiveE << '\n';
+	// výpis štatistík validačnej množiny
+	if (m_printThreshold) {
+		foreach (const FaceDetect::NetTrainer::MatchStat &stat, stats.matchStatE) {
+			m_cout << stat.threshold << '\t' << stat.falseNegative << '\t' << stat.falsePositive << '\n';
+			m_cout.flush();
+		}
+	}
 	startNextStep();
 }
 
@@ -307,7 +355,7 @@ void ConsoleInterface::updateProgress(double progress)
 	}
 }
 
-void ConsoleInterface::printTrainingEpoch(int epoch, double msea, double msee, double msebina, double msebine, double thresholda, double thresholde)
+void ConsoleInterface::printTrainingEpoch(const FaceDetect::NetTrainer::EpochStats &stats)
 {
 	if (!m_quiet) {
 		m_cout << "\r";
@@ -317,10 +365,19 @@ void ConsoleInterface::printTrainingEpoch(int epoch, double msea, double msee, d
 		if (m_quiet) {
 			sep = '\t';
 		}
-		m_cout << epoch << sep << msea << sep << msee  << sep<< msebina  << sep<< msebine  << sep<< thresholda  << sep<< thresholde << '\n';
+		m_cout << stats.epoch << sep
+		       << stats.mseA << sep
+		       << stats.mseE  << sep
+		       << stats.mseBinA << sep
+		       << stats.mseBinE << sep
+		       << stats.thresholdA << sep
+		       << stats.thresholdE << '\n';
 	}
 	else if (!m_quiet) {
-		m_cout << '\r' << "Epoch: " << epoch << ", MSEA: " << msea << ", MSEE:" << msee << '\n';
+		m_cout << '\r'
+		       << "Epoch: " << stats.epoch
+		       << ", MSEA: " << stats.mseA
+		       << ", MSEE:" << stats.mseE << '\n';
 	}
 	m_cout.flush();
 }
@@ -343,6 +400,9 @@ void ConsoleInterface::parseCommandline()
 	m_sobelFilter = getBoolArgument(arguments, "--sobelFilter");
 	m_gaborFilter = getBoolArgument(arguments, "--gaborFilter");
 	m_onlyGaborWavelet = getBoolArgument(arguments, "--onlyGaborWavelet");
+	m_colorizeOut = getBoolArgument(arguments, "--colorizeOut");
+	m_svgOut = getBoolArgument(arguments, "--svgOut");
+	m_outImgValues = getBoolArgument(arguments, "--outImgValues");
 
 	QVector<QString> gaborLambdaStr;
 	QVector<QString> gaborThetaStr;
@@ -400,11 +460,26 @@ void ConsoleInterface::parseCommandline()
 	m_loadNetFile = getArgument(arguments, "--loadNet");
 	m_saveNetFile = getArgument(arguments, "--saveNet");
 	m_detectFiles = getArguments(arguments, "--detect");
-	m_faceCachePath = getArgument(arguments, "--faceCache");
+	if (getBoolArgument(arguments, "--faces")) {
+		m_facesPath = getArgument(arguments, "--faces");
+	}
+	if (getBoolArgument(arguments, "--nofaces")) {
+		m_nonFacePath = getArgument(arguments, "--nofaces");
+	}
+	if (getBoolArgument(arguments, "--faceCache")) {
+		m_faceCachePath = getArgument(arguments, "--faceCache");
+	}
 	m_quiet = getBoolArgument(arguments, "--quiet");
 	m_printAlign = getBoolArgument(arguments, "--printAlign");
 	m_printTraining = getBoolArgument(arguments, "--printTraining");
+	m_printThreshold = getBoolArgument(arguments, "--printThreshold");
 	m_learningSpeed = getDoubleArgument(arguments, "--learningSpeed");
+	if (getBoolArgument(arguments, "--falsePositiveHandicap")) {
+		m_falsePositiveHandicap = getIntArgument(arguments, "--falsePositiveHandicap");
+	}
+	if (getBoolArgument(arguments, "--falseNegativeHandicap")) {
+		m_falseNegativeHandicap = getIntArgument(arguments, "--falseNegativeHandicap");
+	}
 	m_numEpoch = getIntArgument(arguments, "--numEpoch");
 	m_trainingSetPercent = getIntArgument(arguments, "--trainingSetPercent");
 	m_netType = getArgument(arguments, "--netType").toUtf8().constData();
@@ -550,6 +625,103 @@ void ConsoleInterface::scanImageFile(const QString &file)
 	detector.setGlobalFilter(m_globalFilter);
 	detector.setupSegmenter(settings);
 	detector.scanImage();
+
+	if (m_svgOut || m_outImgValues) {
+		QSvgGenerator svgGenerator;
+		QImage outImage;
+		if (m_svgOut) {
+			svgGenerator.setFileName(file + ".svg");
+			svgGenerator.setResolution(100);
+			svgGenerator.setSize(image.size());
+			svgGenerator.setViewBox(QRect(0, 0, image.width(), image.height()));
+		}
+		else {
+			outImage = QImage(image.size(), QImage::Format_ARGB32);
+		}
+
+		// Prevod obrázku na čiernobiele farby
+		FaceDetect::GrayscaleFilter filter;
+		filter.filter(image);
+
+		auto result = detector.scanResult();
+		QPainter painter;
+		if (m_svgOut) {
+			painter.begin(&svgGenerator);
+		}
+		else {
+			painter.begin(&outImage);
+		}
+		painter.drawImage(QPoint(0, 0), image);
+		painter.setBrush(Qt::NoBrush);
+		QColor fgColor(Qt::white);
+		QColor bgColor(Qt::black);
+		QFont font = qApp->font();
+		QFontMetrics metrics(font);
+		painter.setFont(font);
+		foreach (const FaceDetect::FaceDetector::DetectionWindow &window, result) {
+			if (m_colorizeOut) {
+				bgColor = Qt::black;
+				int r = 0;
+				int g = 0;
+				int b = 0;
+				if (window.value < 0.5) {
+					r = window.value * 2.0 * 255;
+					g = 255;
+					b = 0;
+				}
+				else {
+					r = 255;
+					g = (1.0 - window.value) * 2.0 * 255;
+					b = 0;
+				}
+				fgColor = QColor(r, g, b);
+			}
+			bgColor.setAlphaF(window.value);
+			fgColor.setAlphaF(window.value);
+			QPolygonF poly = window.polygon;
+			poly.translate(-0.5, -0.5);
+			painter.setBrush(Qt::NoBrush);
+			painter.setPen(QPen(bgColor, 3));
+			painter.drawPolygon(poly);
+			painter.setPen(QPen(fgColor, 1));
+			painter.drawPolygon(poly);
+
+			bgColor.setAlpha(255);
+			fgColor.setAlpha(255);
+			if (m_colorizeOut) {
+				bgColor = Qt::black;
+				fgColor = Qt::white;
+			}
+			QRectF bRect = poly.boundingRect();
+			QString value = QString::number(window.value, 'f', 4);
+			QSize valSize(metrics.width(value) + 5, metrics.height() + 2);
+			QRectF valRect = QRectF(bRect.topLeft() - QPointF(valSize.width(), valSize.height()), bRect.topLeft());
+			painter.setBrush(bgColor);
+			painter.setPen(Qt::NoPen);
+			painter.drawRect(valRect);
+			painter.setPen(fgColor);
+			painter.drawText(valRect, Qt::AlignCenter, value);
+		}
+		painter.end();
+		if (!m_svgOut) {
+			outImage.save(file + ".out.png");
+		}
+	}
+	else {
+		QImage out = detector.scanResultImage();
+		if (m_colorizeOut) {
+			QLinearGradient imgGradient;
+			imgGradient.setColorAt(0.0, Qt::darkCyan);
+			imgGradient.setColorAt(0.5, Qt::cyan);
+			imgGradient.setColorAt(0.55, Qt::green);
+			imgGradient.setColorAt(0.77, Qt::yellow);
+			imgGradient.setColorAt(1.0, Qt::red);
+			FaceDetect::GrayscaleFilter filter;
+			filter.setGrayscaleGradient(imgGradient);
+			filter.filter(out);
+		}
+		out.save(file + ".out.png", "PNG");
+	}
 }
 
 void ConsoleInterface::printFaceFeaturesData(const FaceDetect::FaceFileScanner::FaceData &data, const QTransform &transform) const

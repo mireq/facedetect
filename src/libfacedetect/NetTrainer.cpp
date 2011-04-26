@@ -20,8 +20,6 @@
 #include "TrainingDataReader.h"
 #include "NetTrainer.h"
 
-#include <QDebug>
-
 using std::numeric_limits;
 using std::ostringstream;
 using std::istringstream;
@@ -38,8 +36,11 @@ NetTrainer::NetTrainer(QObject *parent):
 	m_stop(false),
 	m_numEpoch(100),
 	m_net(0),
-	m_trainingSetSize(0)
+	m_trainingSetSize(0),
+	m_falsePositiveHandicap(50),
+	m_falseNegativeHandicap(1)
 {
+	qRegisterMetaType<EpochStats>();
 }
 
 NetTrainer::~NetTrainer()
@@ -65,6 +66,26 @@ std::size_t NetTrainer::trainingSetSize() const
 void NetTrainer::setTrainingSetSize(std::size_t size)
 {
 	m_trainingSetSize = size;
+}
+
+int NetTrainer::falsePositiveHandicap() const
+{
+	return m_falsePositiveHandicap;
+}
+
+void NetTrainer::setFalsePositiveHandicap(int handicap)
+{
+	m_falsePositiveHandicap = handicap;
+}
+
+int NetTrainer::falseNegativeHandicap() const
+{
+	return m_falseNegativeHandicap;
+}
+
+void NetTrainer::setFalseNegativeHandicap(int handicap)
+{
+	m_falseNegativeHandicap = handicap;
 }
 
 /**
@@ -110,6 +131,14 @@ void NetTrainer::trainNet(FaceDetect::NeuralNet *net)
 }
 
 /**
+ * Vráti štatistiky pre najlepšiu tréningovú epochu.
+ */
+NetTrainer::EpochStats NetTrainer::bestEpochStats() const
+{
+	return m_bestEpochStats;
+}
+
+/**
  * Spustenie tréningu. Pri tréningu sa dáta načítavajú pomocou objektu typu
  * TrainingDataReader.
  * \sa setTrainingDataReader, sampleFinished, epochFinished
@@ -136,13 +165,19 @@ void NetTrainer::run()
 	// Doteraz najlepšie nájdené hodnoty neurónovej siete
 	string bestNet;
 	saveNet(bestNet);
+	// Doteraz najlepšie dosiahnuté štatistiky siete
+	EpochStats bestEpoch;
+	std::size_t trainingSetSize = qMin(m_reader->trainingSetSize(), m_trainingSetSize);
+	if (trainingSetSize == 0) {
+		m_trainingSetSize = m_reader->trainingSetSize();
+	}
+	m_matchStatA.resize(m_trainingSetSize);
+	m_matchStatE.resize(m_reader->trainingSetSize() - m_trainingSetSize);
+	m_bestMatchStatA = m_matchStatA;
+	m_bestMatchStatE = m_matchStatE;
 	// V každej trénovacej epoche sa vyšle signál epochFinished
 	for (int epoch = 1; epoch <= m_numEpoch; ++epoch) {
 		// Pre každú vzorku sa volá trainSample
-		std::size_t trainingSetSize = qMin(m_reader->trainingSetSize(), m_trainingSetSize);
-		if (trainingSetSize == 0) {
-			m_trainingSetSize = m_reader->trainingSetSize();
-		}
 		for (std::size_t sample = 0; sample < trainingSetSize; ++sample) {
 			{
 				QMutexLocker lock(&m_stopMutex);
@@ -158,10 +193,25 @@ void NetTrainer::run()
 			}
 		}
 		emit sampleFinished(m_reader->trainingSetSize(), epoch);
-		finishEpoch(epoch, bestNet, bestMse);
+		if (epoch == 1) {
+			for (std::size_t sample = 0; sample < m_trainingSetSize; ++sample) {
+				if (m_reader->outputVector(sample)(0) == 1) {
+					bestEpoch.facesA++;
+				}
+			}
+			for (std::size_t sample = m_trainingSetSize; sample < m_reader->trainingSetSize(); ++sample) {
+				if (m_reader->outputVector(sample)(0) == 1) {
+					bestEpoch.facesE++;
+				}
+			}
+		}
+		finishEpoch(epoch, bestNet, bestMse, bestEpoch);
 	}
 	// Obnovenie najlepších nastavení
 	restoreNet(bestNet);
+	m_bestEpochStats = bestEpoch;
+	m_bestEpochStats.matchStatA = m_bestMatchStatA;
+	m_bestEpochStats.matchStatE = m_bestMatchStatE;
 	{
 		QMutexLocker lock(&m_stopMutex);
 		m_stop = false;
@@ -172,10 +222,8 @@ void NetTrainer::run()
  * Výpočet MSE neurónovej siete.
  * \sa calcOutput
  */
-double NetTrainer::calcMse(std::size_t from, std::size_t to, bool binary, double *thresholdOut)
+double NetTrainer::calcMse(std::size_t from, std::size_t to, bool binary, double *thresholdOut, QVector<MatchStat> *matchStat, long *fNeg, long *fPos)
 {
-	static const int positiveError = 1000;
-	static const int negativeError = 1;
 	double errorSum = 0;
 	typedef QPair<double,double> OutT;
 	QList<OutT> outData;
@@ -205,8 +253,15 @@ double NetTrainer::calcMse(std::size_t from, std::size_t to, bool binary, double
 				badSum++;
 			}
 		}
-		long best = positiveError * falsePositive + negativeError * falseNegative;
+		long best = m_falsePositiveHandicap * falsePositive + m_falseNegativeHandicap * falseNegative;
 		double bestThres = threshold;
+		int sampleIndex = 0;
+		if (fNeg != 0) {
+			*fNeg = falseNegative;
+		}
+		if (fPos != 0) {
+			*fPos = falsePositive;
+		}
 		for (auto sample = outData.begin(); sample != outData.end(); ++sample) {
 			threshold = sample->first;
 			if (sample->second == 1) {
@@ -217,12 +272,24 @@ double NetTrainer::calcMse(std::size_t from, std::size_t to, bool binary, double
 				falsePositive--;
 				badSum--;
 			}
-			long badVazene = positiveError * falsePositive + negativeError * falseNegative;
+			long badVazene = m_falsePositiveHandicap * falsePositive + m_falseNegativeHandicap * falseNegative;
 			if (badVazene < best) {
 				best = badVazene;
 				bestThres = (threshold + prevThresh) / 2.0;
+				if (fNeg != 0) {
+					*fNeg = falseNegative;
+				}
+				if (fPos != 0) {
+					*fPos = falsePositive;
+				}
+			}
+			if (matchStat != 0) {
+				(*matchStat)[sampleIndex].falsePositive = falsePositive;
+				(*matchStat)[sampleIndex].falseNegative = falseNegative;
+				(*matchStat)[sampleIndex].threshold = (threshold + prevThresh) / 2.0;
 			}
 			prevThresh = threshold;
+			++sampleIndex;
 		}
 		errorSum = best;
 		if (thresholdOut != 0) {
@@ -235,27 +302,49 @@ double NetTrainer::calcMse(std::size_t from, std::size_t to, bool binary, double
 /**
  * Emitovanie signálov pri ukončení epochy a vrátenie doteraz najlepšej siete.
  */
-void NetTrainer::finishEpoch(int epoch, std::string &bestNet, double &bestMse)
+void NetTrainer::finishEpoch(int epoch, std::string &bestNet, double &bestMse, EpochStats &bestEpoch)
 {
+	long fNegA = 0;
+	long fPosA = 0;
+	long fNegE = 0;
+	long fPosE = 0;
 	double msea = calcMse(0, m_trainingSetSize);
 	double msee = msea;
 	double thresholda = 0;
-	double msebina = calcMse(0, m_trainingSetSize, true, &thresholda);
+	double msebina = calcMse(0, m_trainingSetSize, true, &thresholda, &m_matchStatA, &fNegA, &fPosA);
 	double thresholde = thresholda;
 	double msebine = msebina;
 	if (m_trainingSetSize != m_reader->trainingSetSize()) {
 		msee = calcMse(m_trainingSetSize, m_reader->trainingSetSize());
-		msebine = calcMse(m_trainingSetSize, m_reader->trainingSetSize(), true, &thresholde);
+		msebine = calcMse(m_trainingSetSize, m_reader->trainingSetSize(), true, &thresholde, &m_matchStatE, &fNegE, &fPosE);
 	}
 	m_net->setBinaryThreshold(thresholde);
+	EpochStats stats = bestEpoch;
+	stats.epoch = epoch;
+	stats.mseA = msea;
+	stats.mseE = msee;
+	stats.mseBinA = msebina;
+	stats.mseBinE = msebine;
+	stats.thresholdA = thresholda;
+	stats.thresholdE = thresholde;
+	stats.sizeA = m_trainingSetSize;
+	stats.sizeE = m_reader->trainingSetSize() - m_trainingSetSize;
+	stats.falseNegativeA = fNegA;
+	stats.falsePositiveA = fPosA;
+	stats.falseNegativeE = fNegE;
+	stats.falsePositiveE = fPosE;
 	//double mseCombined = qMax(thresholde, 1.0 - thresholde) * msebine;
-	//if (mseCombined <= bestMse) {
-	if (msebine <= bestMse) {
-		//bestMse = mseCombined;
-		bestMse = msebine;
+	double mseCombined = msee * msebine;
+	if (mseCombined <= bestMse) {
+	//if (msebine <= bestMse) {
+		bestMse = mseCombined;
+		//bestMse = msebine;
+		bestEpoch = stats;
 		saveNet(bestNet);
+		m_bestMatchStatA = m_matchStatA;
+		m_bestMatchStatE = m_matchStatE;
 	}
-	emit epochFinished(epoch, msea, msee, msebina, msebine, thresholda, thresholde);
+	emit epochFinished(stats);
 }
 
 /**

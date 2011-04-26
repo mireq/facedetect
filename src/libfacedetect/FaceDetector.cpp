@@ -7,18 +7,13 @@
  * =====================================================================
  */
 
-#include <QPainter>
 #include <QRectF>
 #include <QPolygonF>
-#include <QLabel>
 #include <cstring>
 #include "FaceDetector.h"
 #include "utils/PolygonRasterizer.h"
 
 using std::memset;
-#include <QLabel>
-#include <QEventLoop>
-#include <QDebug>
 
 namespace FaceDetect {
 
@@ -70,20 +65,25 @@ void FaceDetector::scanImage()
 	for (int segmentId = 0; segmentId < segmentCount; ++segmentId) {
 		// Výpočet vstupu a výstupu
 		QImage segmentImage = m_segmenter->segmentImage(segmentId);
-		LaVectorDouble inputVector = m_localFilter.filterVector(segmentImage);
-		LaVectorDouble outputVector = m_neuralNet->calcOutput(inputVector);
-		if (outputVector(0) < m_neuralNet->binaryThreshold()) {
-			outputVector(0) = 0.5 * outputVector(0) / (m_neuralNet->binaryThreshold());
-		}
-		else {
-			outputVector(0) = qMax(0.0, outputVector(0) - m_neuralNet->binaryThreshold()) * 1.0 / (1.0 - m_neuralNet->binaryThreshold()) * 0.5 + 0.5;
-		}
 
 		// Oblasť segmentu
 		QRect segmentRect = m_segmenter->segmentRect(segmentId);
 		// Transformácia polygónu
 		QPolygon poly(segmentRect);
 		poly = rectTransform.map(poly);
+
+		LaVectorDouble inputVector = m_localFilter.filterVector(segmentImage);
+		LaVectorDouble outputVector = m_neuralNet->calcOutput(inputVector);
+		// Zamietnuté
+		if (outputVector(0) < m_neuralNet->binaryThreshold()) {
+			outputVector(0) = 0.5 * outputVector(0) / (m_neuralNet->binaryThreshold());
+		}
+		// Obsahuje tvár
+		else {
+			double val = qMax(0.0, outputVector(0) - m_neuralNet->binaryThreshold()) * 1.0 / (1.0 - m_neuralNet->binaryThreshold());
+			outputVector(0) = val * 0.5 + 0.5;
+			m_scanResult << DetectionWindow{val, poly};
+		}
 		// Rasterizácia polgónu
 		rasterizer.processPolygon(poly);
 		const QVector<Utils::PolygonRasterizer::ScanLine> lines = rasterizer.scanLines();
@@ -108,8 +108,9 @@ void FaceDetector::scanImage()
 			memBegin = statisticsWidth * y;
 		}
 	}
+	qSort(m_scanResult.begin(), m_scanResult.end(), [](DetectionWindow x, DetectionWindow y) { return x.value < y.value; });
 
-	QImage outImage(m_segmenter->image().size(), QImage::Format_ARGB32);
+	m_scanResultImage = QImage(m_segmenter->image().size(), QImage::Format_ARGB32);
 	for (std::size_t yPos = 0; yPos < statisticsHeight; ++yPos) {
 		for (std::size_t xPos = 0; xPos < statisticsWidth; ++xPos) {
 			float val = m_statistics[yPos * statisticsWidth + xPos];
@@ -123,14 +124,9 @@ void FaceDetector::scanImage()
 			else {
 				colorVal = val * 255;
 			}
-			outImage.setPixel(QPoint(int(xPos), int(yPos)), qRgb(colorVal, colorVal, colorVal));
+			m_scanResultImage.setPixel(QPoint(int(xPos), int(yPos)), qRgb(colorVal, colorVal, colorVal));
 		}
 	}
-	QLabel *label = new QLabel();
-	label->setPixmap(QPixmap::fromImage(outImage));
-	label->show();
-	QEventLoop loop(this);
-	loop.exec();
 }
 
 /**
@@ -147,6 +143,24 @@ void FaceDetector::setLocalFilter(const ImageFilter &localFilter)
 void FaceDetector::setGlobalFilter(const ImageFilter &globalFilter)
 {
 	m_segmenter->setGlobalFilter(globalFilter);
+}
+
+/**
+ * Vráti výsledok skenovania súboru ako obrázok.
+ */
+QImage FaceDetector::scanResultImage() const
+{
+	return m_scanResultImage;
+}
+
+/**
+ * Vráti výsledok skenovania ako zoznam okien s hodnotou vyššou ako hranica a
+ * ako value je hodnota v rozsahu 0 - 1 (0 je hranica). Poradie je od najmenšej
+ * hodnoty po najväčšiu.
+ */
+QVector<FaceDetector::DetectionWindow> FaceDetector::scanResult() const
+{
+	return m_scanResult;
 }
 
 } /* end of namespace FaceDetect */

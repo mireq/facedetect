@@ -24,6 +24,10 @@ class FaceDetector: public QThread
 {
 Q_OBJECT
 public:
+	struct DetectionWindow {
+		double value;
+		QPolygon polygon;
+	};
 	FaceDetector(NeuralNet *neuralNet, QObject *parent = 0);
 	~FaceDetector();
 	QImage image() const;
@@ -32,6 +36,8 @@ public:
 	void scanImage();
 	void setLocalFilter(const ImageFilter &localFilter);
 	void setGlobalFilter(const ImageFilter &globalFilter);
+	QImage scanResultImage() const;
+	QVector<FaceDetector::DetectionWindow> scanResult() const;
 
 private:
 	NeuralNet *m_neuralNet;
@@ -41,6 +47,10 @@ private:
 	std::valarray<float> m_statistics;
 	/// Lokálny filter.
 	ImageFilter m_localFilter;
+	/// Výsledok skenovania súboru.
+	QImage m_scanResultImage;
+	/// Výsledky ako súbor polygónov.
+	QVector<DetectionWindow> m_scanResult;
 }; /* -----  end of class FaceDetector  ----- */
 
 } /* end of namespace FaceDetect */

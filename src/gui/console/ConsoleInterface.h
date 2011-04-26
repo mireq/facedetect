@@ -57,7 +57,7 @@ private slots:
 
 	// Výpisy
 	void updateProgress(double progress);
-	void printTrainingEpoch(int epoch, double msea, double msee, double msebina = 0, double msebine = 0, double thresholda = 0, double thresholde = 0);
+	void printTrainingEpoch(const FaceDetect::NetTrainer::EpochStats &stats);
 	void printTrainingSample(std::size_t sample, int epoch);
 
 private:
@@ -82,7 +82,12 @@ private:
 	bool m_sobelFilter;
 	bool m_gaborFilter;
 	bool m_onlyGaborWavelet;
+	bool m_colorizeOut;
+	bool m_svgOut;
+	bool m_outImgValues;
 	double m_learningSpeed;
+	int m_falsePositiveHandicap;
+	int m_falseNegativeHandicap;
 	int m_numEpoch;
 	int m_trainingSetPercent;
 	QVector<FaceDetect::GaborFilter::GaborParameters> m_gaborParameters;
@@ -98,6 +103,7 @@ private:
 	bool m_quiet;
 	bool m_printAlign;
 	bool m_printTraining;
+	bool m_printThreshold;
 	std::size_t m_faceCount;
 	std::size_t m_nonFaceCount;
 	mutable QTextStream m_cout;

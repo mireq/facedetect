@@ -46,7 +46,6 @@ private:
 
 	/// Počet stredných neurónov
 	int m_stredNeuronov;
-
 	/// Váhy medzi vstupnou vrstvou a skrytou vrstvou.
 	LaGenMatDouble m_w;
 	/// Váhy medzi skrytou vrstvou a výstupnou vrstvou.
