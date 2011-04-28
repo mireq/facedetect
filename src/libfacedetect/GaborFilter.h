@@ -15,11 +15,14 @@
 
 namespace FaceDetect {
 
+/**
+ * \brief Gaborov filter pre detekciu hrán.
+ */
 class GaborFilter: public ImageFilterBase
 {
 public:
 	/**
-	 * Vlastnosti gaborovej vlnkovej funkcie.
+	 * \brief Vlastnosti gaborovej vlnkovej funkcie.
 	 */
 	struct GaborParameters {
 		/**
@@ -43,7 +46,6 @@ public:
 	void setOnlyGaborWavelet(bool wavelet);
 
 private:
-	void filterIllumination(QImage &sourceImage) const;
 	void calcGaborConvolution(QImage *sourceImage = 0) const;
 	void applyConvolution(QImage &sourceImage, const std::valarray<double> &convolX, const std::valarray<double> &convolY, int matrixSizeX, int matrixSizeY, double luminanceCorrection) const;
 

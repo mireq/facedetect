@@ -97,7 +97,13 @@ protected:
 	 */
 	virtual void initializeTraining() = 0;
 	void initializeMatrix(LaGenMatDouble &matrix, double min, double max) const;
+	/**
+	 * Sigmoidná funkcia pre hodnotu \a potencial.
+	 */
 	double sigmoid(const double &potencial) const { return 1.0 / (1.0 + std::exp(-potencial)); }
+	/**
+	 * Derivácia sigmoidnej funkci pre hodnotu \a potencial.
+	 */
 	double derivSigmoid(const double &potencial) const {
 		double pom = exp(-potencial);
 		double pom1 = 1.0 + pom;

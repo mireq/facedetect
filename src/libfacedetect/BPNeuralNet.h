@@ -18,11 +18,14 @@
 namespace FaceDetect {
 
 /**
- * \brief Neurónová sieť so spätným šírením signálov.
+ * \brief Neurónová sieť s jednou skrytou vrstvou a spätným šírením signálov.
  */
 class BPNeuralNet: public NeuralNet
 {
 Q_OBJECT
+/**
+ * Počet neurónov skrytej vrstvy.
+ */
 Q_PROPERTY(int stredNeuronov READ stredNeuronov WRITE setStredNeuronov);
 public:
 	BPNeuralNet(QObject *parent = 0);
@@ -30,10 +33,19 @@ public:
 	virtual LaVectorDouble calcOutput(const LaVectorDouble &input);
 	virtual void trainSample(const LaVectorDouble &input, const LaVectorDouble &expectedOutput);
 	virtual void initializeTraining();
+	/**
+	 * Vráti počet neurónov v strednej vrstve.
+	 */
 	int stredNeuronov() const;
+	/**
+	 * Nastavenie počtu neurónov v strednej vrstve.
+	 */
 	void setStredNeuronov(int neuronov);
 
 private:
+	/**
+	 * Serializácia a deserializácia siete.
+	 */
 	template<class Archive> void serialize(Archive &ar, const unsigned int version) {
 		Q_UNUSED(version);
 		ar & boost::serialization::base_object<NeuralNet>(*this);

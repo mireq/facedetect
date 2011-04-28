@@ -14,6 +14,9 @@
 
 namespace FaceDetect {
 
+/**
+ * \brief Sobel operátor pre detekciu hrán.
+ */
 class SobelFilter: public ImageFilterBase
 {
 public:

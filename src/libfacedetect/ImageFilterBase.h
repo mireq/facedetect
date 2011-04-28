@@ -14,11 +14,18 @@
 
 namespace FaceDetect {
 
+/**
+ * \brief Filter bitmapových obrázkov.
+ */
 class ImageFilterBase
 {
 public:
 	ImageFilterBase() {};
 	virtual ~ImageFilterBase() {};
+	/**
+	 * Použitie filtra na obrázok \a sourceImage. Výstupom filtra je vstupný
+	 * parameter.
+	 */
 	virtual void filter(QImage &sourceImage) const = 0;
 }; /* -----  end of class ImageFilterBase  ----- */
 

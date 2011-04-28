@@ -19,7 +19,7 @@
 namespace FaceDetect {
 
 /**
- * Vytvorenie trénovacej databázy.
+ * Vytvorenie tréningovej databázy.
  */
 TrainingImageDatabase::TrainingImageDatabase(QObject *parent):
 	TrainingDataReader(parent),

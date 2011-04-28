@@ -464,7 +464,7 @@ void ConsoleInterface::parseCommandline()
 		m_facesPath = getArgument(arguments, "--faces");
 	}
 	if (getBoolArgument(arguments, "--nofaces")) {
-		m_nonFacePath = getArgument(arguments, "--nofaces");
+		m_nonFacesPath = getArgument(arguments, "--nofaces");
 	}
 	if (getBoolArgument(arguments, "--faceCache")) {
 		m_faceCachePath = getArgument(arguments, "--faceCache");

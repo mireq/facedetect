@@ -27,7 +27,7 @@ class PolygonRasterizer
 {
 public:
 	/**
-	 * Riadok rasterizovaného polygónu.
+	 * \brief Riadok rasterizovaného polygónu.
 	 */
 	struct ScanLine {
 		int minX; /**< Začiatok vyplnenej oblasti */

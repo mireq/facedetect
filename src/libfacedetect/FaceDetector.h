@@ -20,6 +20,9 @@
 
 namespace FaceDetect {
 
+/**
+ * \brief Detektor tváre skenujúci vstupný obraz.
+ */
 class FaceDetector: public QThread
 {
 Q_OBJECT
@@ -40,8 +43,11 @@ public:
 	QVector<FaceDetector::DetectionWindow> scanResult() const;
 
 private:
+	/// Neurónová sieť používaná na detekciu.
 	NeuralNet *m_neuralNet;
+	/// Trieda pre rozklad obrazu na fragmenty.
 	QSharedPointer<ImageSegmenter> m_segmenter;
+	/// Nastavenie rozkladu obrazu.
 	ImageSegmenter::Settings m_settings;
 	/// Štatistiky pre obraz.
 	std::valarray<float> m_statistics;

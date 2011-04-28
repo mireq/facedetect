@@ -16,7 +16,7 @@
 namespace FaceDetect {
 
 /**
- * Filter pre prevod obrazu do odtieňov šedej.
+ * \brief Filter pre prevod obrazu do odtieňov šedej.
  */
 class GrayscaleFilter: public ImageFilterBase
 {

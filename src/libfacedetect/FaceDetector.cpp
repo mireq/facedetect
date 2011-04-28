@@ -17,6 +17,9 @@ using std::memset;
 
 namespace FaceDetect {
 
+/**
+ * Vytvorenie detektoru tváre používajúceho neurónovú sieť \a neuralNet.
+ */
 FaceDetector::FaceDetector(NeuralNet *neuralNet, QObject *parent):
 	QThread(parent),
 	m_neuralNet(neuralNet)
@@ -27,6 +30,9 @@ FaceDetector::~FaceDetector()
 {
 }
 
+/**
+ * Vráti, ktorý sa práve spracúva.
+ */
 QImage FaceDetector::image() const
 {
 	if (m_segmenter.isNull()) {
@@ -37,12 +43,18 @@ QImage FaceDetector::image() const
 	}
 }
 
+/**
+ * Nastavenie obrázku, ktorý sa má spracovať.
+ */
 void FaceDetector::setImage(const QImage &image)
 {
 	m_segmenter = QSharedPointer<ImageSegmenter>(new ImageSegmenter(image, m_settings));
 	m_statistics.resize(image.width() * image.height(), 0);
 }
 
+/**
+ * Nastavenie spôsobu rozkladania obrazu na fragmenty.
+ */
 void FaceDetector::setupSegmenter(const ImageSegmenter::Settings &settings)
 {
 	m_settings = settings;
@@ -51,6 +63,9 @@ void FaceDetector::setupSegmenter(const ImageSegmenter::Settings &settings)
 	}
 }
 
+/**
+ * Preskenovanie aktuálneho súboru s obrázkom.
+ */
 void FaceDetector::scanImage()
 {
 	// Veľkosť dát

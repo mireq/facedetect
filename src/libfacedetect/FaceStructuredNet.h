@@ -20,9 +20,15 @@
 
 namespace FaceDetect {
 
+/**
+ * \brief Neurónová sieť štruktúrovaná pre detekciu tváre.
+ */
 class FaceStructuredNet: public NeuralNet
 {
 Q_OBJECT
+/**
+ * Počet neurónov v prvej skrytej vrstve.
+ */
 Q_PROPERTY(int s1Neuronov READ s1Neuronov WRITE setS1Neuronov);
 public:
 	FaceStructuredNet(QObject *parent = 0);
@@ -30,7 +36,13 @@ public:
 	virtual LaVectorDouble calcOutput(const LaVectorDouble &input);
 	virtual void trainSample(const LaVectorDouble &input, const LaVectorDouble &expectedOutput);
 	virtual void initializeTraining();
+	/**
+	 * Vráti počet neurónov v prvej skrytej vrstve.
+	 */
 	int s1Neuronov() const;
+	/**
+	 * Nastavenie počtu neurónov v prvej skrytej vrstve.
+	 */
 	void setS1Neuronov(int neuronov);
 
 private:

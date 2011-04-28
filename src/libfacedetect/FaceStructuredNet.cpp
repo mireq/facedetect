@@ -21,6 +21,9 @@ using std::ostringstream;
 
 namespace FaceDetect {
 
+/**
+ * Vytvorenie neurónovej siete so štruktúrou pre detekciu tváre.
+ */
 FaceStructuredNet::FaceStructuredNet(QObject *parent):
 	NeuralNet(parent),
 	m_1Neuronov(0),

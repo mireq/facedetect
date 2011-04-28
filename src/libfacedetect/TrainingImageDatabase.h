@@ -43,7 +43,7 @@ public:
 
 private:
 	/**
-	 * Položka trénovacej množiny.
+	 * \brief Položka tréningovej množiny.
 	 */
 	struct TrainingSample {
 		mutable QSharedPointer<FaceFileScanner::ImageInfo> info; /**< Informácie o obrázku (ak je nastavený vstupný a výstupný vektor má hodnotu 0) */

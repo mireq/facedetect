@@ -175,7 +175,7 @@ void NetTrainer::run()
 	m_matchStatE.resize(m_reader->trainingSetSize() - m_trainingSetSize);
 	m_bestMatchStatA = m_matchStatA;
 	m_bestMatchStatE = m_matchStatE;
-	// V každej trénovacej epoche sa vyšle signál epochFinished
+	// V každej tréningovej epoche sa vyšle signál epochFinished
 	for (int epoch = 1; epoch <= m_numEpoch; ++epoch) {
 		// Pre každú vzorku sa volá trainSample
 		for (std::size_t sample = 0; sample < trainingSetSize; ++sample) {

@@ -15,6 +15,9 @@
 
 namespace FaceDetect {
 
+/**
+ * \brief Filter pre korekciu osvetlenia.
+ */
 class IlluminationFilter: public ImageFilterBase
 {
 public:
