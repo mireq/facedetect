@@ -10,11 +10,11 @@ Item {
 		property alias topBar: topBarItem
 		anchors { left: parent.left; top: topBar.bottom; right: parent.right; bottom: parent.bottom }
 		CentralWindow {
-			title: "Nastavenia"
+			title: qsTr("Settings")
 			anchors.fill: parent
 		}
 		FaceDatabaseView {
-			title: "Databáza tvárí"
+			title: qsTr("Face database")
 			anchors.fill: parent
 		}
 	}

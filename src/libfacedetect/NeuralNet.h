@@ -28,7 +28,7 @@ class NeuralNet: public QObject
 Q_OBJECT
 /**
  * Rýchlosť učenia neurónovej siete. Táto hodnota obyčajne nastavuje parameter
- * eta (η) konkrétnej implementácie neurónovej siete.
+ * eta konkrétnej implementácie neurónovej siete.
  */
 Q_PROPERTY(double learningSpeed READ learningSpeed WRITE setLearningSpeed);
 /**
@@ -111,7 +111,7 @@ protected:
 	};
 
 private:
-	/// Rýchlosť učenia neurónovej siete - eta (η).
+	/// Rýchlosť učenia neurónovej siete - eta.
 	double m_learningSpeed;
 	/// Veľkosť vstupného vektoru.
 	int m_inputVectorSize;

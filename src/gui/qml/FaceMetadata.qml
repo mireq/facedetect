@@ -34,25 +34,25 @@ Item {
 			width: metadataContainer.width / 3 - 10
 			Text {
 				width: parent.width
-				text: "Ľavé oko"
+				text: qsTr("Left eye")
 				horizontalAlignment: Text.AlignRight
 				font.pixelSize: fontSize; font.bold: true; color: fontColor
 			}
 			Text {
 				width: parent.width
-				text: "Pravé oko"
+				text: qsTr("Right eye")
 				horizontalAlignment: Text.AlignRight
 				font.pixelSize: fontSize; font.bold: true; color: fontColor
 			}
 			Text {
 				width: parent.width
-				text: "Nos"
+				text: qsTr("Nose")
 				horizontalAlignment: Text.AlignRight
 				font.pixelSize: fontSize; font.bold: true; color: fontColor
 			}
 			Text {
 				width: parent.width
-				text: "Ústa"
+				text: qsTr("Mouth")
 				horizontalAlignment: Text.AlignRight
 				font.pixelSize: fontSize; font.bold: true; color: fontColor
 			}

@@ -25,10 +25,10 @@ CentralWindow {
 		id: scanningInfo
 		Item {
 			property double scanningProgress: runtime.faceFileScanner.progress
-			property string scanningText: "Skenovanie ..."
+			property string scanningText: qsTr("Scanning ...")
 			property string scanningExtendedText: ""
 			onScanningProgressChanged: {
-				scanningExtendedText = "Prehľadaných " + runtime.faceFileScanner.scannedDirs + " adresárov a " + runtime.faceFileScanner.scannedFiles + " súborov";
+				scanningExtendedText = qsTr("Scanned") + " " + qsTr("%n folder(s)", "", parseInt(runtime.faceFileScanner.scannedDirs)) + " " + qsTr("and") + " " + qsTr("%n file(s)", "", parseInt(runtime.faceFileScanner.scannedFiles));
 			}
 			anchors.fill: parent
 			Text {
@@ -69,7 +69,7 @@ CentralWindow {
 			visible: false
 			PushButton {
 				id: cancelButton
-				text: "Zrušiť"
+				text: qsTr("Cancel")
 				anchors { fill: parent; margins: 5 }
 				onClicked: {
 					runtime.faceFileScanner.stop();
@@ -78,7 +78,7 @@ CentralWindow {
 			}
 			PushButton {
 				id: backButton
-				text: "Späť"
+				text: qsTr("Back")
 				anchors { fill: parent; margins: 5 }
 				transform: Translate { y: faceDatabaseView._backButtonTranslate }
 				onClicked: {
@@ -95,7 +95,7 @@ CentralWindow {
 			visible: false
 			PushButton {
 				id: infoButton
-				text: "Info"
+				text: qsTr("Info")
 				anchors { fill: parent; margins: 5 }
 				onClicked: {
 					if (facesView.selectedItem != null) {
@@ -189,7 +189,7 @@ CentralWindow {
 			model: VisualItemModel {
 				InfoListItem {
 					id: faceDetailsInfo
-					title: "Podrobnosti"
+					title: qsTr("Details")
 					width: imageDetailsView.width
 					FaceMetadata {
 						metadata: facesView.selectedItem == null ? null : facesView.selectedItem.facesModel.faceData
@@ -197,7 +197,7 @@ CentralWindow {
 				}
 				InfoListItem {
 					id: definitionFileInfo
-					title: "Definičný súbor"
+					title: qsTr("Definition file")
 					width: imageDetailsView.width
 					Text {
 						text: facesView.selectedItem == null ? "" : facesView.selectedItem.facesModel.definitionFile
@@ -207,7 +207,7 @@ CentralWindow {
 				}
 				InfoListItem {
 					id: transformationInfo
-					title: "Transformácia"
+					title: qsTr("Transformation")
 					width: imageDetailsView.width
 					TransformationDelegate {
 						source: facesView.selectedItem == null ? "" : facesView.selectedItem.facesModel.image
@@ -231,7 +231,7 @@ CentralWindow {
 			width: Math.round(parent.width / 2) - 10
 			Text {
 				anchors { bottom: statisticsImage.top; left: parent.left; right: parent.right }
-				text: "Rozdelenie kontrolných bodov"
+				text: qsTr("Control points")
 				color: "#444444"
 				elide: Text.ElideRight
 				font.pixelSize: 16; font.bold: true;
@@ -255,15 +255,15 @@ CentralWindow {
 			width: Math.round(parent.width / 2)
 			model: VisualItemModel {
 				InfoListItem {
-					title: "Štatistiky skenovania súborov"
+					title: qsTr("Scanning statistics")
 					width: databaseDetailsView.width
 					color: "#444444"
 					styleColor: "#80ffffff"
 					Column {
-						Text { text: "Preskenovaných adresárov: " + runtime.faceFileScanner.scannedDirs; font.pixelSize: 14; color: "#333333" }
-						Text { text: "Preskenovaných súborov: " + runtime.faceFileScanner.scannedFiles; font.pixelSize: 14; color: "#333333" }
-						Text { text: "Celkovo adresárov: " + runtime.faceFileScanner.totalDirs; font.pixelSize: 14; color: "#333333" }
-						Text { text: "Celkovo súborov: " + runtime.faceFileScanner.totalFiles; font.pixelSize: 14; color: "#333333" }
+						Text { text: qsTr("Scanned directories") + ": " + runtime.faceFileScanner.scannedDirs; font.pixelSize: 14; color: "#333333" }
+						Text { text: qsTr("Scanned files") + ": " + runtime.faceFileScanner.scannedFiles; font.pixelSize: 14; color: "#333333" }
+						Text { text: qsTr("All directories") + ": " + runtime.faceFileScanner.totalDirs; font.pixelSize: 14; color: "#333333" }
+						Text { text: qsTr("All files") + ": " + runtime.faceFileScanner.totalFiles; font.pixelSize: 14; color: "#333333" }
 					}
 				}
 			}
