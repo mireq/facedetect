@@ -73,6 +73,7 @@ set(facedetect_SRCS
 	src/gui/console/ConsoleInterface.cpp
 	src/gui/qml/QmlWin.cpp
 	src/gui/qml/plugins/QmlFaceDetectPlugin.cpp
+	src/gui/qml/plugins/QmlFileChooser.cpp
 	src/gui/qml/plugins/QmlQwtPlotWidget.cpp
 )
 
@@ -104,6 +105,7 @@ set(facedetect_MOC_HDRS
 	src/libfacedetect/TrainingImageDatabase.h
 	src/gui/console/ConsoleInterface.h
 	src/gui/qml/plugins/QmlFaceDetectPlugin.h
+	src/gui/qml/plugins/QmlFileChooser.h
 	src/gui/qml/plugins/QmlQwtPlotWidget.h
 	src/gui/qml/QmlWin.h
 )

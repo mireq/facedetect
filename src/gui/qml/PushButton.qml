@@ -13,11 +13,12 @@ Item {
 	id: buttonContainer
 	property alias text: buttonText.text
 	property bool pressed: buttonArea.pressed
+	property bool checked: false
 	property string shape: "img/button.sci"
 	property string pressedShape: "img/button-down.sci"
 	signal clicked()
 	BorderImage {
-		source: buttonContainer.pressed ? buttonContainer.pressedShape : buttonContainer.shape
+		source: (buttonContainer.pressed || buttonContainer.checked) ? buttonContainer.pressedShape : buttonContainer.shape
 		anchors.fill: parent
 		smooth: true
 	}

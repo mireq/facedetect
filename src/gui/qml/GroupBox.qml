@@ -34,12 +34,12 @@ Item {
 			}
 			Text {
 				id: titleText
-				font.pixelSize: 17
+				font.pixelSize: 17; font.bold: true
 				text: groupContainer.title
 				horizontalAlignment: Text.AlignHCenter
 				verticalAlignment: Text.AlignVCenter
 				height: parent.height
-				color: "#555"; styleColor: "#00000080"
+				style: Text.Raised; color: "#444"; styleColor: "#80ffffff"
 				elide: Text.ElideRight
 				anchors { left: titleLeftItem.right; right: titleRightItem.left }
 			}

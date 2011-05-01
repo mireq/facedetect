@@ -8,6 +8,7 @@
  */
 
 import QtQuick 1.0
+import org.facedetect 1.0
 
 CentralWindow {
 	id: settingsWindow
@@ -47,10 +48,12 @@ CentralWindow {
 						height: pathSettingsGrid.lineHeight
 						verticalAlignment: Text.AlignVCenter; horizontalAlignment: Text.AlignRight
 					}
-					LineEdit {
+					FileSelector {
 						width: pathSettings.width / 3 * 2
 						height: pathSettingsGrid.lineHeight
 						color: pathSettingsGrid.textColor
+						fileMode: FileChooser.Directory;
+						chooserTitle: qsTr("Select face database path")
 					}
 					Text {
 						color: pathSettingsGrid.textColor
@@ -60,10 +63,12 @@ CentralWindow {
 						height: pathSettingsGrid.lineHeight
 						verticalAlignment: Text.AlignVCenter; horizontalAlignment: Text.AlignRight
 					}
-					LineEdit {
+					FileSelector {
 						width: pathSettings.width / 3 * 2
 						height: pathSettingsGrid.lineHeight
 						color: pathSettingsGrid.textColor
+						fileMode: FileChooser.Directory;
+						chooserTitle: qsTr("Select non face path")
 					}
 				}
 			}
