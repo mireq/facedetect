@@ -25,6 +25,7 @@ find_package(Qt4 4.5 COMPONENTS QtCore QtDeclarative QtGui QtOpengl QtSvg QtXml 
 find_package(BZip2 REQUIRED)
 find_package(PkgConfig REQUIRED)
 find_package(Boost 1.32.0 COMPONENTS serialization)
+find_package(Qwt6 REQUIRED)
 pkg_check_modules(LAPACKPP REQUIRED lapackpp)
 
 set(QT_USE_DECLARATIVE 1)
@@ -44,6 +45,7 @@ include_directories(
 	${BZIP2_INCLUDE_DIR}
 	${LAPACKPP_INCLUDE_DIRS}
 	${Boost_INCLUDE_DIRS}
+	${Qwt6_INCLUDE_DIR}
 )
 
 set(facedetect_SRCS
@@ -70,6 +72,8 @@ set(facedetect_SRCS
 	src/libfacedetect/utils/PolygonRasterizer.cpp
 	src/gui/console/ConsoleInterface.cpp
 	src/gui/qml/QmlWin.cpp
+	src/gui/qml/plugins/QmlFaceDetectPlugin.cpp
+	src/gui/qml/plugins/QmlQwtPlotWidget.cpp
 )
 
 set(facedetect_HDRS
@@ -99,6 +103,8 @@ set(facedetect_MOC_HDRS
 	src/libfacedetect/TrainingDataReader.h
 	src/libfacedetect/TrainingImageDatabase.h
 	src/gui/console/ConsoleInterface.h
+	src/gui/qml/plugins/QmlFaceDetectPlugin.h
+	src/gui/qml/plugins/QmlQwtPlotWidget.h
 	src/gui/qml/QmlWin.h
 )
 
@@ -136,5 +142,6 @@ target_link_libraries(facedetect
 	${BZIP2_LIBRARIES}
 	${LAPACKPP_LIBRARIES}
 	${Boost_LIBRARIES}
+	${Qwt6_LIBRARY}
 )
 

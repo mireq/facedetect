@@ -1,0 +1,75 @@
+/*
+ * =====================================================================
+ *        Version:  1.0
+ *        Created:  01.05.2011 11:01:32
+ *         Author:  Miroslav Bendík
+ *        Company:  LinuxOS.sk
+ * =====================================================================
+ */
+
+import QtQuick 1.0
+
+Item {
+	id: groupContainer
+	default property alias content: contentsItem.children
+	property string title
+	property alias titleLeft: titleLeftItem.children
+	property alias titleRight: titleRightItem.children
+	state: "closed"
+	height: contentsItem.height + bgImage.border.top + bgImage.border.bottom
+	BorderImage {
+		id: bgImage
+		source: "img/groupbox.sci"
+		anchors.fill: parent
+	}
+	Item {
+		width: parent.width; height: bgImage.border.top
+		Item {
+			id: titleContainer
+			anchors { leftMargin: 6; rightMargin: 6; topMargin: 2; fill: parent }
+			Item {
+				id: titleLeftItem
+				width: childrenRect.width; height: parent.height
+				anchors.left: parent.left
+			}
+			Text {
+				id: titleText
+				font.pixelSize: 17
+				text: groupContainer.title
+				horizontalAlignment: Text.AlignHCenter
+				verticalAlignment: Text.AlignVCenter
+				height: parent.height
+				color: "#555"; styleColor: "#00000080"
+				elide: Text.ElideRight
+				anchors { left: titleLeftItem.right; right: titleRightItem.left }
+			}
+			Item {
+				id: titleRightItem
+				width: childrenRect.width; height: parent.height
+				anchors.right: parent.right
+			}
+		}
+	}
+	Item {
+		id: contentsItem
+		x: bgImage.border.left; y: bgImage.border.top
+		width: parent.width - bgImage.border.left - bgImage.border.right
+		height: childrenRect.height
+	}
+	states: [
+		State {
+			name: "closed"; when: groupContainer.state == "closed"
+			PropertyChanges { target: contentsItem; height: 0; opacity: 0 }
+		},
+		State {
+			name: "open"; when: groupContainer.state == "open"
+			PropertyChanges { target: contentsItem; height: contentsItem.childrenRect.height; opacity: 1 }
+		}
+	]
+	transitions: [
+		Transition {
+			NumberAnimation { properties: "x,y,width,height,opacity"; duration: 250; easing.type: Easing.InOutQuad }
+		}
+	]
+}
+

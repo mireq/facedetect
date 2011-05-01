@@ -2,10 +2,13 @@
   <qresource prefix="/qml">
     <file>CentralWindow.qml</file>
     <file>ControlPointsDisplay.qml</file>
+    <file>DatabaseSettings.qml</file>
     <file>FaceDatabaseView.qml</file>
     <file>FaceDelegate.qml</file>
     <file>FaceMetadata.qml</file>
+    <file>GroupBox.qml</file>
     <file>InfoListItem.qml</file>
+    <file>LineEdit.qml</file>
     <file>LoadingIndicator.qml</file>
     <file>ProgressBar.qml</file>
     <file>PushButton.qml</file>
@@ -17,10 +20,14 @@
     <file>img/button.sci</file>
     <file>img/button-down.png</file>
     <file>img/button-down.sci</file>
+    <file>img/groupbox.png</file>
+    <file>img/groupbox.sci</file>
     <file>img/imgbackground.png</file>
     <file>img/imgbackground.sci</file>
     <file>img/innerbg.png</file>
     <file>img/innerbg.sci</file>
+    <file>img/input.png</file>
+    <file>img/input.sci</file>
     <file>img/loading.png</file>
     <file>img/pointer.png</file>
     <file>img/progress-inner.png</file>

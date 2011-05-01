@@ -9,8 +9,8 @@ Item {
 		id: tabWidget
 		property alias topBar: topBarItem
 		anchors { left: parent.left; top: topBar.bottom; right: parent.right; bottom: parent.bottom }
-		CentralWindow {
-			title: qsTr("Settings")
+		DatabaseSettings {
+			title: qsTr("Database settings")
 			anchors.fill: parent
 		}
 		FaceDatabaseView {

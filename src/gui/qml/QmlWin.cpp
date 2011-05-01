@@ -14,6 +14,7 @@
 #include <QSettings>
 #include "libfacedetect/FaceFileScanner.h"
 #include "core/FaceImageProvider.h"
+#include "plugins/QmlFaceDetectPlugin.h"
 #include "QmlWin.h"
 
 using FaceDetect::FaceFileScanner;
@@ -21,6 +22,9 @@ using FaceDetect::FaceFileScanner;
 QmlWin::QmlWin(QWidget *parent):
 	QDeclarativeView(parent)
 {
+	QmlFaceDetectPlugin plugin;
+	plugin.registerTypes("org.facedetect");
+
 	QSettings settings;
 	settings.beginGroup("paths");
 	m_facesPath = settings.value("faces").toString();
