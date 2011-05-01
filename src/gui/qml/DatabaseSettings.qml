@@ -21,8 +21,13 @@ CentralWindow {
 		id: itemsModel
 		GroupBox {
 			width: listView.width
-			state: "open"
 			title: qsTr("Path settings")
+			/*
+			titleRight: Switch { id: sw; anchors.verticalCenter: parent.verticalCenter }
+			closed: !sw.on
+			*/
+			closed: false
+			clip: true
 			Item {
 				id: pathSettings
 				anchors { left: parent.left; right: parent.right; margins: 5 }

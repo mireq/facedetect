@@ -15,7 +15,7 @@ Item {
 	property string title
 	property alias titleLeft: titleLeftItem.children
 	property alias titleRight: titleRightItem.children
-	state: "closed"
+	property bool closed: true
 	height: contentsItem.height + bgImage.border.top + bgImage.border.bottom
 	BorderImage {
 		id: bgImage
@@ -54,15 +54,15 @@ Item {
 		id: contentsItem
 		x: bgImage.border.left; y: bgImage.border.top
 		width: parent.width - bgImage.border.left - bgImage.border.right
-		height: childrenRect.height
+		height: 0; opacity: 0
 	}
 	states: [
 		State {
-			name: "closed"; when: groupContainer.state == "closed"
+			name: "closed"; when: groupContainer.closed == true
 			PropertyChanges { target: contentsItem; height: 0; opacity: 0 }
 		},
 		State {
-			name: "open"; when: groupContainer.state == "open"
+			name: "open"; when: groupContainer.closed == false
 			PropertyChanges { target: contentsItem; height: contentsItem.childrenRect.height; opacity: 1 }
 		}
 	]

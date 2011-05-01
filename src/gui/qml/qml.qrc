@@ -12,14 +12,15 @@
     <file>LoadingIndicator.qml</file>
     <file>ProgressBar.qml</file>
     <file>PushButton.qml</file>
+    <file>Switch.qml</file>
     <file>TabWidget.qml</file>
     <file>TitleWidget.qml</file>
     <file>TransformationDelegate.qml</file>
     <file>main.qml</file>
-    <file>img/button.png</file>
-    <file>img/button.sci</file>
     <file>img/button-down.png</file>
     <file>img/button-down.sci</file>
+    <file>img/button.png</file>
+    <file>img/button.sci</file>
     <file>img/groupbox.png</file>
     <file>img/groupbox.sci</file>
     <file>img/imgbackground.png</file>
@@ -34,6 +35,9 @@
     <file>img/progress-inner.sci</file>
     <file>img/progress-outer.png</file>
     <file>img/progress-outer.sci</file>
+    <file>img/switch.png</file>
+    <file>img/switch_off.png</file>
+    <file>img/switch_on.png</file>
     <file>img/tab-left-aitem.png</file>
     <file>img/tab-left-aitem.sci</file>
     <file>img/tab-left-bg.png</file>
