@@ -10,6 +10,8 @@
 #ifndef FILESCANNER_BRQV7MA7
 #define FILESCANNER_BRQV7MA7
 
+#include <QFileInfo>
+#include <QList>
 #include <QMutex>
 #include <QThread>
 
@@ -62,6 +64,10 @@ public:
  * Vytvorenie inštanice skenera.
  */
 	explicit FileScanner(QObject *parent = 0);
+/**
+ * Zrušenie inštancie skenera.
+ */
+	~FileScanner();
 /**
  * Nastavenie adresára, ktorý sa má skenovať.
  * \sa scanPath
@@ -154,11 +160,21 @@ private slots:
 
 private:
 /**
- * Skenovanie adresára \a directory. Táto metóda sa volá rekurzívne, pričom v
- * prvej úrovni je \a progressMin 0 a \a progressMax 1. Tieto hodnoty sa
- * postupne delia na jednotlivé adresáre.
+ * Položka zásobnika skenovania.
  */
-	void scanDirectory(const QString &directory, double progressMin, double progressMax);
+	struct ScanStackItem {
+		QString directory;
+		double progressMin;
+		double progressMax;
+		bool scanned;
+		int dirCount;
+		int fileCount;
+		QList<QFileInfo> files;
+	};
+/**
+ * Spustenie skenovania.
+ */
+	void scan();
 /**
  * Vyčistenie stavových premenných.
  */
@@ -183,6 +199,8 @@ private:
 	bool m_stop;
 	/// Indikátor činnosti - ak práve prebieha skenovanie má hodnotu \e true.
 	bool m_scanning;
+	/// Zásobnik skenovania.
+	QList<ScanStackItem> m_scanStack;
 
 	Q_DISABLE_COPY(FileScanner)
 }; /* -----  end of class FileScanner  ----- */

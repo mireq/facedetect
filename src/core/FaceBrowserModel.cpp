@@ -116,3 +116,10 @@ void FaceBrowserModel::addDefinitionFile(const FaceDetect::FaceFileScanner::Imag
 	endInsertRows();
 }
 
+void FaceBrowserModel::clear()
+{
+	beginResetModel();
+	m_files.clear();
+	endResetModel();
+}
+

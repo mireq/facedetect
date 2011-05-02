@@ -81,6 +81,7 @@ Item {
 			State {
 				name: "grid"; when: faceImageWrapper.state == "grid"
 				ParentChange { target: faceImageWrapper; parent: faceDelegate; x: 10; y: 10; width: faceDelegate.size - 20; height: faceDelegate.size - 20 }
+				ParentChange { target: controlPointsDisplay; parent: faceDetectorForeground }
 			},
 			State {
 				name: "zoom"; when: faceImageWrapper.state == "zoom"
@@ -90,9 +91,15 @@ Item {
 		]
 		transitions: [
 			Transition {
-				ParentAnimation {
-					target: faceImageWrapper; via: faceDetectorForeground
-					NumberAnimation { properties: "x,y, width, height"; duration: 250 }
+				ParallelAnimation {
+					ParentAnimation {
+						target: controlPointsDisplay; via: faceImage
+						NumberAnimation { properties: "x,y, width, height"; duration: 250 }
+					}
+					ParentAnimation {
+						target: faceImageWrapper; via: faceDetectorForeground
+						NumberAnimation { properties: "x,y, width, height"; duration: 250 }
+					}
 				}
 			}
 		]

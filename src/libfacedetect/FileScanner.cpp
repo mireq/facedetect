@@ -12,6 +12,9 @@
 #include <QMutexLocker>
 #include "FileScanner.h"
 
+#include <QDebug>
+#include <unistd.h>
+
 FileScanner::FileScanner(QObject *parent):
 	QThread(parent),
 	m_scanning(false)
@@ -22,8 +25,14 @@ FileScanner::FileScanner(QObject *parent):
 	connect(this, SIGNAL(started()), SLOT(onStarted()));
 }
 
+FileScanner::~FileScanner()
+{
+}
+
 void FileScanner::setScanPath(const QString &path)
 {
+	stop();
+	clearState();
 	if (m_scanPath != path) {
 		m_scanPath = path;
 		emit scanPathChanged(m_scanPath);
@@ -75,10 +84,26 @@ void FileScanner::stop()
 
 void FileScanner::run()
 {
-	clearState();
-	scanDirectory(m_scanPath, 0.0, 1.0);
-	QMutexLocker lock(&m_stopMutex);
-	m_stop = false;
+	{
+		QMutexLocker lock(&m_stopMutex);
+		m_stop = false;
+	}
+	if (m_scanStack.isEmpty()) {
+		clearState();
+		ScanStackItem item;
+		item.directory = m_scanPath;
+		item.progressMin = 0;
+		item.progressMax = 1;
+		item.dirCount = 0;
+		item.fileCount = 0;
+		item.scanned = false;
+		m_scanStack.append(item);
+	}
+	scan();
+	{
+		QMutexLocker lock(&m_stopMutex);
+		m_stop = false;
+	}
 }
 
 void FileScanner::onFinished()
@@ -97,7 +122,7 @@ void FileScanner::onStarted()
 	}
 }
 
-void FileScanner::scanDirectory(const QString &directory, double progressFrom, double progressTo)
+void FileScanner::scan()
 {
 	{
 		QMutexLocker lock(&m_stopMutex);
@@ -105,38 +130,83 @@ void FileScanner::scanDirectory(const QString &directory, double progressFrom, d
 			return;
 		}
 	}
-	// Vytvorenie zoznamu adresárov a súborov
-	QDir dir(directory);
-	QList<QFileInfo> dirs = dir.entryInfoList(QDir::Dirs | QDir::Readable | QDir::NoDotAndDotDot, QDir::Name);
-	QList<QFileInfo> files = dir.entryInfoList(QDir::Files | QDir::Readable | QDir::NoDotAndDotDot, QDir::Name);
 
-	// Aktualizácia celkového počtu súborov a adresárov
-	m_totalDirs += dirs.count();
-	m_totalDirs += files.count();
-	// Výpočet zmen priebehu pre každú položku v zozname súborov
-	double progressStep = (progressTo - progressFrom) / (dirs.count() + files.count());
-
-	// Rekurzívne prehľadanie adresárov
-	foreach (QFileInfo dirInfo, dirs) {
-		scanDirectory(dirInfo.absoluteFilePath(), m_progress, m_progress + progressStep);
-		m_scannedDirs++;
+	if (m_scanStack.isEmpty() || (m_scanStack.first().files.isEmpty() && m_scanStack.first().scanned)) {
+		return;
 	}
 
-	// Spracovanie súborov v aktuálnom adresári
-	foreach (QFileInfo fileInfo, files) {
+	while (!m_scanStack.empty()) {
 		{
 			QMutexLocker lock(&m_stopMutex);
 			if (m_stop) {
 				return;
 			}
 		}
-		scanFile(fileInfo.absoluteFilePath());
-		m_progress += progressStep;
-		m_scannedFiles++;
-		emit progressChanged(m_progress);
+		auto stackItem = m_scanStack.begin();
+
+		QList<QFileInfo> dirs;
+		if (!stackItem->scanned) {
+			// Vytvorenie zoznamu adresárov a súborov
+			QDir dir(stackItem->directory);
+			dirs = dir.entryInfoList(QDir::Dirs | QDir::Readable | QDir::NoDotAndDotDot, QDir::Name);
+			stackItem->files = dir.entryInfoList(QDir::Files | QDir::Readable | QDir::NoDotAndDotDot, QDir::Name);
+			stackItem->scanned = true;
+			stackItem->dirCount = dirs.count();
+			stackItem->fileCount = stackItem->files.count();
+
+			// Aktualizácia celkového počtu súborov a adresárov
+			m_totalDirs += dirs.count();
+			m_totalFiles += stackItem->files.count();
+		}
+
+		// Výpočet zmen priebehu pre každú položku v zozname súborov
+		double progressStep = (stackItem->progressMax - stackItem->progressMin) / (stackItem->dirCount + stackItem->fileCount);
+
+		double progressNext = m_progress;
+		// Rekurzívne prehľadanie adresárov
+		foreach (QFileInfo dirInfo, dirs) {
+			ScanStackItem item;
+			item.directory = dirInfo.absoluteFilePath();
+			item.progressMin = progressNext;
+			progressNext += progressStep;
+			item.progressMax = progressNext;
+			item.scanned = false;
+			item.dirCount = 0;
+			item.fileCount = 0;
+			m_scanStack.append(item);
+		}
+		stackItem = m_scanStack.begin();
+
+		// Spracovanie súborov v aktuálnom adresári
+		while (!stackItem->files.isEmpty()) {
+			{
+				QMutexLocker lock(&m_stopMutex);
+				if (m_stop) {
+					return;
+				}
+			}
+			QFileInfo fileInfo = stackItem->files.takeFirst();
+			scanFile(fileInfo.absoluteFilePath());
+			m_progress += progressStep;
+			m_scannedFiles++;
+			emit progressChanged(m_progress);
+		}
+
+		m_scannedDirs++;
+		m_scanStack.removeFirst();
+		usleep(1000);
 	}
-	m_progress = progressTo;
-	emit progressChanged(m_progress);
+
+	if (m_scanStack.isEmpty()) {
+		ScanStackItem item;
+		item.directory = m_scanPath;
+		item.progressMin = 0;
+		item.progressMax = 1;
+		item.dirCount = 0;
+		item.fileCount = 0;
+		item.scanned = true;
+		m_scanStack.append(item);
+	}
 }
 
 void FileScanner::clearState()
@@ -144,9 +214,11 @@ void FileScanner::clearState()
 	m_progress = 0;
 	m_scannedDirs = 0;
 	m_scannedFiles = 0;
-	m_totalDirs = 0;
+	m_totalDirs = 1;
 	m_totalFiles = 0;
+	m_scanStack.clear();
 	QMutexLocker lock(&m_stopMutex);
 	m_stop = false;
+	emit progressChanged(m_progress);
 }
 

@@ -49,11 +49,16 @@ CentralWindow {
 						verticalAlignment: Text.AlignVCenter; horizontalAlignment: Text.AlignRight
 					}
 					FileSelector {
+						id: facesPathSelector
 						width: pathSettings.width / 3 * 2
 						height: pathSettingsGrid.lineHeight
 						color: pathSettingsGrid.textColor
 						fileMode: FileChooser.Directory;
 						chooserTitle: qsTr("Select face database path")
+						Component.onCompleted: selectedFile = runtime.facesPath;
+						onSelectedFileChanged: {
+							runtime.facesPath = selectedFile;
+						}
 					}
 					Text {
 						color: pathSettingsGrid.textColor
@@ -64,11 +69,16 @@ CentralWindow {
 						verticalAlignment: Text.AlignVCenter; horizontalAlignment: Text.AlignRight
 					}
 					FileSelector {
+						id: nonFacesPathSelector
 						width: pathSettings.width / 3 * 2
 						height: pathSettingsGrid.lineHeight
 						color: pathSettingsGrid.textColor
 						fileMode: FileChooser.Directory;
 						chooserTitle: qsTr("Select non face path")
+						Component.onCompleted: selectedFile = runtime.nonFacesPath;
+						onSelectedFileChanged: {
+							runtime.nonFacesPath = selectedFile;
+						}
 					}
 				}
 			}

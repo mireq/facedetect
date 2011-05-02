@@ -11,11 +11,10 @@ import QtQuick 1.0
 
 CentralWindow {
 	id: faceDatabaseView
-	property bool _started: false
 	property bool scanning: runtime.faceFileScanner.scanning
 	property double scanningProgress: runtime.faceFileScanner.progress
-	property string stateOverlay: ""
-	property string state: (facesView.currentItem != null && stateOverlay == "") ? facesView.currentItem.state : stateOverlay
+	property string stateOverlay: "grid"
+	property string state: (facesView.currentItem != null && stateOverlay == "grid") ? facesView.currentItem.state : stateOverlay
 
 	property int _infoButtonTranslate: -tabWidget.topBar.height
 	property int _backButtonTranslate: -tabWidget.topBar.height
@@ -113,7 +112,7 @@ CentralWindow {
 			facesView.selectedItem.hide();
 		}
 		if (faceDatabaseView.stateOverlay == "info") {
-			faceDatabaseView.stateOverlay = "";
+			faceDatabaseView.stateOverlay = "grid";
 		}
 	}
 
@@ -127,14 +126,16 @@ CentralWindow {
 			centralTitleWidget = scanningInfo.createObject(tabWidget.topBar);
 		}
 		else {
+			if (centralTitleWidget != null) {
+				centralTitleWidget.destroy();
+			}
 			centralTitleWidget = null;
 		}
 	}
 
 	onActiveChanged: {
-		if (active && !_started) {
+		if (active) {
 			runtime.faceFileScanner.start();
-			_started = true;
 		}
 		if (!active) {
 			back();
@@ -153,6 +154,12 @@ CentralWindow {
 			faceDetailsInfo.state = "closed";
 			definitionFileInfo.state = "closed";
 			transformationInfo.state = "closed";
+		}
+		onCountChanged: {
+			if (count == 1) {
+				currentIndex = -1;
+				currentIndex = 0;
+			}
 		}
 		transform: Translate { id: facesViewTranslate }
 	}

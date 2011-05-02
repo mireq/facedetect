@@ -25,9 +25,9 @@ public:
 	explicit FaceBrowserModel(FaceDetect::Align *aligner, QObject *parent = 0);
 	int rowCount(const QModelIndex &parent = QModelIndex()) const;
 	QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
-	QImage getStatisticsImage() const;
 	QTransform getTransform(const FaceDetect::FaceFileScanner::FaceData &data) const;
 	void addDefinitionFile(const FaceDetect::FaceFileScanner::ImageInfo &image);
+	void clear();
 
 private:
 	/*! \cond PRIVATE */
