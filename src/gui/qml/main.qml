@@ -17,6 +17,10 @@ Item {
 			title: qsTr("Face database")
 			anchors.fill: parent
 		}
+		FiltersEdit {
+			title: qsTr("Filters")
+			anchors.fill: parent
+		}
 	}
 	Rectangle {
 		id: topBarItem

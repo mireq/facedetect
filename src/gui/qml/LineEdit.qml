@@ -9,10 +9,17 @@
 
 import QtQuick 1.0
 
-Item {
+FocusScope {
 	id: textInput
 	property alias color: inputElement.color
 	property alias text: inputElement.text
+	property alias validator: inputElement.validator
+	function selectAll() {
+		inputElement.selectAll();
+	}
+	function select(start, end) {
+		inputElement.select(start, end);
+	}
 	width: 200; height: 32
 	BorderImage {
 		id: backgroundImage
@@ -21,6 +28,7 @@ Item {
 	}
 	TextInput {
 		id: inputElement
+		focus: true
 		anchors {
 			fill: parent
 			leftMargin: backgroundImage.border.left

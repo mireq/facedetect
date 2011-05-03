@@ -7,12 +7,14 @@
     <file>FaceDelegate.qml</file>
     <file>FaceMetadata.qml</file>
     <file>FileSelector.qml</file>
+    <file>FiltersEdit.qml</file>
     <file>GroupBox.qml</file>
     <file>InfoListItem.qml</file>
     <file>LineEdit.qml</file>
     <file>LoadingIndicator.qml</file>
     <file>ProgressBar.qml</file>
     <file>PushButton.qml</file>
+    <file>SpinBox.qml</file>
     <file>Switch.qml</file>
     <file>TabWidget.qml</file>
     <file>TitleWidget.qml</file>
@@ -42,6 +44,8 @@
     <file>img/progress-inner.sci</file>
     <file>img/progress-outer.png</file>
     <file>img/progress-outer.sci</file>
+    <file>img/spin_down.png</file>
+    <file>img/spin_up.png</file>
     <file>img/switch.png</file>
     <file>img/switch_off.png</file>
     <file>img/switch_on.png</file>
