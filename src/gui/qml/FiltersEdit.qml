@@ -8,8 +8,20 @@
  */
 
 import QtQuick 1.0
+import "filters"
 
 CentralWindow {
 	id: filtersEdit
+	anchors.margins: 10
+	ListView {
+		id: listView
+		anchors.fill: parent
+		model: itemsModel
+		spacing: 10
+	}
+
+	VisualItemModel {
+		id: itemsModel
+	}
 }
 

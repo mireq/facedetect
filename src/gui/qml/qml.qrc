@@ -20,6 +20,9 @@
     <file>TitleWidget.qml</file>
     <file>TransformationDelegate.qml</file>
     <file>main.qml</file>
+    <file>filters/GraphicFilterSettings.qml</file>
+    <file>img/arrow_down.png</file>
+    <file>img/arrow_right.png</file>
     <file>img/button-down.png</file>
     <file>img/button-down.sci</file>
     <file>img/button.png</file>
