@@ -8,6 +8,7 @@
  */
 
 #include <QtDeclarative>
+#include "QmlCursorArea.h"
 #include "QmlFileChooser.h"
 #include "QmlQwtPlotWidget.h"
 #include "QmlFaceDetectPlugin.h"
@@ -23,6 +24,7 @@ QmlFaceDetectPlugin::~QmlFaceDetectPlugin()
 
 void QmlFaceDetectPlugin::registerTypes(const char *uri)
 {
+	qmlRegisterType<QmlCursorArea>(uri, 1, 0, "CursorArea");
 	qmlRegisterType<QmlFileChooser>(uri, 1, 0, "FileChooser");
 	qmlRegisterType<QmlQwtPlotWidget>(uri, 1, 0, "PlotWidget");
 }

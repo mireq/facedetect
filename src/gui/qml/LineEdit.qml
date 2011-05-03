@@ -8,6 +8,7 @@
  */
 
 import QtQuick 1.0
+import org.facedetect 1.0
 
 FocusScope {
 	id: textInput
@@ -29,6 +30,7 @@ FocusScope {
 	TextInput {
 		id: inputElement
 		focus: true
+		selectByMouse: true
 		anchors {
 			fill: parent
 			leftMargin: backgroundImage.border.left
@@ -38,6 +40,7 @@ FocusScope {
 		}
 		font.pixelSize: (parent.height - backgroundImage.border.top - backgroundImage.border.top) * 2 / 3
 		color: "black"
+		CursorArea.cursor: Qt.IBeamCursor
 	}
 }
 

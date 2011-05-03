@@ -8,6 +8,7 @@
  */
 
 import QtQuick 1.0
+import org.facedetect 1.0
 
 Item {
 	id: spinBox
@@ -66,7 +67,7 @@ Item {
 		anchors {
 			left: parent.left
 			verticalCenter: parent.verticalCenter
-			verticalCenterOffset: downMouseArea.pressed ? 1 : 0
+			verticalCenterOffset: downMouseArea.pressed && _downEnabled ? 1 : 0
 		}
 		MouseArea {
 			id: downMouseArea
@@ -84,7 +85,7 @@ Item {
 		anchors {
 			right: parent.right
 			verticalCenter: parent.verticalCenter
-			verticalCenterOffset: upMouseArea.pressed ? 1 : 0
+			verticalCenterOffset: upMouseArea.pressed && _upEnabled ? 1 : 0
 		}
 		MouseArea {
 			id: upMouseArea
@@ -110,6 +111,7 @@ Item {
 		validator: DoubleValidator { decimals: spinBox.decimals }
 		text: spinBox.value
 		color: "black"; horizontalAlignment: TextInput.AlignHCenter
+		selectByMouse: true
 
 		MouseArea {
 			property variant oldPos: null
@@ -146,6 +148,7 @@ Item {
 			enabled: !lineEdit.activeFocus
 		}
 
+		CursorArea.cursor: activeFocus ? Qt.IBeamCursor : Qt.ArrowCursor
 		onTextChanged: spinBox.setValue(text)
 		onActiveFocusChanged: {
 			if (!activeFocus) {

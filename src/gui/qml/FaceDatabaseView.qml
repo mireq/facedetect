@@ -8,6 +8,7 @@
  */
 
 import QtQuick 1.0
+import org.facedetect 1.0
 
 CentralWindow {
 	id: faceDatabaseView
@@ -19,6 +20,9 @@ CentralWindow {
 	property int _infoButtonTranslate: -tabWidget.topBar.height
 	property int _backButtonTranslate: -tabWidget.topBar.height
 	property int _cancelButtonTranslate: -tabWidget.topBar.height
+
+	// Nastavenie kurzoru počas skenovania
+	CursorArea.cursor: scanning ? Qt.BusyCursor : Qt.ArrowCursor
 
 	Component {
 		id: scanningInfo

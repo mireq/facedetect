@@ -72,6 +72,8 @@ set(facedetect_SRCS
 	src/libfacedetect/utils/PolygonRasterizer.cpp
 	src/gui/console/ConsoleInterface.cpp
 	src/gui/qml/QmlWin.cpp
+	src/gui/qml/plugins/QmlCursorArea.cpp
+	src/gui/qml/plugins/QmlFaceDetectPlugin.cpp
 	src/gui/qml/plugins/QmlFaceDetectPlugin.cpp
 	src/gui/qml/plugins/QmlFileChooser.cpp
 	src/gui/qml/plugins/QmlQwtPlotWidget.cpp
@@ -104,6 +106,7 @@ set(facedetect_MOC_HDRS
 	src/libfacedetect/TrainingDataReader.h
 	src/libfacedetect/TrainingImageDatabase.h
 	src/gui/console/ConsoleInterface.h
+	src/gui/qml/plugins/QmlCursorArea.h
 	src/gui/qml/plugins/QmlFaceDetectPlugin.h
 	src/gui/qml/plugins/QmlFileChooser.h
 	src/gui/qml/plugins/QmlQwtPlotWidget.h
