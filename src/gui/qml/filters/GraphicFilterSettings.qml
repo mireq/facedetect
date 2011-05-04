@@ -14,6 +14,7 @@ GroupBox {
 	property alias enabled: sw.on
 	titleRight: Switch { id: sw; anchors.verticalCenter: parent.verticalCenter }
 	titleLeft: ExpandButton{ id: closeImage }
+	onTitleClicked: closeImage.open = !closeImage.open
 	closed: !(sw.on && closeImage.open)
 	clip: true
 }

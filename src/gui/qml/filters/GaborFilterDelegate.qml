@@ -11,11 +11,32 @@ import QtQuick 1.0
 import "../"
 
 GroupBox {
+	id: gaborDelegate
 	property int lineHeight: 32
 	property string textColor: "black"
+	property string lambdaStr: "λ=" + model.lambda
+	property string thetaStr: "θ=" + model.theta
+	property string psiStr: "Ψ=" + model.psi
+	property string sigmaStr: "σ=" + model.sigma
+	property string gammaStr: "γ=" + model.gamma
+	property string lumStr: "l=" + model.lum
+	property variant sourceModel: null
+	signal changed()
+
+	Component.onCompleted: {
+		lambdaValue.value = model.lambda;
+		thetaValue.value = model.theta;
+		psiValue.value = model.psi;
+		sigmaValue.value = model.sigma;
+		gammaValue.value = model.gamma;
+		lumValue.value = model.lum;
+	}
+
 	width: parent.width
 	background: "img/item_header.sci"
 	titleLeft: ExpandButton{ id: closeImage; open: false }
+	onTitleClicked: closeImage.open = !closeImage.open
+	title: lambdaStr + ", " + thetaStr + ", " + psiStr + ", " + sigmaStr + ", " + gammaStr + ", " + lumStr;
 	closed: !closeImage.open
 	Item {
 		Component {
@@ -30,7 +51,6 @@ GroupBox {
 	}
 	Grid {
 		id: grid
-		//property bool more: moreButton.checked
 		columns: 2; spacing: 5
 		height: childrenRect.height + 5; y: 5
 		anchors { left: parent.left; right: parent.right }
@@ -40,6 +60,14 @@ GroupBox {
 			SpinBox {
 				id: lambdaValue
 				anchors { verticalCenter: parent.verticalCenter; left: parent.left }
+				minValue: 0.1; maxValue: 40; step: 0.1
+				onValueChanged: {
+					sourceModel.setProperty(index, "lambda", value);
+					if (moreButtonContainer.enabled && !moreButton.checked) {
+						sigmaValue.value = value / 2.0;
+					}
+					gaborDelegate.changed();
+				}
 			}
 		}
 		Loader { sourceComponent: label; Component.onCompleted: item.text = qsTr("Theta") }
@@ -48,6 +76,11 @@ GroupBox {
 			SpinBox {
 				id: thetaValue
 				anchors { verticalCenter: parent.verticalCenter; left: parent.left }
+				minValue: 0; maxValue: 360; step: 15
+				onValueChanged: {
+					sourceModel.setProperty(index, "theta", value);
+					gaborDelegate.changed();
+				}
 			}
 		}
 	}
@@ -63,6 +96,10 @@ GroupBox {
 			SpinBox {
 				id: psiValue
 				anchors { verticalCenter: parent.verticalCenter; left: parent.left }
+				onValueChanged: {
+					sourceModel.setProperty(index, "psi", value);
+					gaborDelegate.changed();
+				}
 			}
 		}
 		Loader { sourceComponent: label; Component.onCompleted: item.text = qsTr("Sigma") }
@@ -71,13 +108,24 @@ GroupBox {
 			SpinBox {
 				id: sigmaValue
 				anchors { verticalCenter: parent.verticalCenter; left: parent.left }
+				minValue: 0.05; maxValue: 20; step: 0.1
+				onValueChanged: {
+					sourceModel.setProperty(index, "sigma", value);
+					gaborDelegate.changed();
+				}
 			}
 		}
 		Loader { sourceComponent: label; Component.onCompleted: item.text = qsTr("Gamma") }
 		Item {
 			width: grid.width / 2 - grid.spacing; height: lineHeight
 			SpinBox {
+				id: gammaValue
 				anchors { verticalCenter: parent.verticalCenter; left: parent.left }
+				step: 0.1
+				onValueChanged: {
+					sourceModel.setProperty(index, "gamma", value);
+					gaborDelegate.changed();
+				}
 			}
 		}
 		Loader { sourceComponent: label; Component.onCompleted: item.text = qsTr("Luminance") }
@@ -86,6 +134,11 @@ GroupBox {
 			SpinBox {
 				id: lumValue
 				anchors { verticalCenter: parent.verticalCenter; left: parent.left }
+				step: 0.01
+				onValueChanged: {
+					sourceModel.setProperty(index, "lum", value);
+					gaborDelegate.changed();
+				}
 			}
 		}
 		states: [

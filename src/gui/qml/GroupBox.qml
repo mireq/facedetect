@@ -12,6 +12,7 @@ import QtQuick 1.0
 Item {
 	id: groupContainer
 	default property alias content: contentsItem.children
+	signal titleClicked()
 	property string title
 	property string background: "img/groupbox.sci"
 	property alias titleLeft: titleLeftItem.children
@@ -43,6 +44,10 @@ Item {
 				style: Text.Raised; color: "#444"; styleColor: "#80ffffff"
 				elide: Text.ElideRight
 				anchors { left: titleLeftItem.right; right: titleRightItem.left }
+				MouseArea {
+					anchors.fill: parent
+					onClicked: groupContainer.titleClicked()
+				}
 			}
 			Item {
 				id: titleRightItem

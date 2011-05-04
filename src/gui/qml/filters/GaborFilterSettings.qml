@@ -20,7 +20,9 @@ GraphicFilterSettings {
 		height: childrenRect.height + 10
 		Repeater {
 			model: filtersModel
-			delegate: GaborFilterDelegate {}
+			delegate: GaborFilterDelegate {
+				sourceModel: filtersModel
+			}
 		}
 		ListModel {
 			id: filtersModel

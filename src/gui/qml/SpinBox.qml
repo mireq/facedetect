@@ -43,7 +43,7 @@ Item {
 		if (newValue > maxValue) {
 			newValue = maxValue;
 		}
-		if (newValue < minValue) {
+		else if (newValue < minValue) {
 			newValue = minValue;
 		}
 		value = roundValue(newValue, decimals);
@@ -51,6 +51,20 @@ Item {
 
 	function roundValue(val, dec) {
 		return Math.round(val * Math.pow(10, dec)) / Math.pow(10, dec);
+	}
+	Component.onCompleted: {
+		lineEdit.text = value;
+	}
+	onValueChanged: {
+		if (value > maxValue) {
+			value = maxValue;
+		}
+		else if (value < minValue) {
+			value = minValue;
+		}
+		if (lineEdit.text != value) {
+			lineEdit.text = value;
+		}
 	}
 
 	BorderImage {
@@ -109,12 +123,11 @@ Item {
 		}
 		font.pixelSize: (parent.height - backgroundImage.border.top - backgroundImage.border.top) * 2 / 3
 		validator: DoubleValidator { decimals: spinBox.decimals }
-		text: spinBox.value
 		color: "black"; horizontalAlignment: TextInput.AlignHCenter
 		selectByMouse: true
-	Item {
-		id: dragTarget
-	}
+		Item {
+			id: dragTarget
+		}
 
 		MouseArea {
 			property variant oldPos: null
@@ -135,9 +148,12 @@ Item {
 			onPositionChanged: {
 				var xMove = mouseX - oldPos.x;
 				if (Math.abs(xMove) >= dragStepSize) {
-					var steps = Math.floor(xMove / dragStepSize);
-					var up = steps > 0;
-					var stepCount = Math.abs(steps);
+					var steps = Math.floor(Math.abs(xMove) / dragStepSize);
+					var up = xMove > 0;
+					var stepCount = steps;
+					if (!up) {
+						steps = -steps;
+					}
 					for (var step = 0; step < stepCount; ++step) {
 						if (up) {
 							spinBox.increment();
