@@ -17,7 +17,8 @@ namespace FaceDetect {
 
 ImageFilter::ImageFilter():
 	ImageFilterBase(),
-	m_filters(NoFilter)
+	m_filters(NoFilter),
+	m_onlyGaborWavelet(false)
 {
 	m_gaborFilters.resize(1);
 }
@@ -183,6 +184,7 @@ void ImageFilter::setOnlyGaborWavelet(bool wavelet)
 	for (auto filter = m_gaborFilters.begin(); filter != m_gaborFilters.end(); ++filter) {
 		filter->setOnlyGaborWavelet(wavelet);
 	}
+	m_onlyGaborWavelet = wavelet;
 }
 
 /**
@@ -196,6 +198,7 @@ void ImageFilter::setGaborParameters(const GaborFilter::GaborParameters &paramet
 		m_gaborFilters.resize(1);
 	}
 	m_gaborFilters.first().setGaborParameters(parameters);
+	setOnlyGaborWavelet(m_onlyGaborWavelet);
 }
 
 /**
@@ -211,6 +214,7 @@ void ImageFilter::setGaborParameters(const QList<GaborFilter::GaborParameters> &
 		gaborIt->setGaborParameters(*parameterIt);
 		++gaborIt;
 	}
+	setOnlyGaborWavelet(m_onlyGaborWavelet);
 }
 
 /**

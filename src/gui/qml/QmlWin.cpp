@@ -189,10 +189,10 @@ void QmlWin::createFilterSettings()
 	gaborSettings["enabled"] = false;
 	QVariantList gaborFiltersList = QVariantList();
 	QVariantMap gaborParameters;
-	gaborParameters["lambda"] = 4.0;
+	gaborParameters["lambda"] = 2.0;
 	gaborParameters["theta"] = 0.0;
 	gaborParameters["psi"] = 0.0;
-	gaborParameters["sigma"] = 2.0;
+	gaborParameters["sigma"] = 1.0;
 	gaborParameters["gamma"] = 1.0;
 	gaborParameters["lum"] = 0.0;
 	gaborFiltersList.append(gaborParameters);

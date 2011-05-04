@@ -41,8 +41,6 @@ GroupBox {
 	}
 	titleRight: PushButton {
 		id: deleteButton
-		shape: "img/pbutton_normal.sci"
-		pressedShape: "img/pbutton_pressed.sci"
 		anchors.verticalCenter: parent.verticalCenter
 		text: qsTr("Delete")
 		height: 28; fontPixelSize: 17

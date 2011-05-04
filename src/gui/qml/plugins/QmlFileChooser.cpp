@@ -22,7 +22,7 @@ QmlFileChooser::~QmlFileChooser()
 {
 }
 
-void QmlFileChooser::selectFile()
+bool QmlFileChooser::selectFile()
 {
 	QFileDialog dialog(qApp->activeWindow());
 	dialog.setModal(true);
@@ -54,6 +54,12 @@ void QmlFileChooser::selectFile()
 	int ret = dialog.exec();
 	if (ret == QDialog::Accepted && dialog.selectedFiles().count() > 0) {
 		setSelectedFile(dialog.selectedFiles().first());
+	}
+	if (ret == QDialog::Accepted) {
+		return true;
+	}
+	else {
+		return false;
 	}
 }
 

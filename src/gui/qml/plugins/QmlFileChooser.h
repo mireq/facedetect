@@ -22,7 +22,6 @@ Q_PROPERTY(QString selectedFile READ selectedFile WRITE setSelectedFile NOTIFY s
 public:
 	explicit QmlFileChooser(QObject *parent = 0);
 	virtual ~QmlFileChooser();
-	Q_INVOKABLE void selectFile();
 
 	enum AcceptMode {
 		AcceptOpen,
@@ -36,6 +35,7 @@ public:
 	Q_ENUMS(AcceptMode);
 	Q_ENUMS(FileMode);
 
+	Q_INVOKABLE bool selectFile();
 	QmlFileChooser::AcceptMode acceptMode() const;
 	void setAcceptMode(QmlFileChooser::AcceptMode acceptMode);
 	QmlFileChooser::FileMode fileMode() const;

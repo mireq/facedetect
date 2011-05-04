@@ -74,6 +74,8 @@ CentralWindow {
 				id: cancelButton
 				text: qsTr("Cancel")
 				anchors { fill: parent; margins: 5 }
+				shape: "img/button.sci"
+				pressedShape: "img/button-down.sci"
 				onClicked: {
 					runtime.faceFileScanner.stop();
 				}
@@ -83,6 +85,8 @@ CentralWindow {
 				id: backButton
 				text: qsTr("Back")
 				anchors { fill: parent; margins: 5 }
+				shape: "img/button.sci"
+				pressedShape: "img/button-down.sci"
 				transform: Translate { y: faceDatabaseView._backButtonTranslate }
 				onClicked: {
 					back();
@@ -100,6 +104,8 @@ CentralWindow {
 				id: infoButton
 				text: qsTr("Info")
 				anchors { fill: parent; margins: 5 }
+				shape: "img/button.sci"
+				pressedShape: "img/button-down.sci"
 				onClicked: {
 					if (facesView.selectedItem != null) {
 						facesView.selectedItem.hide();

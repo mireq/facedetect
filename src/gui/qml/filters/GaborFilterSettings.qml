@@ -49,10 +49,10 @@ GraphicFilterSettings {
 			id: filtersModel
 			function getDefaultSettings() {
 				return {
-					"lambda": 4.0,
+					"lambda": 2.0,
 					"theta": 0.0,
 					"psi": 0.0,
-					"sigma": 2.0,
+					"sigma": 1.0,
 					"gamma": 1.0,
 					"lum": 0.0
 				}
@@ -83,8 +83,6 @@ GraphicFilterSettings {
 		anchors { left: parent.left; right: parent.right; top: gaborFiltersView.bottom }
 		height: 32
 		text: qsTr("Add filter")
-		shape: "img/pbutton_normal.sci"
-		pressedShape: "img/pbutton_pressed.sci"
 		onClicked: {
 			filtersModel.append(filtersModel.getDefaultSettings());
 		}

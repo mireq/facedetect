@@ -15,8 +15,8 @@ Item {
 	property bool pressed: buttonArea.pressed && enabled
 	property bool checked: false
 	property bool enabled: true
-	property string shape: "img/button.sci"
-	property string pressedShape: "img/button-down.sci"
+	property string shape: "img/pbutton_normal.sci"
+	property string pressedShape: "img/pbutton_pressed.sci"
 	property int fontPixelSize: 18
 	signal clicked()
 	width: textSize.paintedWidth + bg.border.left + bg.border.right; height: 32

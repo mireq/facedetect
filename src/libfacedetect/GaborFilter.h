@@ -28,7 +28,7 @@ public:
 		/**
 		 * Inicializácia štandardných hodnôt.
 		 */
-		GaborParameters(): lambda(4.0), theta(0.0), psi(0.0), sigma(2.0), gamma(1.0), lum(0.0) {};
+		GaborParameters(): lambda(2.0), theta(0.0), psi(0.0), sigma(1.0), gamma(1.0), lum(0.0) {};
 		double lambda; /**< Parameter lambda (dĺžka vlny).              */
 		double theta;  /**< Parameter theta (uhol sínusoidy).           */
 		double psi;    /**< Parameter psi (posun sínusoidy).            */

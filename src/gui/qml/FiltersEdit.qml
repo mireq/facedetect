@@ -8,12 +8,15 @@
  */
 
 import QtQuick 1.0
+import org.facedetect 1.0
 import "filters"
 
 CentralWindow {
 	id: filtersEdit
 	property variant filterSettings: runtime.filterSettings
 	property string filterStr
+	property string previewFile
+	property int gaborCount: 1
 
 	ListView {
 		id: listView
@@ -21,18 +24,84 @@ CentralWindow {
 		model: itemsModel
 		spacing: 10
 		anchors.margins: 10
+		cacheBuffer: 1024
 	}
 	Rectangle {
 		id: previewPanel
-		width: 256
+		width: 272
 		anchors { top: parent.top; bottom: parent.bottom; right: parent.right }
 		color: "#dedede"
 		Text {
 			id: previewTitle
-			anchors { left: parent.left; top: parent.top; right: parent.right }
+			anchors { left: parent.left; top: parent.top; right: parent.right; topMargin: 10 }
 			elide: Text.ElideRight; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter
 			font.pixelSize: 18; styleColor: "#80ffffff"; style: Text.Sunken; color: "#444"
 			text: qsTr("Preview")
+		}
+		Flickable {
+			clip: true
+			contentWidth: previewBackground.width; contentHeight: previewBackground.height
+			anchors { horizontalCenter: parent.horizontalCenter; top: previewTitle.bottom; bottom: parent.bottom}
+			width: 262
+			BorderImage {
+				id: previewBackground
+				width: 262; height: previewImage.height + 7
+				source: "img/photo_frame.png"
+				border { left: 3; top: 3; right: 4; bottom: 4 }
+				Image {
+					id: previewImage
+					width: 255; height: 255 * (gaborCount == 0 ? 1 : gaborCount)
+					sourceSize.width: 255; sourceSize.height: height
+					anchors.centerIn: parent
+					source: "image://filter/" + filterStr + "|" + previewFile
+					asynchronous: true
+				}
+				Image {
+					id: loadingImage
+					source: "img/photo.png"
+					width: 255; height: previewImage.height
+					anchors.centerIn: parent
+					visible: previewImage.status != Image.Ready
+				}
+				Column {
+					anchors.centerIn: parent
+					height: childrenRect.height
+					spacing: 10
+					opacity: (imageButtonsArea.containsMouse || previewFile == "") ? 1 : 0
+					Behavior on opacity {
+						NumberAnimation { duration: 250 }
+					}
+					PushButton {
+						text: qsTr("Select image")
+						width: Math.round(previewBackground.width / 3 * 2)
+						onClicked: {
+							if (previewFileChooser.selectFile()) {
+								previewFile = previewFileChooser.selectedFile;
+							}
+						}
+						height: 32
+					}
+					PushButton {
+						text: qsTr("Clear image")
+						width: Math.round(previewBackground.width / 3 * 2)
+						visible: previewFile != ""
+						height: visible ? 32 : 0
+						onClicked: previewFile = ""
+					}
+				}
+				FileChooser {
+					id: previewFileChooser
+					windowTitle: qsTr("Select preview image")
+					acceptMode: FileChooser.AcceptOpen
+					fileMode: FileChooser.ExistingFile
+				}
+				MouseArea {
+					id: imageButtonsArea
+					anchors.fill: parent
+					hoverEnabled: true
+					acceptedButtons: Qt.NoButton
+				}
+			}
 		}
 	}
 
@@ -100,23 +169,8 @@ CentralWindow {
 					s.gabor = settings;
 					runtime.filterSettings = s;
 					updatePreview();
+					gaborCount = settings.filters.length;
 				}
-			}
-		}
-		GroupBox {
-			id: previewGroup
-			titleRight: Switch {
-				id: sw
-				anchors.verticalCenter: parent.verticalCenter
-			}
-			closed: !sw.on
-			width: listView.width
-			title: qsTr("Preview")
-			Image {
-				id: previewImage
-				width: 200; height: 200
-				source: "image://filter/" + filterStr + "|" + ".jpg"
-				asynchronous: true
 			}
 		}
 	}

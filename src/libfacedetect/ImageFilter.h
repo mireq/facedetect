@@ -80,6 +80,8 @@ private:
 	FaceDetect::SobelFilter m_sobelFilter;
 	/// Filtre pre detekciu hrán - gabor
 	QVector<FaceDetect::GaborFilter> m_gaborFilters;
+	/// Vykreslenie len gaborovej vlnkovej funkcie
+	bool m_onlyGaborWavelet;
 }; /* -----  end of class ImageFilter  ----- */
 
 } /* end of namespace FaceDetect */
