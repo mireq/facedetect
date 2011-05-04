@@ -31,10 +31,11 @@ QmlWin::QmlWin(QWidget *parent):
 	addAction(actionQuit);
 	connect(actionQuit, SIGNAL(triggered()), qApp, SLOT(quit()));
 
+	loadSettings();
+	createFilterSettings();
+
 	QmlFaceDetectPlugin plugin;
 	plugin.registerTypes("org.facedetect");
-
-	loadSettings();
 
 	// Nastavenie OpenGL
 	setAttribute(Qt::WA_OpaquePaintEvent);
@@ -99,6 +100,19 @@ FaceFileScanner *QmlWin::faceFileScanner() const
 	return m_faceFileScanner.data();
 }
 
+QVariantMap QmlWin::filterSettings() const
+{
+	return m_filterSettings;
+}
+
+void QmlWin::setFilterSettings(const QVariantMap &filterSettings)
+{
+	if (m_filterSettings != filterSettings) {
+		m_filterSettings = filterSettings;
+		emit filterSettingsChanged(m_filterSettings);
+	}
+}
+
 void QmlWin::imageScanned(const FaceDetect::FaceFileScanner::ImageInfo &img)
 {
 	m_faceBrowserModel->addDefinitionFile(img);
@@ -139,5 +153,33 @@ void QmlWin::initializeScanner()
 		m_imageProvider->bindScanner(m_faceFileScanner.data());
 		connect(m_faceFileScanner.data(), SIGNAL(imageScanned(FaceDetect::FaceFileScanner::ImageInfo)), this, SLOT(imageScanned(FaceDetect::FaceFileScanner::ImageInfo)));
 	}
+}
+
+void QmlWin::createFilterSettings()
+{
+	QVariantMap grayscaleSettings;
+	grayscaleSettings["enabled"] = false;
+	m_filterSettings["grayscale"] = grayscaleSettings;
+	QVariantMap illuminationSettings;
+	illuminationSettings["enabled"] = false;
+	illuminationSettings["illuminationPlaneOnly"] = false;
+	illuminationSettings["illuminationCorrectHistogram"] = true;
+	m_filterSettings["illumination"] = illuminationSettings;
+	QVariantMap sobelSettings;
+	sobelSettings["enabled"] = false;
+	m_filterSettings["sobel"] = sobelSettings;
+	QVariantMap gaborSettings;
+	gaborSettings["enabled"] = false;
+	QVariantList gaborFiltersList = QVariantList();
+	QVariantMap gaborParameters;
+	gaborParameters["lambda"] = 4.0;
+	gaborParameters["theta"] = 0.0;
+	gaborParameters["psi"] = 0.0;
+	gaborParameters["sigma"] = 2.0;
+	gaborParameters["gamma"] = 1.0;
+	gaborParameters["lum"] = 0.0;
+	gaborFiltersList.append(gaborParameters);
+	gaborSettings["filters"] = gaborFiltersList;
+	m_filterSettings["gabor"] = gaborSettings;
 }
 

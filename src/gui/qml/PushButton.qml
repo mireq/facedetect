@@ -11,14 +11,17 @@ import QtQuick 1.0
 
 Item {
 	id: buttonContainer
-	property alias text: buttonText.text
+	property string text
 	property bool pressed: buttonArea.pressed && enabled
 	property bool checked: false
 	property bool enabled: true
 	property string shape: "img/button.sci"
 	property string pressedShape: "img/button-down.sci"
+	property int fontPixelSize: 18
 	signal clicked()
+	width: textSize.paintedWidth + bg.border.left + bg.border.right; height: 32
 	BorderImage {
+		id: bg
 		source: (buttonContainer.pressed || buttonContainer.checked) ? buttonContainer.pressedShape : buttonContainer.shape
 		anchors.fill: parent
 		smooth: true
@@ -26,14 +29,25 @@ Item {
 	}
 	Text {
 		id: buttonText
-		anchors.fill: parent
-		anchors.topMargin: buttonContainer.pressed ? 2 : 0
+		anchors {
+			verticalCenterOffset: buttonContainer.pressed ? 2 : 0
+			verticalCenter: parent.verticalCenter
+			left: parent.left; right: parent.right
+			leftMargin: bg.border.left; rightMargin: bg.border.right
+		}
 		color: "#444444"
 		elide: Text.ElideRight; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter
-
-		font.pixelSize: 18; font.bold: true;
+		font.pixelSize: fontPixelSize; font.bold: true;
 		style: Text.Raised; styleColor: "#80ffffff"
 		opacity: buttonContainer.enabled ? 1 : 0.5
+		text: buttonContainer.text
+	}
+	Text {
+		id: textSize
+		font.pixelSize: fontPixelSize; font.bold: true;
+		style: Text.Raised
+		text: buttonContainer.text
+		visible: false
 	}
 	MouseArea {
 		id: buttonArea

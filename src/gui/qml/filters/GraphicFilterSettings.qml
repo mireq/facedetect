@@ -11,8 +11,25 @@ import QtQuick 1.0
 import ".."
 
 GroupBox {
+	id: filterSettings
 	property alias enabled: sw.on
-	titleRight: Switch { id: sw; anchors.verticalCenter: parent.verticalCenter }
+	property variant settings: { "on": sw.on }
+	onSettingsChanged: {
+		if (settings != undefined && settings.enabled != undefined) {
+			sw.on = settings.enabled;
+		}
+	}
+	signal changed()
+	titleRight: Switch {
+		id: sw
+		anchors.verticalCenter: parent.verticalCenter
+		onOnChanged: {
+			var tmp = settings;
+			tmp.enabled = on;
+			settings = tmp;
+			filterSettings.changed();
+		}
+	}
 	titleLeft: ExpandButton{ id: closeImage }
 	onTitleClicked: closeImage.open = !closeImage.open
 	closed: !(sw.on && closeImage.open)

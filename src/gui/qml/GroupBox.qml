@@ -69,7 +69,7 @@ Item {
 		},
 		State {
 			name: "open"; when: groupContainer.closed == false
-			PropertyChanges { target: contentsItem; height: contentsItem.childrenRect.height; opacity: 1 }
+			PropertyChanges { target: contentsItem; height: contentsItem.childrenRect.height + contentsItem.childrenRect.y; opacity: 1 }
 		}
 	]
 	transitions: [

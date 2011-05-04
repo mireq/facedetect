@@ -12,8 +12,9 @@ import "../"
 
 GraphicFilterSettings {
 	id: gaborSettings
+	property bool initialization: true
 
-	Row {
+	Column {
 		id: gaborFiltersView
 		anchors { left: parent.left; right: parent.right }
 		y: 5
@@ -22,12 +23,28 @@ GraphicFilterSettings {
 			model: filtersModel
 			delegate: GaborFilterDelegate {
 				sourceModel: filtersModel
+				listView: gaborFiltersView
+				onChanged: {
+					if (!initialization) {
+						filtersModel.updateSettings();
+						gaborSettings.changed();
+					}
+				}
+			}
+			onCountChanged: {
+				if (!initialization) {
+					filtersModel.updateSettings();
+					gaborSettings.changed();
+				}
 			}
 		}
 		ListModel {
 			id: filtersModel
 			Component.onCompleted: {
-				append(getDefaultSettings());
+				for (var filter = 0; filter < settings.filters.length; ++filter) {
+					append(settings.filters[filter]);
+				}
+				initialization = false;
 			}
 			function getDefaultSettings() {
 				return {
@@ -39,7 +56,40 @@ GraphicFilterSettings {
 					"lum": 0.0
 				}
 			}
+			function updateSettings() {
+				var filterList = [];
+				for (var filter = 0; filter < count; ++filter) {
+					var obj = get(filter);
+					filterList[filter] = {};
+					filterList[filter]["lambda"] = obj.lambda;
+					filterList[filter]["theta"] = obj.theta;
+					filterList[filter]["psi"] = obj.psi;
+					filterList[filter]["sigma"] = obj.sigma;
+					filterList[filter]["gamma"] = obj.gamma;
+					filterList[filter]["lum"] = obj.lum;
+				}
+				var tmp = settings;
+				tmp.filters = filterList;
+				settings = tmp;
+			}
 		}
+		/*move: Transition {
+			NumberAnimation { properties: "y"; duration: 100 }
+		}*/
+	}
+	PushButton {
+		id: addButton
+		anchors { left: parent.left; right: parent.right; top: gaborFiltersView.bottom }
+		height: 32
+		text: qsTr("Add filter")
+		shape: "img/pbutton_normal.sci"
+		pressedShape: "img/pbutton_pressed.sci"
+		onClicked: {
+			filtersModel.append(filtersModel.getDefaultSettings());
+		}
+	}
+	Item {
+		height: 5; anchors{ top: addButton.bottom; left: parent.left; right: parent.right }
 	}
 }
 

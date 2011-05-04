@@ -12,7 +12,6 @@ import QtQuick 1.0
 Item {
 	id: checkSwitch
 	property bool on: false
-	state: "off"
 	width: offImage.width; height: offImage.height
 	MouseArea {
 		anchors.fill: parent
@@ -53,32 +52,27 @@ Item {
 	}
 
 	function toggleSwitch() {
-		if (checkSwitch.state == "off") {
-			checkSwitch.state = "on";
-		}
-		else {
-			checkSwitch.state = "off";
-		}
+		checkSwitch.on = !checkSwitch.on;
 	}
 
 	function releaseSwitch() {
 		if (switchImage.x < (offImage.width - switchImage.width) / 2) {
-			checkSwitch.state = "on";
+			checkSwitch.on = true;
 		}
 		else {
-			checkSwitch.state = "off";
+			checkSwitch.on = false;
 		}
 		toggleSwitch();
 	}
 
 	states: [
 		State {
-			name: "on"
+			name: "on"; when: checkSwitch.on == true
 			PropertyChanges { target: switchImage; x: offImage.width - switchImage.width }
 			PropertyChanges { target: checkSwitch; on: true }
 		},
 		State {
-			name: "off"
+			name: "off"; when: checkSwitch.on == false
 			PropertyChanges { target: switchImage; x: 0 }
 			PropertyChanges { target: checkSwitch; on: false }
 		}

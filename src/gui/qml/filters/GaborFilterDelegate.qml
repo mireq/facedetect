@@ -13,7 +13,6 @@ import "../"
 GroupBox {
 	id: gaborDelegate
 	property int lineHeight: 32
-	property string textColor: "black"
 	property string lambdaStr: "λ=" + model.lambda
 	property string thetaStr: "θ=" + model.theta
 	property string psiStr: "Ψ=" + model.psi
@@ -21,6 +20,7 @@ GroupBox {
 	property string gammaStr: "γ=" + model.gamma
 	property string lumStr: "l=" + model.lum
 	property variant sourceModel: null
+	property Item listView
 	signal changed()
 
 	Component.onCompleted: {
@@ -32,9 +32,22 @@ GroupBox {
 		lumValue.value = model.lum;
 	}
 
-	width: parent.width
+	width: listView.width
 	background: "img/item_header.sci"
-	titleLeft: ExpandButton{ id: closeImage; open: false }
+	titleLeft: ExpandButton {
+		id: closeImage
+		open: false
+		anchors.verticalCenter: parent.verticalCenter
+	}
+	titleRight: PushButton {
+		id: deleteButton
+		shape: "img/pbutton_normal.sci"
+		pressedShape: "img/pbutton_pressed.sci"
+		anchors.verticalCenter: parent.verticalCenter
+		text: qsTr("Delete")
+		height: 28; fontPixelSize: 17
+		onClicked: sourceModel.remove(index)
+	}
 	onTitleClicked: closeImage.open = !closeImage.open
 	title: lambdaStr + ", " + thetaStr + ", " + psiStr + ", " + sigmaStr + ", " + gammaStr + ", " + lumStr;
 	closed: !closeImage.open
