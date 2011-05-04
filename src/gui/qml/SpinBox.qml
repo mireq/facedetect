@@ -112,19 +112,24 @@ Item {
 		text: spinBox.value
 		color: "black"; horizontalAlignment: TextInput.AlignHCenter
 		selectByMouse: true
+	Item {
+		id: dragTarget
+	}
 
 		MouseArea {
 			property variant oldPos: null
-			property bool drag: false
+			property bool isDrag: false
+			drag.axis: Drag.XAxis
+			drag.target: dragTarget
 			anchors.fill: parent
 			onClicked: {
-				if (!drag) {
+				if (!isDrag) {
 					lineEdit.forceActiveFocus();
 					lineEdit.selectAll();
 				}
 			}
 			onPressed: {
-				drag = false;
+				isDrag = false;
 				oldPos = Qt.point(mouseX, mouseY);
 			}
 			onPositionChanged: {
@@ -140,7 +145,7 @@ Item {
 						else {
 							spinBox.decrement();
 						}
-						drag = true;
+						isDrag = true;
 					}
 					oldPos = Qt.point(oldPos.x + steps * dragStepSize, mouseY);
 				}

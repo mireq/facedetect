@@ -3,6 +3,7 @@
     <file>CentralWindow.qml</file>
     <file>ControlPointsDisplay.qml</file>
     <file>DatabaseSettings.qml</file>
+    <file>ExpandButton.qml</file>
     <file>FaceDatabaseView.qml</file>
     <file>FaceDelegate.qml</file>
     <file>FaceMetadata.qml</file>
@@ -20,7 +21,10 @@
     <file>TitleWidget.qml</file>
     <file>TransformationDelegate.qml</file>
     <file>main.qml</file>
+    <file>filters/GaborFilterDelegate.qml</file>
+    <file>filters/GaborFilterSettings.qml</file>
     <file>filters/GraphicFilterSettings.qml</file>
+    <file>filters/IlluminationFilterSettings.qml</file>
     <file>img/arrow_down.png</file>
     <file>img/arrow_right.png</file>
     <file>img/button-down.png</file>
@@ -35,6 +39,8 @@
     <file>img/innerbg.sci</file>
     <file>img/input.png</file>
     <file>img/input.sci</file>
+    <file>img/item_header.png</file>
+    <file>img/item_header.sci</file>
     <file>img/loading.png</file>
     <file>img/pbutton_checked.png</file>
     <file>img/pbutton_checked.sci</file>

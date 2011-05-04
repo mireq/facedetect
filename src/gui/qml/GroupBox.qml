@@ -13,13 +13,14 @@ Item {
 	id: groupContainer
 	default property alias content: contentsItem.children
 	property string title
+	property string background: "img/groupbox.sci"
 	property alias titleLeft: titleLeftItem.children
 	property alias titleRight: titleRightItem.children
 	property bool closed: true
 	height: contentsItem.height + bgImage.border.top + bgImage.border.bottom
 	BorderImage {
 		id: bgImage
-		source: "img/groupbox.sci"
+		source: background
 		anchors.fill: parent
 	}
 	Item {

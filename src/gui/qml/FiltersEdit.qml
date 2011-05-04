@@ -22,6 +22,22 @@ CentralWindow {
 
 	VisualItemModel {
 		id: itemsModel
+		GraphicFilterSettings {
+			width: listView.width
+			title: qsTr("Grayscale")
+		}
+		IlluminationFilterSettings {
+			width: listView.width
+			title: qsTr("Illumination correction")
+		}
+		GraphicFilterSettings {
+			width: listView.width
+			title: qsTr("Sobel")
+		}
+		GaborFilterSettings {
+			width: listView.width
+			title: qsTr("Gabor")
+		}
 	}
 }
 

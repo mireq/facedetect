@@ -12,8 +12,9 @@ import QtQuick 1.0
 Item {
 	id: buttonContainer
 	property alias text: buttonText.text
-	property bool pressed: buttonArea.pressed
+	property bool pressed: buttonArea.pressed && enabled
 	property bool checked: false
+	property bool enabled: true
 	property string shape: "img/button.sci"
 	property string pressedShape: "img/button-down.sci"
 	signal clicked()
@@ -21,6 +22,7 @@ Item {
 		source: (buttonContainer.pressed || buttonContainer.checked) ? buttonContainer.pressedShape : buttonContainer.shape
 		anchors.fill: parent
 		smooth: true
+		opacity: buttonContainer.enabled ? 1 : 0.5
 	}
 	Text {
 		id: buttonText
@@ -31,12 +33,15 @@ Item {
 
 		font.pixelSize: 18; font.bold: true;
 		style: Text.Raised; styleColor: "#80ffffff"
+		opacity: buttonContainer.enabled ? 1 : 0.5
 	}
 	MouseArea {
 		id: buttonArea
 		anchors.fill: parent
 		onClicked: {
-			buttonContainer.clicked();
+			if (buttonContainer.enabled) {
+				buttonContainer.clicked();
+			}
 		}
 	}
 }
