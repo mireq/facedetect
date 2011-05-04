@@ -228,7 +228,7 @@ void ImageFilter::filter(QImage &sourceImage) const
 	if (m_filters & SobelFilter) {
 		m_sobelFilter.filter(sourceImage);
 	}
-	if (m_filters & GaborFilter) {
+	if (m_filters & GaborFilter && m_gaborFilters.count() > 0) {
 		if (m_gaborFilters.count() == 1) {
 			m_gaborFilters.first().filter(sourceImage);
 		}

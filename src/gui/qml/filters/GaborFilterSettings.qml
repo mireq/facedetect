@@ -14,6 +14,13 @@ GraphicFilterSettings {
 	id: gaborSettings
 	property bool initialization: true
 
+	Component.onCompleted: {
+		for (var filter = 0; filter < settings.filters.length; ++filter) {
+			filtersModel.append(settings.filters[filter]);
+		}
+		initialization = false;
+	}
+
 	Column {
 		id: gaborFiltersView
 		anchors { left: parent.left; right: parent.right }
@@ -40,12 +47,6 @@ GraphicFilterSettings {
 		}
 		ListModel {
 			id: filtersModel
-			Component.onCompleted: {
-				for (var filter = 0; filter < settings.filters.length; ++filter) {
-					append(settings.filters[filter]);
-				}
-				initialization = false;
-			}
 			function getDefaultSettings() {
 				return {
 					"lambda": 4.0,

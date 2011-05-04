@@ -57,7 +57,7 @@ GroupBox {
 			Text {
 				color: "black"
 				elide: Text.ElideRight
-				width: grid.width / 2; height: lineHeight
+				width: Math.round(grid.width / 2); height: lineHeight
 				verticalAlignment: Text.AlignVCenter; horizontalAlignment: Text.AlignRight
 			}
 		}
@@ -69,7 +69,7 @@ GroupBox {
 		anchors { left: parent.left; right: parent.right }
 		Loader { sourceComponent: label; Component.onCompleted: item.text = qsTr("Lambda") }
 		Item {
-			width: grid.width / 2 - grid.spacing; height: lineHeight
+			width: Math.round(grid.width / 2 - grid.spacing); height: lineHeight
 			SpinBox {
 				id: lambdaValue
 				anchors { verticalCenter: parent.verticalCenter; left: parent.left }
@@ -85,7 +85,7 @@ GroupBox {
 		}
 		Loader { sourceComponent: label; Component.onCompleted: item.text = qsTr("Theta") }
 		Item {
-			width: grid.width / 2 - grid.spacing; height: lineHeight
+			width: Math.round(grid.width / 2 - grid.spacing); height: lineHeight
 			SpinBox {
 				id: thetaValue
 				anchors { verticalCenter: parent.verticalCenter; left: parent.left }
@@ -105,10 +105,11 @@ GroupBox {
 		anchors { left: parent.left; right: parent.right; top: grid.bottom }
 		Loader { sourceComponent: label; Component.onCompleted: item.text = qsTr("Psi") }
 		Item {
-			width: grid.width / 2 - grid.spacing; height: lineHeight
+			width: Math.round(grid.width / 2 - grid.spacing); height: lineHeight
 			SpinBox {
 				id: psiValue
 				anchors { verticalCenter: parent.verticalCenter; left: parent.left }
+				step: 0.1
 				onValueChanged: {
 					sourceModel.setProperty(index, "psi", value);
 					gaborDelegate.changed();
@@ -117,7 +118,7 @@ GroupBox {
 		}
 		Loader { sourceComponent: label; Component.onCompleted: item.text = qsTr("Sigma") }
 		Item {
-			width: grid.width / 2 - grid.spacing; height: lineHeight
+			width: Math.round(grid.width / 2 - grid.spacing); height: lineHeight
 			SpinBox {
 				id: sigmaValue
 				anchors { verticalCenter: parent.verticalCenter; left: parent.left }
@@ -130,7 +131,7 @@ GroupBox {
 		}
 		Loader { sourceComponent: label; Component.onCompleted: item.text = qsTr("Gamma") }
 		Item {
-			width: grid.width / 2 - grid.spacing; height: lineHeight
+			width: Math.round(grid.width / 2 - grid.spacing); height: lineHeight
 			SpinBox {
 				id: gammaValue
 				anchors { verticalCenter: parent.verticalCenter; left: parent.left }
@@ -143,7 +144,7 @@ GroupBox {
 		}
 		Loader { sourceComponent: label; Component.onCompleted: item.text = qsTr("Luminance") }
 		Item {
-			width: grid.width / 2 - grid.spacing; height: lineHeight
+			width: Math.round(grid.width / 2 - grid.spacing); height: lineHeight
 			SpinBox {
 				id: lumValue
 				anchors { verticalCenter: parent.verticalCenter; left: parent.left }
@@ -185,8 +186,8 @@ GroupBox {
 		PushButton {
 			id: moreButton
 			enabled: parent.enabled
-			anchors { left: parent.left; right: parent.right; top: parent.top }
-			height: lineHeight
+			anchors { top: parent.top }
+			x: Math.round(grid.width / 2 + grid.spacing); height: lineHeight
 			shape: "img/pbutton_normal.sci"
 			pressedShape: "img/pbutton_checked.sci"
 			text: qsTr("More ...")

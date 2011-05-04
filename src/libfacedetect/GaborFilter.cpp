@@ -12,6 +12,7 @@
 #include <lapackpp/blas3pp.h>
 #include <lapackpp/laexcp.h>
 
+#include <QDebug>
 using std::ceil;
 using std::cos;
 using std::exp;
@@ -54,6 +55,7 @@ void GaborFilter::filter(QImage &sourceImage) const
 void GaborFilter::setGaborParameters(const GaborFilter::GaborParameters &parameters)
 {
 	m_gaborParameters = parameters;
+	m_gaborRecalcConvolution = true;
 }
 
 /**

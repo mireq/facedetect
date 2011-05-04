@@ -9,6 +9,8 @@
 
 #include <QAction>
 #include <QApplication>
+#include <QBuffer>
+#include <QDataStream>
 #include <QDeclarativeContext>
 #include <QDeclarativeEngine>
 #include <QGLWidget>
@@ -17,9 +19,11 @@
 #include <QUrl>
 #include "libfacedetect/FaceFileScanner.h"
 #include "core/FaceImageProvider.h"
+#include "core/FilterImageProvider.h"
 #include "plugins/QmlFaceDetectPlugin.h"
 #include "QmlWin.h"
 
+#include <QDebug>
 using FaceDetect::Align;
 using FaceDetect::FaceFileScanner;
 
@@ -46,6 +50,8 @@ QmlWin::QmlWin(QWidget *parent):
 
 	m_imageProvider = new FaceImageProvider;
 	engine()->addImageProvider(QLatin1String("faceimage"), m_imageProvider);
+	m_filterImageProvider = new FilterImageProvider;
+	engine()->addImageProvider(QLatin1String("filter"), m_filterImageProvider);
 	initializeScanner();
 	rootContext()->setContextProperty("runtime", this);
 	setSource(QUrl("qrc:/qml/main.qml"));
@@ -111,6 +117,17 @@ void QmlWin::setFilterSettings(const QVariantMap &filterSettings)
 		m_filterSettings = filterSettings;
 		emit filterSettingsChanged(m_filterSettings);
 	}
+}
+
+QString QmlWin::encodeFilterString() const
+{
+	QBuffer buffer;
+	buffer.open(QIODevice::WriteOnly);
+	{
+		QDataStream stream(&buffer);
+		stream << m_filterSettings;
+	}
+	return buffer.data().toBase64();
 }
 
 void QmlWin::imageScanned(const FaceDetect::FaceFileScanner::ImageInfo &img)

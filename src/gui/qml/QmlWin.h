@@ -18,6 +18,7 @@
 #include "libfacedetect/Align.h"
 #include "libfacedetect/FaceFileScanner.h"
 class FaceImageProvider;
+class FilterImageProvider;
 
 class QmlWin: public QDeclarativeView
 {
@@ -38,6 +39,7 @@ public:
 	FaceDetect::FaceFileScanner *faceFileScanner() const;
 	QVariantMap filterSettings() const;
 	void setFilterSettings(const QVariantMap &filterSettings);
+	Q_INVOKABLE QString encodeFilterString() const;
 
 signals:
 	void facesPathChanged(const QString &url);
@@ -60,6 +62,7 @@ private:
 	QSharedPointer<FaceBrowserModel> m_faceBrowserModel;
 	QSharedPointer<FaceDetect::FaceFileScanner> m_faceFileScanner;
 	FaceImageProvider *m_imageProvider;
+	FilterImageProvider *m_filterImageProvider;
 	QString m_facesPath;
 	QString m_nonFacesPath;
 	QVariantMap m_filterSettings;

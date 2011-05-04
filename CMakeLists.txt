@@ -52,6 +52,7 @@ set(facedetect_SRCS
 	src/main.cpp
 	src/core/FaceBrowserModel.cpp
 	src/core/FaceImageProvider.cpp
+	src/core/FilterImageProvider.cpp
 	src/libfacedetect/Align.cpp
 	src/libfacedetect/BPNeuralNet.cpp
 	src/libfacedetect/FaceDetector.cpp
@@ -81,6 +82,7 @@ set(facedetect_SRCS
 
 set(facedetect_HDRS
 	src/core/FaceImageProvider.h
+	src/core/FilterImageProvider.h
 	src/libfacedetect/GaborFilter.h
 	src/libfacedetect/GrayscaleFilter.h
 	src/libfacedetect/IlluminationFilter.h
