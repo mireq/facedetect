@@ -50,12 +50,29 @@ void GaborFilter::filter(QImage &sourceImage) const
 }
 
 /**
+ * Vráti parametre gaborovho filtra.
+ */
+GaborFilter::GaborParameters GaborFilter::gaborParameters() const
+{
+	return m_gaborParameters;
+}
+
+/**
  * Nastavenie parametrov gabor filtra.
  */
 void GaborFilter::setGaborParameters(const GaborFilter::GaborParameters &parameters)
 {
 	m_gaborParameters = parameters;
 	m_gaborRecalcConvolution = true;
+}
+
+/**
+ * Vráti \e true, ak je filter nastavený tak, aby vrátil len Gaborovu vlnkovú
+ * funkciu.
+ */
+bool GaborFilter::onlyGaborWavelet() const
+{
+	return m_onlyGaborWavelet;
 }
 
 /**

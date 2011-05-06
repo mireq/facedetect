@@ -107,8 +107,8 @@ CentralWindow {
 				shape: "img/button.sci"
 				pressedShape: "img/button-down.sci"
 				onClicked: {
-					if (facesView.selectedItem != null) {
-						facesView.selectedItem.hide();
+					if (facesView.currentItem != null) {
+						facesView.currentItem.hide();
 					}
 					faceDatabaseView.stateOverlay = "info";
 				}
@@ -118,8 +118,8 @@ CentralWindow {
 	}
 
 	function back() {
-		if (facesView.selectedItem != null) {
-			facesView.selectedItem.hide();
+		if (facesView.currentItem != null) {
+			facesView.currentItem.hide();
 		}
 		if (faceDatabaseView.stateOverlay == "info") {
 			faceDatabaseView.stateOverlay = "grid";
@@ -154,7 +154,6 @@ CentralWindow {
 
 	GridView {
 		id: facesView
-		property Item selectedItem
 		anchors.fill: parent
 		model: runtime.faceBrowserModel
 		delegate: FaceDelegate{}
@@ -164,6 +163,14 @@ CentralWindow {
 			faceDetailsInfo.state = "closed";
 			definitionFileInfo.state = "closed";
 			transformationInfo.state = "closed";
+			if (currentItem == null) {
+				faceMetadata.metadata = null;
+				definitionFileText.text = "";
+				transformationDelegate.transformRotate = 0;
+				transformationDelegate.transformScale = 0;
+				transformationDelegate.transformTranslateX = 0;
+				transformationDelegate.transformTranslateY = 0;
+			}
 		}
 		onCountChanged: {
 			if (count == 1) {
@@ -209,7 +216,7 @@ CentralWindow {
 					title: qsTr("Details")
 					width: imageDetailsView.width
 					FaceMetadata {
-						metadata: facesView.selectedItem == null ? null : facesView.selectedItem.facesModel.faceData
+						id: faceMetadata
 					}
 				}
 				InfoListItem {
@@ -217,7 +224,7 @@ CentralWindow {
 					title: qsTr("Definition file")
 					width: imageDetailsView.width
 					Text {
-						text: facesView.selectedItem == null ? "" : facesView.selectedItem.facesModel.definitionFile
+						id: definitionFileText
 						color: "white"
 						textFormat: Text.PlainText
 					}
@@ -227,11 +234,7 @@ CentralWindow {
 					title: qsTr("Transformation")
 					width: imageDetailsView.width
 					TransformationDelegate {
-						source: facesView.selectedItem == null ? "" : facesView.selectedItem.facesModel.image
-						transformRotate: facesView.selectedItem == null ? 0.0 : facesView.selectedItem.facesModel.transformRotate
-						transformScale: facesView.selectedItem == null ? 0.0 : facesView.selectedItem.facesModel.transformScale
-						transformTranslateX: facesView.selectedItem == null ? 0.0 : facesView.selectedItem.facesModel.transformTranslateX
-						transformTranslateY: facesView.selectedItem == null ? 0.0 : facesView.selectedItem.facesModel.transformTranslateY
+						id: transformationDelegate
 						parentWindow: faceDatabaseView
 					}
 				}
@@ -290,6 +293,11 @@ CentralWindow {
 		if (state == "info") {
 			statisticsImage.index++;
 		}
+		if (state == "grid") {
+			faceDetailsInfo.state = "closed";
+			definitionFileInfo.state = "closed";
+			transformationInfo.state = "closed";
+		}
 	}
 	onScanningProgressChanged: {
 		if (state == "info") {
@@ -303,7 +311,16 @@ CentralWindow {
 			PropertyChanges { target: foregroundDimArea; enabled: false }
 			PropertyChanges { target: controlPointsDisplay; opacity: 0 }
 			PropertyChanges { target: faceDatabaseView; _infoButtonTranslate: 0 }
-			PropertyChanges { target: facesView; selectedItem: null }
+			PropertyChanges { target: faceMetadata; metadata: null }
+			PropertyChanges { target: definitionFileText; text: "" }
+			PropertyChanges {
+				target: transformationDelegate
+				transformRotate: 0
+				transformScale: 0
+				transformTranslateX: 0
+				transformTranslateY: 0
+				source: ""
+			}
 		},
 		State {
 			name: "scanning"; extend: "grid"; when: (faceDatabaseView.state == "grid" && faceDatabaseView.scanning)
@@ -316,6 +333,16 @@ CentralWindow {
 			PropertyChanges { target: controlPointsDisplay; opacity: 1 }
 			PropertyChanges { target: imageDetailsTranslate; x: 0 }
 			PropertyChanges { target: faceDatabaseView; _backButtonTranslate: 0 }
+			PropertyChanges { target: faceMetadata; metadata: facesView.currentItem == null ? null : facesView.currentItem.facesModel.faceData }
+			PropertyChanges { target: definitionFileText; text: facesView.currentItem == null ? "" : facesView.currentItem.facesModel.definitionFile }
+			PropertyChanges {
+				target: transformationDelegate
+				source: facesView.currentItem == null ? "" : facesView.currentItem.facesModel.image
+				transformRotate: facesView.currentItem == null ? 0 : facesView.currentItem.facesModel.transformRotate
+				transformScale: facesView.currentItem == null ? 0 : facesView.currentItem.facesModel.transformScale
+				transformTranslateX: facesView.currentItem == null ? 0 : facesView.currentItem.facesModel.transformTranslateX
+				transformTranslateY: facesView.currentItem == null ? 0 : facesView.currentItem.facesModel.transformTranslateY
+			}
 		},
 		State {
 			name: "info"; when: faceDatabaseView.state == "info"

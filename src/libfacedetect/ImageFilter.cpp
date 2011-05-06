@@ -9,6 +9,9 @@
 
 #include "ImageFilter.h"
 #include <cstring>
+#include <QVariant>
+#include <QVariantMap>
+#include <boost/math/constants/constants.hpp>
 #include <QDebug>
 
 using std::memcpy;
@@ -260,12 +263,118 @@ void ImageFilter::filter(QImage &sourceImage) const
 }
 
 /**
+ * Vráti nastavenie všetkých filtrov.
+ */
+QVariant ImageFilter::filterData() const
+{
+	QVariantMap grayscaleSettings;
+	grayscaleSettings["enabled"] = bool(m_filters & GrayscaleFilter);
+
+	QVariantMap illuminationSettings;
+	illuminationSettings["enabled"] = bool(m_filters & IlluminationFilter);
+	illuminationSettings["illuminationPlaneOnly"] = m_illuminationFilter.illuminationPlaneOnly();
+	illuminationSettings["illuminationCorrectHistogram"] = m_illuminationFilter.illuminationCorrectHistogram();
+
+	QVariantMap sobelSettings;
+	sobelSettings["enalbed"] = bool(m_filters & SobelFilter);
+
+	QVariantMap gaborSettings;
+	gaborSettings["enabled"] = bool(m_filters & GaborFilter);
+	QVariantList gaborFilterList;
+	foreach (const FaceDetect::GaborFilter &filter, m_gaborFilters) {
+		QVariantMap gaborVarParams;
+		FaceDetect::GaborFilter::GaborParameters gaborParams = filter.gaborParameters();
+		gaborVarParams["lambda"] = gaborParams.lambda;
+		gaborVarParams["theta"] = gaborParams.theta;
+		gaborVarParams["psi"] = gaborParams.psi;
+		gaborVarParams["sigma"] = gaborParams.sigma;
+		gaborVarParams["gamma"] = gaborParams.gamma;
+		gaborVarParams["lum"] = gaborParams.lum;
+		gaborFilterList << gaborVarParams;
+	}
+	gaborSettings["filters"] = gaborFilterList;
+
+	QVariantMap filterSettings;
+	filterSettings["grayscale"] = grayscaleSettings;
+	filterSettings["illumination"] = illuminationSettings;
+	filterSettings["sobel"] = sobelSettings;
+	filterSettings["gabor"] = gaborSettings;
+	return filterSettings;
+}
+
+/**
+ * Nastavenie všetkých filtrov.
+ * \todo Doplniť popis nastavenia.
+ */
+void ImageFilter::setFilterData(const QVariant &settings)
+{
+	QVariantMap filters = settings.value<QVariantMap>();
+	// Prevod do odtieňov šedej
+	{
+		QVariantMap settings = filters["grayscale"].value<QVariantMap>();
+		if (settings["enabled"].value<bool>()) {
+			enableGrayscaleFilter();
+		}
+		else {
+			disableGrayscaleFilter();
+		}
+	}
+	// Korekcia osvetlenia
+	{
+		QVariantMap settings = filters["illumination"].value<QVariantMap>();
+		if (settings["enabled"].value<bool>()) {
+			enableIlluminationFilter();
+			setIlluminationPlaneOnly(settings["illuminationPlaneOnly"].value<bool>());
+			setIlluminationCorrectHistogram(settings["illuminationCorrectHistogram"].value<bool>());
+		}
+		else {
+			disableIlluminationFilter();
+		}
+	}
+	// Sobelov filter
+	{
+		QVariantMap settings = filters["sobel"].value<QVariantMap>();
+		if (settings["enabled"].value<bool>()) {
+			enableSobelFilter();
+		}
+		else {
+			disableSobelFilter();
+		}
+	}
+	// Gaborov filter
+	{
+		QVariantMap settings = filters["gabor"].value<QVariantMap>();
+		if (settings["enabled"].value<bool>()) {
+			enableGaborFilter();
+			QVariantList gaborFilters = settings["filters"].value<QVariantList>();
+			QList<FaceDetect::GaborFilter::GaborParameters> parameters;
+			foreach (const QVariant &gaborFilterVar, gaborFilters) {
+				QVariantMap gaborFilter = gaborFilterVar.value<QVariantMap>();
+				FaceDetect::GaborFilter::GaborParameters gaborParameters;
+				gaborParameters.lambda = gaborFilter["lambda"].value<double>();
+				gaborParameters.theta = gaborFilter["theta"].value<double>() / 180.0 * boost::math::constants::pi<double>();
+				gaborParameters.psi = gaborFilter["psi"].value<double>();
+				gaborParameters.sigma = gaborFilter["sigma"].value<double>();
+				gaborParameters.gamma = gaborFilter["gamma"].value<double>();
+				gaborParameters.lum = gaborFilter["lum"].value<double>();
+				parameters << gaborParameters;
+			}
+			setGaborParameters(parameters);
+		}
+		else {
+			disableGaborFilter();
+		}
+	}
+}
+
+/**
  * Vráti kombinovaný počet obrázkov, ktoré vráti filter.
  */
 int ImageFilter::subImageCount() const
 {
 	if (m_filters & ImageFilter::GaborFilter) {
-		return m_gaborFilters.count();
+		// Ak nie je povolený ani jeden gaborov filter ignoruje sa to
+		return qMax(m_gaborFilters.count(), 1);
 	}
 	else {
 		return 1;

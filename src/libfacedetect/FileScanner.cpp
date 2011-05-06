@@ -11,8 +11,6 @@
 #include <QFile>
 #include <QMutexLocker>
 #include "FileScanner.h"
-
-#include <QDebug>
 #include <unistd.h>
 
 FileScanner::FileScanner(QObject *parent):
@@ -27,6 +25,7 @@ FileScanner::FileScanner(QObject *parent):
 
 FileScanner::~FileScanner()
 {
+	stop();
 }
 
 void FileScanner::setScanPath(const QString &path)

@@ -76,10 +76,10 @@ void QmlWin::setFacesPath(const QString &facesPath)
 		m_faceFileScanner->stop();
 		decltype(m_aligner) aligner = m_aligner;
 		decltype(m_faceBrowserModel) faceBrowserModel = m_faceBrowserModel;
-		m_faceFileScanner->setBasePath(m_facesPath);
 		m_faceBrowserModel->clear();
 		m_aligner.clear();
 		m_faceBrowserModel.clear();
+		m_faceFileScanner->setBasePath(m_facesPath);
 		initializeScanner();
 		emit faceBrowserModelChanged(m_faceBrowserModel.data());
 		emit faceFileScannerChanged(m_faceFileScanner.data());
@@ -106,15 +106,16 @@ FaceFileScanner *QmlWin::faceFileScanner() const
 	return m_faceFileScanner.data();
 }
 
-QVariantMap QmlWin::filterSettings() const
+QVariant QmlWin::filterSettings() const
 {
 	return m_filterSettings;
 }
 
-void QmlWin::setFilterSettings(const QVariantMap &filterSettings)
+void QmlWin::setFilterSettings(const QVariant &filterSettings)
 {
 	if (m_filterSettings != filterSettings) {
 		m_filterSettings = filterSettings;
+		m_filter.setFilterData(m_filterSettings);
 		emit filterSettingsChanged(m_filterSettings);
 	}
 }
@@ -174,29 +175,6 @@ void QmlWin::initializeScanner()
 
 void QmlWin::createFilterSettings()
 {
-	QVariantMap grayscaleSettings;
-	grayscaleSettings["enabled"] = false;
-	m_filterSettings["grayscale"] = grayscaleSettings;
-	QVariantMap illuminationSettings;
-	illuminationSettings["enabled"] = false;
-	illuminationSettings["illuminationPlaneOnly"] = false;
-	illuminationSettings["illuminationCorrectHistogram"] = true;
-	m_filterSettings["illumination"] = illuminationSettings;
-	QVariantMap sobelSettings;
-	sobelSettings["enabled"] = false;
-	m_filterSettings["sobel"] = sobelSettings;
-	QVariantMap gaborSettings;
-	gaborSettings["enabled"] = false;
-	QVariantList gaborFiltersList = QVariantList();
-	QVariantMap gaborParameters;
-	gaborParameters["lambda"] = 2.0;
-	gaborParameters["theta"] = 0.0;
-	gaborParameters["psi"] = 0.0;
-	gaborParameters["sigma"] = 1.0;
-	gaborParameters["gamma"] = 1.0;
-	gaborParameters["lum"] = 0.0;
-	gaborFiltersList.append(gaborParameters);
-	gaborSettings["filters"] = gaborFiltersList;
-	m_filterSettings["gabor"] = gaborSettings;
+	m_filterSettings = m_filter.filterData();
 }
 

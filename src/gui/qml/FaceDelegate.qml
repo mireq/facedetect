@@ -74,7 +74,6 @@ Item {
 					controlPointsDisplay.mouthY = model.faceData[0].mouthY;
 				}
 				GridView.view.currentIndex = index;
-				GridView.view.selectedItem = GridView.view.currentItem;
 			}
 		}
 		states: [

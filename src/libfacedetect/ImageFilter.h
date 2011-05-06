@@ -11,6 +11,7 @@
 #define IMAGEFILTER_FKHAR0M2
 
 #include <QList>
+#include <QVariant>
 #include "GrayscaleFilter.h"
 #include "IlluminationFilter.h"
 #include "SobelFilter.h"
@@ -63,6 +64,9 @@ public:
 	void setGaborParameters(const GaborFilter::GaborParameters &parameters);
 	void setGaborParameters(const QList<GaborFilter::GaborParameters> &parameters);
 	void filter(QImage &sourceImage) const;
+
+	QVariant filterData() const;
+	void setFilterData(const QVariant &settings);
 
 	int subImageCount() const;
 

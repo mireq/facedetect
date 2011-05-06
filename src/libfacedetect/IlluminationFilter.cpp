@@ -123,12 +123,28 @@ void IlluminationFilter::filter(QImage &sourceImage) const
 }
 
 /**
+ * Vráti \e true, ak sa má renderovať len korekčná funkcia.
+ */
+bool IlluminationFilter::illuminationPlaneOnly() const
+{
+	return m_illuminationPlaneOnly;
+}
+
+/**
  * Ak je \a planeOnly nastavené na \e true namiesto korigovaného obrázku vráti
  * filter len korekčnú plochu.
  */
 void IlluminationFilter::setIlluminationPlaneOnly(bool planeOnly)
 {
 	m_illuminationPlaneOnly = planeOnly;
+}
+
+/**
+ * Vráti \e true, ak sa bude korigovať histogram.
+ */
+bool IlluminationFilter::illuminationCorrectHistogram() const
+{
+	return m_illuminationCorrectHistogram;
 }
 
 /**

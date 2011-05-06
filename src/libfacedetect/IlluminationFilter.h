@@ -25,7 +25,9 @@ public:
 	~IlluminationFilter();
 	virtual void filter(QImage &sourceImage) const;
 	// Len pre štatistické účely
+	bool illuminationPlaneOnly() const;
 	void setIlluminationPlaneOnly(bool planeOnly);
+	bool illuminationCorrectHistogram() const;
 	void setIlluminationCorrectHistogram(bool correctHistogram);
 
 private:

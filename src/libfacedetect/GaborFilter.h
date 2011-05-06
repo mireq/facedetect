@@ -41,8 +41,10 @@ public:
 	~GaborFilter();
 	void filter(QImage &sourceImage) const;
 
+	GaborFilter::GaborParameters gaborParameters() const;
 	void setGaborParameters(const GaborFilter::GaborParameters &parameters);
 	// Len pre štatistické účely
+	bool onlyGaborWavelet() const;
 	void setOnlyGaborWavelet(bool wavelet);
 
 private:
