@@ -59,6 +59,7 @@ private slots:
 	void updateProgress(double progress);
 	void printTrainingEpoch(const FaceDetect::NetTrainer::EpochStats &stats);
 	void printTrainingSample(std::size_t sample, int epoch);
+	void printValidationError(std::size_t sample, std::size_t sampleCount, double errorSum);
 
 private:
 	void parseCommandline();

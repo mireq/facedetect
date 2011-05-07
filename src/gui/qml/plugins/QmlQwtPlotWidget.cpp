@@ -8,12 +8,20 @@
  */
 
 #include <qwt_plot.h>
+#include <qwt_plot_canvas.h>
+#include <QWidget>
 #include "QmlQwtPlotWidget.h"
 
 QmlQwtPlotWidget::QmlQwtPlotWidget(QGraphicsItem *parent):
 	QGraphicsProxyWidget(parent)
 {
 	QwtPlot *plot = new QwtPlot();
+	// Nastavenie priehľadnosti
+	plot->setAttribute(Qt::WA_TranslucentBackground);
+	plot->canvas()->setFrameShape(QFrame::NoFrame);
+	plot->setCanvasBackground(Qt::transparent);
+	plot->canvas()->setPaintAttribute(QwtPlotCanvas::PaintCached, false);
+	plot->canvas()->setAutoFillBackground(false);
 	setWidget(plot);
 }
 

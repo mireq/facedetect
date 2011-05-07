@@ -1,4 +1,14 @@
+/*
+ * =====================================================================
+ *        Version:  1.0
+ *        Created:  06.05.2011 14:19:27
+ *         Author:  Miroslav Bendík
+ *        Company:  LinuxOS.sk
+ * =====================================================================
+ */
+
 import QtQuick 1.0
+import org.facedetect 1.0
 
 Item {
 	id: main
@@ -20,6 +30,13 @@ Item {
 		FiltersEdit {
 			title: qsTr("Filters")
 			anchors.fill: parent
+		}
+		CentralWindow {
+			title: qsTr("Training")
+			anchors.fill: parent
+			PlotWidget {
+				anchors.fill: parent
+			}
 		}
 	}
 	Rectangle {

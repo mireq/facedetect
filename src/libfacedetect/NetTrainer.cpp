@@ -24,6 +24,7 @@ using std::numeric_limits;
 using std::ostringstream;
 using std::istringstream;
 using std::string;
+#include <QDebug>
 
 namespace FaceDetect {
 
@@ -38,7 +39,8 @@ NetTrainer::NetTrainer(QObject *parent):
 	m_net(0),
 	m_trainingSetSize(0),
 	m_falsePositiveHandicap(50),
-	m_falseNegativeHandicap(1)
+	m_falseNegativeHandicap(1),
+	m_mseSampleCount(0)
 {
 	qRegisterMetaType<EpochStats>();
 }
@@ -152,11 +154,10 @@ void NetTrainer::run()
 	m_net->setOutputVectorSize(m_reader->outputVectorSize());
 	{
 		QMutexLocker lock(&m_stopMutex);
-		if (m_stop == true) {
+		if (m_stop) {
 			m_stop = false;
 			return;
 		}
-		m_stop = false;
 	}
 	// Inicializácia váh
 	m_net->initializeTraining();
@@ -175,6 +176,11 @@ void NetTrainer::run()
 	m_matchStatE.resize(m_reader->trainingSetSize() - m_trainingSetSize);
 	m_bestMatchStatA = m_matchStatA;
 	m_bestMatchStatE = m_matchStatE;
+	// Výpis len niektorých položiek
+	int printEvery = 4;
+	if (trainingSetSize > 4000) {
+		printEvery = trainingSetSize / 4000;
+	}
 	// V každej tréningovej epoche sa vyšle signál epochFinished
 	for (int epoch = 1; epoch <= m_numEpoch; ++epoch) {
 		// Pre každú vzorku sa volá trainSample
@@ -187,25 +193,13 @@ void NetTrainer::run()
 				}
 			}
 			m_net->trainSample(m_reader->inputVector(sample), m_reader->outputVector(sample));
-			// Každých 16 položiek sa vyšle signál sampleFinished
-			if (sample % 16 == 0) {
+			// Každých niekoľko položiek sa vyšle signál sampleFinished
+			if (sample % printEvery == 0) {
 				emit sampleFinished(sample + 1, epoch);
 			}
 		}
-		emit sampleFinished(m_reader->trainingSetSize(), epoch);
-		if (epoch == 1) {
-			for (std::size_t sample = 0; sample < m_trainingSetSize; ++sample) {
-				if (m_reader->outputVector(sample)(0) == 1) {
-					bestEpoch.facesA++;
-				}
-			}
-			for (std::size_t sample = m_trainingSetSize; sample < m_reader->trainingSetSize(); ++sample) {
-				if (m_reader->outputVector(sample)(0) == 1) {
-					bestEpoch.facesE++;
-				}
-			}
-		}
-		finishEpoch(epoch, bestNet, bestMse, bestEpoch);
+		emit sampleFinished(trainingSetSize, epoch);
+		calcMseForEpoch(epoch, bestNet, bestMse, bestEpoch);
 	}
 	// Obnovenie najlepších nastavení
 	restoreNet(bestNet);
@@ -222,22 +216,58 @@ void NetTrainer::run()
  * Výpočet MSE neurónovej siete.
  * \sa calcOutput
  */
-double NetTrainer::calcMse(std::size_t from, std::size_t to, bool binary, double *thresholdOut, QVector<MatchStat> *matchStat, long *fNeg, long *fPos)
+double NetTrainer::calcMse(std::size_t from, std::size_t to, bool binary, double *thresholdOut, QVector<MatchStat> *matchStat, long *fNeg, long *fPos, double *mse, long *faces)
 {
+	double binErrorSum = 0;
 	double errorSum = 0;
+	double partErrorSum = 0;
+	std::size_t sampleCount = 0;
+	std::size_t partSampleCount = 0;
+	long faceCount = 0;
 	typedef QPair<double,double> OutT;
 	QList<OutT> outData;
 	for (std::size_t sample = from; sample < to; ++sample) {
 		double out = m_net->calcOutput(m_reader->inputVector(sample))(0);
 		double expected = m_reader->outputVector(sample)(0);
+		if (expected == 1) {
+			faceCount++;
+		}
 		if (binary) {
 			outData << QPair<double,double>(out, expected);
 		}
-		else {
-			double diff = out - expected;
-			errorSum += diff * diff;
+		double diff = out - expected;
+		partErrorSum += diff * diff;
+		partSampleCount++;
+		if (partSampleCount % 256 == 0) {
+			exportMseStats(partSampleCount, partErrorSum);
+			errorSum += partErrorSum;
+			sampleCount += partSampleCount;
+			partErrorSum = 0;
+			partSampleCount = 0;
+			QMutexLocker lock(&m_stopMutex);
+			if (m_stop) {
+				return 0;
+			}
 		}
 	}
+
+	if (faces != 0) {
+		*faces = faceCount;
+	}
+
+	if (partSampleCount != 0) {
+		exportMseStats(partSampleCount, partErrorSum);
+		errorSum += partErrorSum;
+		sampleCount += partSampleCount;
+	}
+	if (sampleCount == 0) {
+		sampleCount = 1;
+	}
+	double msError = errorSum / static_cast<double>(sampleCount);
+	if (mse != 0) {
+		*mse = msError;
+	}
+
 	if (binary) {
 		long badSum = 0;
 		long falsePositive = 0;
@@ -291,33 +321,53 @@ double NetTrainer::calcMse(std::size_t from, std::size_t to, bool binary, double
 			prevThresh = threshold;
 			++sampleIndex;
 		}
-		errorSum = best;
+		binErrorSum = best;
 		if (thresholdOut != 0) {
 			*thresholdOut = bestThres;
 		}
+		return binErrorSum / static_cast<double>(sampleCount);
 	}
-	return errorSum / static_cast<double>(to - from);
+	else {
+		return msError;
+	}
 }
 
 /**
  * Emitovanie signálov pri ukončení epochy a vrátenie doteraz najlepšej siete.
  */
-void NetTrainer::finishEpoch(int epoch, std::string &bestNet, double &bestMse, EpochStats &bestEpoch)
+void NetTrainer::calcMseForEpoch(int epoch, std::string &bestNet, double &bestMse, EpochStats &bestEpoch)
 {
+	m_mseSampleCount = 0;
 	long fNegA = 0;
 	long fPosA = 0;
 	long fNegE = 0;
 	long fPosE = 0;
-	double msea = calcMse(0, m_trainingSetSize);
-	double msee = msea;
+	double msea = 0;
 	double thresholda = 0;
-	double msebina = calcMse(0, m_trainingSetSize, true, &thresholda, &m_matchStatA, &fNegA, &fPosA);
+	double msebina = calcMse(0, m_trainingSetSize, true, &thresholda, &m_matchStatA, &fNegA, &fPosA, &msea, &bestEpoch.facesA);
 	double thresholde = thresholda;
+	double msee = msea;
 	double msebine = msebina;
 	if (m_trainingSetSize != m_reader->trainingSetSize()) {
-		msee = calcMse(m_trainingSetSize, m_reader->trainingSetSize());
-		msebine = calcMse(m_trainingSetSize, m_reader->trainingSetSize(), true, &thresholde, &m_matchStatE, &fNegE, &fPosE);
+		msebine = calcMse(m_trainingSetSize, m_reader->trainingSetSize(), true, &thresholde, &m_matchStatE, &fNegE, &fPosE, &msee, &bestEpoch.facesE);
+		QMutexLocker lock(&m_stopMutex);
+		if (m_stop) {
+			return;
+		}
 	}
+	{
+		QMutexLocker lock(&m_stopMutex);
+		if (m_stop) {
+			return;
+		}
+	}
+
+	if (m_trainingSetSize == m_reader->trainingSetSize()) {
+		msee = msea;
+		msebine = msebina;
+		thresholde = thresholda;
+	}
+
 	m_net->setBinaryThreshold(thresholde);
 	EpochStats stats = bestEpoch;
 	stats.epoch = epoch;
@@ -370,6 +420,17 @@ void NetTrainer::restoreNet(const std::string &net)
 	ia >> *m_net;
 }
 
+/**
+ * Výstup hodnôt validácie pre zobrazenie priebehu.
+ */
+void NetTrainer::exportMseStats(std::size_t count, double errorSum)
+{
+	if (count == 0) {
+		return;
+	}
+	m_mseSampleCount += count;
+	emit errorCalculated(m_mseSampleCount, count, errorSum);
+}
 
 } /* end of namespace FaceDetect */
 

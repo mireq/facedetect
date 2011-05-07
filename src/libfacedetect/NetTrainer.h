@@ -52,8 +52,8 @@ public:
 		double thresholdE;
 		long sizeA;
 		long sizeE;
-		int facesA;
-		int facesE;
+		long facesA;
+		long facesE;
 		long falsePositiveA;
 		long falsePositiveE;
 		long falseNegativeA;
@@ -114,14 +114,19 @@ signals:
 	 * obsahuje štatistiky behu epochy.
 	 */
 	void epochFinished(const FaceDetect::NetTrainer::EpochStats &stats);
+	/**
+	 * Signál sa vyšle po výpočte chýb pre určitý počet vzoriek.
+	 */
+	void errorCalculated(std::size_t sample, std::size_t sampleCount, double errorSum);
 
 private:
 	using QThread::start;
 	void run();
-	double calcMse(std::size_t from, std::size_t to, bool binary = false, double *thresholdOut = 0, QVector<MatchStat> *matchStat = 0, long *fNeg = 0, long *fPos = 0);
-	void finishEpoch(int epoch, std::string &bestNet, double &bestMse, EpochStats &bestEpoch);
+	double calcMse(std::size_t from, std::size_t to, bool binary = false, double *thresholdOut = 0, QVector<MatchStat> *matchStat = 0, long *fNeg = 0, long *fPos = 0, double *mse = 0, long *faces = 0);
+	void calcMseForEpoch(int epoch, std::string &bestNet, double &bestMse, EpochStats &bestEpoch);
 	void saveNet(std::string &net);
 	void restoreNet(const std::string &net);
+	void exportMseStats(std::size_t count, double errorSum);
 
 private:
 	/// Objekt čítajúci tréningové vzorky.
@@ -150,6 +155,8 @@ private:
 	int m_falsePositiveHandicap;
 	/// Handicap pre nesprávne negatívne výsledky.
 	int m_falseNegativeHandicap;
+	/// Počet vzoriek, pre ktoré bolo vypočítané MSE.
+	std::size_t m_mseSampleCount;
 
 	Q_DISABLE_COPY(NetTrainer)
 }; /* -----  end of class NetTrainer  ----- */

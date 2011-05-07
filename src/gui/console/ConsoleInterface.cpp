@@ -98,26 +98,6 @@ void ConsoleInterface::startNextStep()
 
 void ConsoleInterface::saveFilterImage()
 {
-	/*
-	FaceDetect::ImageFilter filter;
-	if (m_grayscaleFilter) {
-		filter.enableGrayscaleFilter();
-	}
-	if (m_illuminationFilter) {
-		filter.enableIlluminationFilter();
-	}
-	if (m_sobelFilter) {
-		filter.enableSobelFilter();
-	}
-	if (m_gaborFilter) {
-		filter.enableGaborFilter();
-	}
-	filter.setIlluminationPlaneOnly(m_illuminationPlaneOnly);
-	filter.setIlluminationCorrectHistogram(!m_noIlluminationCorrectHistogram);
-	filter.setOnlyGaborWavelet(m_onlyGaborWavelet);
-	filter.setGaborParameters(m_gaborParameters.toList());
-	*/
-
 	QImage inputImage(m_filterImage);
 	if (inputImage.isNull()) {
 		return;
@@ -301,6 +281,7 @@ void ConsoleInterface::trainNet()
 	connect(m_trainer.data(), SIGNAL(terminated()), this, SLOT(onTrainingFinished()));
 	connect(m_trainer.data(), SIGNAL(epochFinished(FaceDetect::NetTrainer::EpochStats)), this, SLOT(printTrainingEpoch(FaceDetect::NetTrainer::EpochStats)));
 	connect(m_trainer.data(), SIGNAL(sampleFinished(std::size_t,int)), this, SLOT(printTrainingSample(std::size_t,int)));
+	connect(m_trainer.data(), SIGNAL(errorCalculated(std::size_t,std::size_t,double)), this, SLOT(printValidationError(std::size_t,std::size_t,double)));
 	m_trainer->trainNet(m_neuralNet.data());
 }
 
@@ -382,10 +363,18 @@ void ConsoleInterface::printTrainingEpoch(const FaceDetect::NetTrainer::EpochSta
 	m_cout.flush();
 }
 
+void ConsoleInterface::printValidationError(std::size_t sample, std::size_t sampleCount, double errorSum)
+{
+	if (!m_quiet) {
+		m_cout << "\rVal: " << QString("%1%").arg((static_cast<double>(sample) / m_trainingDatabase->trainingSetSize()) * 100.0, 5, 'f', 1) << ", Err: " << (errorSum / static_cast<double>(sampleCount)) << "       ";
+		m_cout.flush();
+	}
+}
+
 void ConsoleInterface::printTrainingSample(std::size_t sample, int epoch)
 {
 	if (!m_quiet) {
-		m_cout << "\rEpoch: " << epoch << " - " << QString("%1%").arg((static_cast<double>(sample) / m_trainingDatabase->trainingSetSize()) * 100.0, 5, 'f', 1);
+		m_cout << "\rEpoch: " << epoch << " - " << QString("%1%").arg((static_cast<double>(sample) / m_trainer->trainingSetSize()) * 100.0, 5, 'f', 1);
 		m_cout.flush();
 	}
 }
