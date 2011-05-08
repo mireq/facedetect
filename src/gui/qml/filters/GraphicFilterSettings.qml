@@ -14,6 +14,7 @@ GroupBox {
 	id: filterSettings
 	property alias enabled: sw.on
 	property variant settings: { "on": sw.on }
+	property bool hasContents: content.length > 0
 	onSettingsChanged: {
 		if (settings != undefined && settings.enabled != undefined) {
 			sw.on = settings.enabled;
@@ -30,7 +31,11 @@ GroupBox {
 			filterSettings.changed();
 		}
 	}
-	titleLeft: ExpandButton{ id: closeImage }
+	titleLeft: ExpandButton {
+		id: closeImage
+		opacity: (sw.on && hasContents) ? 1 : 0
+		Behavior on opacity { NumberAnimation { duration: 200 } }
+	}
 	onTitleClicked: closeImage.open = !closeImage.open
 	closed: !(sw.on && closeImage.open)
 	clip: true

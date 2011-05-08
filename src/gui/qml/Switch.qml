@@ -43,6 +43,13 @@ Item {
 	Image {
 		id: switchImage
 		source: "img/switch.png"
+		Text {
+			id: switchText
+			font.pixelSize: 17; font.bold: true
+			text: on ? "1" : "0"
+			style: Text.Raised; color: "#444"; styleColor: "#80ffffff"
+			anchors.centerIn: parent
+		}
 		MouseArea {
 			anchors.fill: parent
 			drag.target: switchImage; drag.axis: Drag.XAxis; drag.minimumX: 0; drag.maximumX: offImage.width - switchImage.width

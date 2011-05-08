@@ -79,8 +79,9 @@ Item {
 			verticalAlignment: Text.AlignVCenter
 			horizontalAlignment:  Text.AlignHCenter
 			elide: Text.ElideRight
-			font.pixelSize: 17; font.bold: true
-			color: "#555555"
+			font { pixelSize: 22; bold: true }
+			color: "#fff"
+			style: Text.Raised; styleColor: "#111830"
 		}
 	}
 }

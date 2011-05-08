@@ -69,5 +69,8 @@
     <file>img/tab-left-bg.sci</file>
     <file>img/tab-left-item.png</file>
     <file>img/tab-left-item.sci</file>
+    <file>img/title_bg.png</file>
+    <file>img/title_border.png</file>
+    <file>img/title_border.sci</file>
   </qresource>
 </RCC>

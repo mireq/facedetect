@@ -125,6 +125,9 @@ Item {
 		validator: DoubleValidator { decimals: spinBox.decimals }
 		color: "black"; horizontalAlignment: TextInput.AlignHCenter
 		selectByMouse: true
+		Keys.onReturnPressed: {
+			parent.forceActiveFocus();
+		}
 		Item {
 			id: dragTarget
 		}

@@ -15,26 +15,40 @@ Item {
 	property string statusText: ""
 	property string statusExtendedText: ""
 	width: 200; height: 50
+	BorderImage {
+		id: bg
+		anchors.fill: parent
+		source: "img/title_border.sci"
+	}
 	Text {
 		id: statusText
-		anchors { top: parent.top; left: parent.left; right: parent.right }
-		color: "#555555"
+		anchors {
+			top: parent.top; left: parent.left; right: parent.right
+			leftMargin: bg.border.left; topMargin: bg.border.top; rightMargin: bg.border.right
+		}
+		color: "#fff"
 		elide: Text.ElideRight; horizontalAlignment: Text.AlignHCenter
-		font { pixelSize: 22; bold: true }
-		style: Text.Raised; styleColor: "#ffffff"
+		font { pixelSize: 16; bold: true }
+		style: Text.Raised; styleColor: "#111830"
 		text: progressItem.statusText
 	}
 	Text {
 		id: extendedStatus
-		anchors { top: statusText.bottom; left: parent.left; right: parent.right }
-		color: "#777777"
+		anchors {
+			top: statusText.bottom; left: parent.left; right: parent.right
+			leftMargin: bg.border.left; rightMargin: bg.border.right
+		}
+		color: "#eee"
 		elide: Text.ElideRight; horizontalAlignment: Text.AlignHCenter
-		font.pixelSize: 12
-		style: Text.Raised; styleColor: "#ffffff"
+		font.pixelSize: 11
+		style: Text.Raised; styleColor: "#80000000"
 		text: progressItem.statusExtendedText
 	}
 	Item {
-		anchors { top: extendedStatus.bottom; left: parent.left; right: parent.right; bottom: parent.bottom }
+		anchors {
+			top: extendedStatus.bottom; left: parent.left; right: parent.right; bottom: parent.bottom
+			leftMargin: bg.border.left; rightMargin: bg.border.right
+		}
 		ProgressBar {
 			id: progress
 			anchors.left: parent.left

@@ -41,9 +41,9 @@ Item {
 		anchors { left: parent.left; top: parent.top; right: parent.right }
 		height: 72
 		color: "#dedede"
-		BorderImage {
-			source: "img/innerbg.sci"
-			anchors { fill: parent; leftMargin: -7; topMargin: -7; rightMargin: -7 }
+		Image {
+			source: "img/title_bg.png"
+			anchors.fill: parent
 		}
 		TitleWidget {
 			id: titleWidget
