@@ -122,6 +122,10 @@ public slots:
  * Zastavenie skenovania a čakanie na ukončenie činnosti vlákna.
  */
 	void stop();
+/**
+ * Zrušenie informácii o poslednej skenovanej položke.
+ */
+	void reset();
 
 signals:
 /**

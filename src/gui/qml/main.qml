@@ -31,12 +31,9 @@ Item {
 			title: qsTr("Filters")
 			anchors.fill: parent
 		}
-		CentralWindow {
+		Training {
 			title: qsTr("Training")
 			anchors.fill: parent
-			PlotWidget {
-				anchors.fill: parent
-			}
 		}
 	}
 	Rectangle {

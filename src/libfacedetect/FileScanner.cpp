@@ -81,6 +81,12 @@ void FileScanner::stop()
 	wait();
 }
 
+void FileScanner::reset()
+{
+	stop();
+	clearState();
+}
+
 void FileScanner::run()
 {
 	{

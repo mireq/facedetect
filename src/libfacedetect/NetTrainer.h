@@ -7,6 +7,9 @@
  * =====================================================================
  */
 
+#ifndef NETTRAINER_CW0ED9X8
+#define NETTRAINER_CW0ED9X8
+
 #include <QMetaType>
 #include <QMutex>
 #include <QThread>
@@ -164,4 +167,6 @@ private:
 } /* end of namespace FaceDetect */
 
 Q_DECLARE_METATYPE(FaceDetect::NetTrainer::EpochStats);
+
+#endif /* end of include guard: NETTRAINER_CW0ED9X8 */
 

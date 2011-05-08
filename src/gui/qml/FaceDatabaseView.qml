@@ -21,49 +21,11 @@ CentralWindow {
 	property int _backButtonTranslate: -tabWidget.topBar.height
 	property int _cancelButtonTranslate: -tabWidget.topBar.height
 
+	property Component scanningInfoComponent: Qt.createComponent("ScanningInfoWidget.qml")
+
 	// Nastavenie kurzoru počas skenovania
 	CursorArea.cursor: scanning ? Qt.BusyCursor : Qt.ArrowCursor
 
-	Component {
-		id: scanningInfo
-		Item {
-			property double scanningProgress: runtime.faceFileScanner.progress
-			property string scanningText: qsTr("Scanning ...")
-			property string scanningExtendedText: ""
-			onScanningProgressChanged: {
-				scanningExtendedText = qsTr("Scanned") + " " + qsTr("%n folder(s)", "", parseInt(runtime.faceFileScanner.scannedDirs)) + " " + qsTr("and") + " " + qsTr("%n file(s)", "", parseInt(runtime.faceFileScanner.scannedFiles));
-			}
-			anchors.fill: parent
-			Text {
-				id: statusText
-				anchors { top: parent.top; left: parent.left; right: parent.right }
-				color: "#555555"
-				elide: Text.ElideRight; horizontalAlignment: Text.AlignHCenter
-				font { pixelSize: 22; bold: true }
-				style: Text.Raised; styleColor: "#ffffff"
-				text: scanningText
-			}
-			Text {
-				id: extendedStatus
-				anchors { top: statusText.bottom; left: parent.left; right: parent.right }
-				color: "#777777"
-				elide: Text.ElideRight; horizontalAlignment: Text.AlignHCenter
-				font.pixelSize: 12
-				style: Text.Raised; styleColor: "#ffffff"
-				text: scanningExtendedText
-			}
-			Item {
-				anchors { top: extendedStatus.bottom; left: parent.left; right: parent.right; bottom: parent.bottom }
-				ProgressBar {
-					id: scanningProgress
-					anchors.left: parent.left
-					anchors.right: parent.right
-					anchors.verticalCenter: parent.verticalCenter
-					progress: runtime.faceFileScanner.progress
-				}
-			}
-		}
-	}
 	Component {
 		id: leftTitleButtons
 		Item {
@@ -132,8 +94,9 @@ CentralWindow {
 	}
 
 	onScanningChanged: {
-		if (scanning) {
-			centralTitleWidget = scanningInfo.createObject(tabWidget.topBar);
+		if (scanning && active) {
+			centralTitleWidget = scanningInfoComponent.createObject(tabWidget.topBar);
+			centralTitleWidget.scanner = runtime.faceFileScanner;
 		}
 		else {
 			if (centralTitleWidget != null) {
@@ -145,7 +108,13 @@ CentralWindow {
 
 	onActiveChanged: {
 		if (active) {
-			runtime.faceFileScanner.start();
+			if (scanning && centralTitleWidget == null) {
+				centralTitleWidget = scanningInfoComponent.createObject(tabWidget.topBar);
+				centralTitleWidget.scanner = runtime.faceFileScanner;
+			}
+			else if (!scanning) {
+				runtime.faceFileScanner.start();
+			}
 		}
 		if (!active) {
 			back();

@@ -161,6 +161,14 @@ void TrainingImageDatabase::setGlobalFilter(const ImageFilter &filter)
 }
 
 /**
+ * Vyčistenie cachovaných dát.
+ */
+void TrainingImageDatabase::clear()
+{
+	m_samples.clear();
+}
+
+/**
  * Prevod obrázku vo vzorke \a sample na vektor. Výstup sa zapisuje do premennej
  * m_samples.
  */

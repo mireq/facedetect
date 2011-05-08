@@ -15,6 +15,7 @@
 #include <QDeclarativeEngine>
 #include <QGLWidget>
 #include <QKeySequence>
+#include <QMetaObject>
 #include <QSettings>
 #include <QUrl>
 #include "libfacedetect/FaceFileScanner.h"
@@ -26,9 +27,11 @@
 #include <QDebug>
 using FaceDetect::Align;
 using FaceDetect::FaceFileScanner;
+using FaceDetect::ImageFileScanner;
 
 QmlWin::QmlWin(QWidget *parent):
-	QDeclarativeView(parent)
+	QDeclarativeView(parent),
+	m_trainingDatabase(new FaceDetect::TrainingImageDatabase(this))
 {
 	QAction *actionQuit = new QAction(this);
 	actionQuit->setShortcut(QKeySequence("CTRL+Q"));
@@ -71,9 +74,9 @@ QString QmlWin::facesPath() const
 void QmlWin::setFacesPath(const QString &facesPath)
 {
 	if (m_facesPath != facesPath) {
+		m_faceFileScanner->stop();
 		m_facesPath = facesPath;
 		emit facesPathChanged(m_facesPath);
-		m_faceFileScanner->stop();
 		decltype(m_aligner) aligner = m_aligner;
 		decltype(m_faceBrowserModel) faceBrowserModel = m_faceBrowserModel;
 		m_faceBrowserModel->clear();
@@ -82,7 +85,6 @@ void QmlWin::setFacesPath(const QString &facesPath)
 		m_faceFileScanner->setBasePath(m_facesPath);
 		initializeScanner();
 		emit faceBrowserModelChanged(m_faceBrowserModel.data());
-		emit faceFileScannerChanged(m_faceFileScanner.data());
 	}
 }
 
@@ -93,7 +95,13 @@ QString QmlWin::nonFacesPath() const
 
 void QmlWin::setNonFacesPath(const QString &nonFacesPath)
 {
-	m_nonFacesPath = nonFacesPath;
+	if (m_nonFacesPath != nonFacesPath) {
+		m_nonFaceFileScanner->stop();
+		m_nonFacesPath = nonFacesPath;
+		m_nonFaceFileScanner->setScanPath(m_nonFacesPath);
+		emit nonFacesPathChanged(m_nonFacesPath);
+		initializeScanner();
+	}
 }
 
 FaceBrowserModel *QmlWin::faceBrowserModel() const
@@ -104,6 +112,11 @@ FaceBrowserModel *QmlWin::faceBrowserModel() const
 FaceFileScanner *QmlWin::faceFileScanner() const
 {
 	return m_faceFileScanner.data();
+}
+
+FaceDetect::ImageFileScanner *QmlWin::nonFaceFileScanner() const
+{
+	return m_nonFaceFileScanner.data();
 }
 
 QVariant QmlWin::filterSettings() const
@@ -131,10 +144,26 @@ QString QmlWin::encodeFilterString() const
 	return buffer.data().toBase64();
 }
 
+void QmlWin::startTraining()
+{
+	m_steps.append(ProcessStep(this, "scanFaces"));
+	m_steps.append(ProcessStep(this, "scanNonFaces"));
+	startNextStep();
+}
+
 void QmlWin::imageScanned(const FaceDetect::FaceFileScanner::ImageInfo &img)
 {
 	m_faceBrowserModel->addDefinitionFile(img);
 	m_aligner->addImage(img);
+}
+
+void QmlWin::startNextStep()
+{
+	if (m_steps.isEmpty()) {
+		return;
+	}
+	ProcessStep step = m_steps.takeFirst();
+	QMetaObject::invokeMethod(step.object, step.method.constData(), Qt::QueuedConnection);
 }
 
 void QmlWin::loadSettings()
@@ -155,6 +184,14 @@ void QmlWin::saveSettings()
 
 void QmlWin::initializeScanner()
 {
+	if (!m_faceFileScanner.isNull()) {
+		m_faceFileScanner->reset();
+	}
+	if (!m_nonFaceFileScanner.isNull()) {
+		m_nonFaceFileScanner->reset();
+	}
+	m_trainingDatabase->clear();
+
 	if (m_aligner.isNull()) {
 		m_aligner = QSharedPointer<Align>(new Align(this));
 		m_aligner->setImageSize(128);
@@ -170,11 +207,29 @@ void QmlWin::initializeScanner()
 		m_faceFileScanner->setBasePath(m_facesPath);
 		m_imageProvider->bindScanner(m_faceFileScanner.data());
 		connect(m_faceFileScanner.data(), SIGNAL(imageScanned(FaceDetect::FaceFileScanner::ImageInfo)), this, SLOT(imageScanned(FaceDetect::FaceFileScanner::ImageInfo)));
+		connect(m_faceFileScanner.data(), SIGNAL(finished()), SLOT(startNextStep()));
+		connect(m_faceFileScanner.data(), SIGNAL(terminated()), SLOT(startNextStep()));
+	}
+	if (m_nonFaceFileScanner.isNull()) {
+		m_nonFaceFileScanner = QSharedPointer<ImageFileScanner>(new ImageFileScanner());
+		m_nonFaceFileScanner->setScanPath(m_nonFacesPath);
+		connect(m_nonFaceFileScanner.data(), SIGNAL(finished()), SLOT(startNextStep()));
+		connect(m_nonFaceFileScanner.data(), SIGNAL(terminated()), SLOT(startNextStep()));
 	}
 }
 
 void QmlWin::createFilterSettings()
 {
 	m_filterSettings = m_filter.filterData();
+}
+
+void QmlWin::scanFaces()
+{
+	m_faceFileScanner->start();
+}
+
+void QmlWin::scanNonFaces()
+{
+	m_nonFaceFileScanner->start();
 }
 

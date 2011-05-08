@@ -14,12 +14,15 @@
     <file>LineEdit.qml</file>
     <file>LoadingIndicator.qml</file>
     <file>ProgressBar.qml</file>
+    <file>ProgressTitleItem.qml</file>
     <file>PushButton.qml</file>
+    <file>ScanningInfoWidget.qml</file>
     <file>SpinBox.qml</file>
     <file>Switch.qml</file>
     <file>TabWidget.qml</file>
     <file>TitleWidget.qml</file>
     <file>TransformationDelegate.qml</file>
+    <file>Training.qml</file>
     <file>main.qml</file>
     <file>filters/GaborFilterDelegate.qml</file>
     <file>filters/GaborFilterSettings.qml</file>

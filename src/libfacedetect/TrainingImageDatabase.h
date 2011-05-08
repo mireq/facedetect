@@ -40,6 +40,7 @@ public:
 	void shuffle();
 	void setLocalFilter(const ImageFilter &filter);
 	void setGlobalFilter(const ImageFilter &filter);
+	void clear();
 
 private:
 	/**

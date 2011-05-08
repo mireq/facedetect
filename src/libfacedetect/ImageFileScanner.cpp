@@ -72,7 +72,7 @@ void ImageFileScanner::scanFile(const QString &fileName)
 	ImageSegmenter segmenter(image);
 	segmenter.setGlobalFilter(m_globalFilter);
 	segmenter.setSegmentSize(QSize(ImageWidth, ImageHeight));
-	segmenter.setStep(ImageWidth / 4, ImageHeight / 4);
+	segmenter.setStep(ImageWidth / 2, ImageHeight / 2);
 	for (int segment = 0; segment < segmenter.segmentCount(); ++segment) {
 		QImage segmentImage = segmenter.segmentImage(segment);
 		inVector = m_localFilter.filterVector(segmentImage);
