@@ -62,6 +62,7 @@ void ImageFileScanner::scanFile(const QString &fileName)
 	if (image.isNull()) {
 		return;
 	}
+	image = image.convertToFormat(QImage::Format_ARGB32);
 
 	// Vytvorenie vstupného a výstupného vektoru
 	LaVectorDouble inVector(InputVectorSize);

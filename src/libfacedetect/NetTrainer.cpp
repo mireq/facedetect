@@ -57,7 +57,11 @@ int NetTrainer::numEpoch() const
 
 void NetTrainer::setNumEpoch(int numEpoch)
 {
-	m_numEpoch = numEpoch;
+	if (numEpoch != m_numEpoch) {
+		stop();
+		m_numEpoch = numEpoch;
+		numEpochChanged(m_numEpoch);
+	}
 }
 
 std::size_t NetTrainer::trainingSetSize() const
@@ -201,6 +205,7 @@ void NetTrainer::run()
 		emit sampleFinished(trainingSetSize, epoch);
 		calcMseForEpoch(epoch, bestNet, bestMse, bestEpoch);
 	}
+	m_mseSampleCount = 0;
 	// Obnovenie najlepších nastavení
 	restoreNet(bestNet);
 	m_bestEpochStats = bestEpoch;

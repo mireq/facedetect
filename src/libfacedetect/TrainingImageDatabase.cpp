@@ -148,7 +148,7 @@ void TrainingImageDatabase::shuffle()
 void TrainingImageDatabase::setLocalFilter(const ImageFilter &filter)
 {
 	m_localFilter = filter;
-	m_inputVectorSize = ImageWidth * ImageHeight * m_localFilter.subImageCount() * m_globalFilter.subImageCount();
+	m_inputVectorSize = ImageWidth * ImageHeight * m_localFilter.subImageCount() * m_globalFilter.subImageCount() * ((m_globalFilter.filters() & ImageFilter::GrayscaleFilter) ? 1 : 4);
 }
 
 /**
@@ -157,7 +157,7 @@ void TrainingImageDatabase::setLocalFilter(const ImageFilter &filter)
 void TrainingImageDatabase::setGlobalFilter(const ImageFilter &filter)
 {
 	m_globalFilter = filter;
-	m_inputVectorSize = ImageWidth * ImageHeight * m_localFilter.subImageCount() * m_globalFilter.subImageCount();
+	m_inputVectorSize = ImageWidth * ImageHeight * m_localFilter.subImageCount() * m_globalFilter.subImageCount() * ((m_globalFilter.filters() & ImageFilter::GrayscaleFilter) ? 1 : 4);
 }
 
 /**
@@ -175,7 +175,7 @@ void TrainingImageDatabase::clear()
 inline void TrainingImageDatabase::calcVectors(std::size_t sample) const
 {
 	if (m_workingImage.isNull()) {
-		m_workingImage = QImage(QSize(128, 128), QImage::Format_RGB888);
+		m_workingImage = QImage(QSize(128, 128), QImage::Format_ARGB32);
 	}
 
 	FaceFileScanner::ImageInfo imageInfo = *(m_samples[sample].info);
@@ -188,7 +188,7 @@ inline void TrainingImageDatabase::calcVectors(std::size_t sample) const
 			cacheFileName = m_cacheDir.toUtf8() + "/" + QCryptographicHash::hash(imageInfo.url().toLocalFile().toAscii(), QCryptographicHash::Md4).toHex();
 			QImage loadedImg(cacheFileName.constData(), "PNG");
 			if (!loadedImg.isNull()) {
-				m_workingImage = loadedImg;
+				m_workingImage = loadedImg.convertToFormat(QImage::Format_ARGB32);
 				loaded = true;
 			}
 		}
@@ -209,7 +209,9 @@ inline void TrainingImageDatabase::calcVectors(std::size_t sample) const
 		m_workingImage = imageInfo.getImage().scaled(QSize(ImageWidth, ImageHeight));
 	}
 
-	QImage filtredImage = m_globalFilter.filterImage(m_workingImage.scaled(QSize(ImageWidth * 2, ImageHeight * 2), Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
+	QImage wi = m_workingImage.scaled(QSize(ImageWidth * 2, ImageHeight * 2), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+	wi = wi.convertToFormat(QImage::Format_ARGB32);
+	QImage filtredImage = m_globalFilter.filterImage(wi);
 	m_samples[sample].info.clear();
 	m_samples[sample].input = m_localFilter.filterVector(filtredImage.copy(ImageWidth / 2, filtredImage.height() / 4, filtredImage.width() / 2, filtredImage.height() / 2));
 	m_samples[sample].output = LaVectorDouble(1);

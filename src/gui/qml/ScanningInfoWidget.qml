@@ -12,7 +12,7 @@ import QtQuick 1.0
 ProgressTitleItem {
 	property variant scanner: null
 	progress: scanner == null ? 0 : scanner.progress
-	statusText: qsTr("Scanning ...")
+	statusText: qsTr("Scanning")
 	statusExtendedText: ""
 	anchors.fill: parent
 	onProgressChanged: {

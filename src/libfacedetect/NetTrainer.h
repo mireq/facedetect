@@ -28,7 +28,7 @@ Q_OBJECT
 /**
  * Počet epoch učenia neurónovej siete.
  */
-Q_PROPERTY(int numEpoch READ numEpoch WRITE setNumEpoch);
+Q_PROPERTY(int numEpoch READ numEpoch WRITE setNumEpoch NOTIFY numEpochChanged);
 /**
  * Handicap pri nesprávnych pozitívnych výsledkoch.
  */
@@ -121,6 +121,10 @@ signals:
 	 * Signál sa vyšle po výpočte chýb pre určitý počet vzoriek.
 	 */
 	void errorCalculated(std::size_t sample, std::size_t sampleCount, double errorSum);
+	/**
+	 * Signál sa vyšle pri zmene počtu tréningových epoch.
+	 */
+	void numEpochChanged(int numEpoch);
 
 private:
 	using QThread::start;
