@@ -14,10 +14,6 @@
 #include <bzlib.h>
 #include "FaceFileScanner.h"
 
-using std::FILE;
-using std::fopen;
-using std::fclose;
-
 namespace FaceDetect {
 
 bool FaceFileScanner::FaceData::isFrontal() const

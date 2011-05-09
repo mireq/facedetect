@@ -26,7 +26,6 @@
 #include "plugins/QmlFaceDetectPlugin.h"
 #include "QmlWin.h"
 
-#include <QDebug>
 using FaceDetect::Align;
 using FaceDetect::FaceFileScanner;
 using FaceDetect::ImageFileScanner;
@@ -73,7 +72,7 @@ QmlWin::QmlWin(QWidget *parent):
 QmlWin::~QmlWin()
 {
 	saveSettings();
-	m_faceFileScanner->stop();
+	stop();
 }
 
 QString QmlWin::facesPath() const
@@ -280,6 +279,8 @@ void QmlWin::loadSettings()
 	m_settings.beginGroup("paths");
 	m_facesPath = m_settings.value("faces").toString();
 	m_nonFacesPath = m_settings.value("nofaces").toString();
+	m_faceCachePath = m_settings.value("faceCache").toString();
+	m_trainingDatabase->setCacheDir(m_faceCachePath);
 	m_settings.endGroup();
 }
 
@@ -378,7 +379,6 @@ void QmlWin::scanNonFaces()
 
 void QmlWin::trainNet()
 {
-	m_trainingDatabase->shuffle();
 	m_trainer->setTrainingDataReader(m_trainingDatabase);
 	m_trainer->setTrainingSetSize(m_trainingDatabase->trainingSetSize() * (static_cast<double>(m_trainingSetPercent) / 100.0));
 	m_trainer->trainNet(m_neuralNet);

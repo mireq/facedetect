@@ -37,6 +37,18 @@ Q_PROPERTY(int fapsePositiveHandicap READ falsePositiveHandicap WRITE setFalsePo
  * Handicap pri nesprávnych negatívnych výsledkoch.
  */
 Q_PROPERTY(int falseNegativeHandicap READ falseNegativeHandicap WRITE setFalseNegativeHandicap);
+/**
+ * Stav tréningu siete. Ak sa sieť práve trénuje má hodnotu \e true.
+ */
+Q_PROPERTY(bool running READ isRunning NOTIFY runningChanged);
+/**
+ * Stav spracovania aktuálnej epochy.
+ */
+Q_PROPERTY(double epochProgress READ epochProgress NOTIFY epochProgressChanged);
+/**
+ * Poradové číslo aktuálnej epochy.
+ */
+Q_PROPERTY(int epoch READ epoch NOTIFY epochChanged);
 public:
 	struct MatchStat {
 		MatchStat(): threshold(0), falsePositive(0), falseNegative(0) {};
@@ -99,6 +111,18 @@ public:
 	 * Nastavenie handicapu pre nesprávne negatívne výsledky.
 	 */
 	void setFalseNegativeHandicap(int handicap);
+	/**
+	 * Vráti \e true, ak beží trénovanie siete.
+	 */
+	bool isRunning() const;
+	/**
+	 * Vráti stav spracovania epochy.
+	 */
+	double epochProgress() const;
+	/**
+	 * Vráti číslo aktuálnej epochy.
+	 */
+	int epoch() const;
 	TrainingDataReader *trainingDataReader() const;
 	void setTrainingDataReader(TrainingDataReader *reader);
 	void stop();
@@ -125,12 +149,28 @@ signals:
 	 * Signál sa vyšle pri zmene počtu tréningových epoch.
 	 */
 	void numEpochChanged(int numEpoch);
+	/**
+	 * Signál sa vyšle vtedy, keď sa zmení stav trénovania siete.
+	 */
+	void runningChanged(bool running);
+	/**
+	 * Vyšle sa pri zmene priebehu spracovania epochyb.
+	 */
+	void epochProgressChanged(double epochProgress);
+	/**
+	 * Signál sa vyšle pri zmene čísla epochy.
+	 */
+	void epochChanged(int epoch);
+
+private slots:
+	void onStarted();
+	void onFinished();
 
 private:
 	using QThread::start;
 	void run();
 	double calcMse(std::size_t from, std::size_t to, bool binary = false, double *thresholdOut = 0, QVector<MatchStat> *matchStat = 0, long *fNeg = 0, long *fPos = 0, double *mse = 0, long *faces = 0);
-	void calcMseForEpoch(int epoch, std::string &bestNet, double &bestMse, EpochStats &bestEpoch);
+	void calcMseForEpoch(std::string &bestNet, double &bestMse, EpochStats &bestEpoch);
 	void saveNet(std::string &net);
 	void restoreNet(const std::string &net);
 	void exportMseStats(std::size_t count, double errorSum);
@@ -164,6 +204,14 @@ private:
 	int m_falseNegativeHandicap;
 	/// Počet vzoriek, pre ktoré bolo vypočítané MSE.
 	std::size_t m_mseSampleCount;
+	/// Premenná udržiava stav tréningu (trénuje sa / netrénuje sa).
+	bool m_running;
+	/// Priebeh spracovania epochy.
+	double m_epochProgress;
+	/// Počet krokov výpočtu epochy (len pr výpočet priebehu).
+	long m_epochSteps;
+	/// Číslo aktuálnej epochy
+	int m_epoch;
 
 	Q_DISABLE_COPY(NetTrainer)
 }; /* -----  end of class NetTrainer  ----- */

@@ -21,8 +21,8 @@
     <file>Switch.qml</file>
     <file>TabWidget.qml</file>
     <file>TitleWidget.qml</file>
-    <file>TransformationDelegate.qml</file>
     <file>Training.qml</file>
+    <file>TransformationDelegate.qml</file>
     <file>main.qml</file>
     <file>filters/GaborFilterDelegate.qml</file>
     <file>filters/GaborFilterSettings.qml</file>

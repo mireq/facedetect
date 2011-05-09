@@ -119,6 +119,7 @@ private:
 	FaceDetect::ImageFilter m_globalFilter;
 	QString m_facesPath;
 	QString m_nonFacesPath;
+	QString m_faceCachePath;
 	QVariant m_filterSettings;
 	QSettings m_settings;
 	QString m_netType;

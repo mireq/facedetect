@@ -251,7 +251,6 @@ void ConsoleInterface::onNonFaceScanningFinished()
 
 void ConsoleInterface::trainNet()
 {
-	m_trainingDatabase->shuffle();
 	m_trainer = QSharedPointer<FaceDetect::NetTrainer>(new FaceDetect::NetTrainer);
 	m_trainer->setNumEpoch(m_numEpoch);
 	m_trainer->setTrainingDataReader(m_trainingDatabase);

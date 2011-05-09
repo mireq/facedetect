@@ -15,11 +15,18 @@ CentralWindow {
 	property int _cancelButtonTranslate: -tabWidget.topBar.height
 	property bool faceScanning: runtime.faceFileScanner.scanning
 	property bool nonFaceScanning: runtime.nonFaceFileScanner.scanning
-	property bool scanning: faceScanning || nonFaceScanning
+	property bool training: runtime.netTrainer.running
+	property bool running: faceScanning || nonFaceScanning || training
 	property Component scanningInfoComponent: Qt.createComponent("ScanningInfoWidget.qml")
 	property variant neuralNet: runtime.neuralNet
 	property int lineHeight: 32
 
+	Component {
+		id: trainingInfoComponent
+		ProgressTitleItem {
+			anchors.fill: parent
+		}
+	}
 	Component {
 		id: startButtonComponent
 		Item {
@@ -69,6 +76,8 @@ CentralWindow {
 		anchors { fill: parent; margins: 10 }
 		contentWidth: width; contentHeight: childrenRect.height
 		GroupBox {
+			id: settingsGroup
+			clip: true
 			title: qsTr("Settings")
 			closed: false
 			anchors { left: parent.left; right: parent.right }
@@ -194,14 +203,61 @@ CentralWindow {
 		}
 	}
 
-	function openScanningWidget() {
+	Connections {
+		id: netTrainerConnections
+		target: runtime.netTrainer
+		onEpochProgressChanged: netTrainerConnections.updateProgress();
+		onEpochChanged: {
+			netTrainerConnections.updateProgress();
+			if (centralTitleWidget != null) {
+				centralTitleWidget.statusExtendedText = qsTr("Epoch") + " " + epoch;
+			}
+		}
+		function updateProgress() {
+			if (centralTitleWidget != null) {
+				centralTitleWidget.extendedProgress = runtime.netTrainer.epochProgress;
+				if (runtime.netTrainer.epoch >= 1) {
+					var epochStep = 1 / runtime.netTrainer.numEpoch
+					centralTitleWidget.progress = runtime.netTrainer.epochProgress * epochStep + (runtime.netTrainer.epoch - 1) * epochStep;
+				}
+			}
+		}
+	}
+
+	function openProgressWidget() {
 		if (!active) {
 			return;
 		}
-		if (centralTitleWidget == null) {
-			centralTitleWidget = scanningInfoComponent.createObject(tabWidget.topBar);
+		if (centralTitleWidget != null) {
+			if (training) {
+				if (centralTitleWidget.scanner != undefined) {
+					centralTitleWidget.destroy();
+					centralTitleWidget = null;
+				}
+			}
+			else {
+				if (centralTitleWidget.scanner == undefined) {
+					centralTitleWidget.destroy();
+					centralTitleWidget = null;
+				}
+			}
 		}
-		if (faceScanning) {
+
+		if (centralTitleWidget == null) {
+			if (training) {
+				centralTitleWidget = trainingInfoComponent.createObject(tabWidget.topBar);
+			}
+			else {
+				centralTitleWidget = scanningInfoComponent.createObject(tabWidget.topBar);
+			}
+		}
+		if (training) {
+			centralTitleWidget.statusText = qsTr("Training");
+			centralTitleWidget.progressText = qsTr("Overall progress");
+			centralTitleWidget.statusExtendedText = "                "
+			centralTitleWidget.extendedProgress = 0;
+		}
+		else if (faceScanning) {
 			centralTitleWidget.scanner = runtime.faceFileScanner;
 			centralTitleWidget.statusText = qsTr("Scanning faces");
 		}
@@ -218,12 +274,17 @@ CentralWindow {
 	}
 	onFaceScanningChanged: {
 		if (faceScanning) {
-			openScanningWidget();
+			openProgressWidget();
 		}
 	}
 	onNonFaceScanningChanged: {
 		if (nonFaceScanning) {
-			openScanningWidget();
+			openProgressWidget();
+		}
+	}
+	onTrainingChanged: {
+		if (training) {
+			openProgressWidget();
 		}
 	}
 	Component.onCompleted: {
@@ -233,15 +294,15 @@ CentralWindow {
 		numEpoch.value = runtime.netTrainer.numEpoch;
 		learningSpeed.value = runtime.learningSpeed;
 	}
-	onScanningChanged: {
-		if (!scanning) {
+	onRunningChanged: {
+		if (!running) {
 			closeScanningWidget();
 		}
 	}
 	onActiveChanged: {
 		if (active) {
-			if (scanning) {
-				openScanningWidget();
+			if (running) {
+				openProgressWidget();
 			}
 		}
 		else {
@@ -267,19 +328,24 @@ CentralWindow {
 
 	states: [
 		State {
-			name: "default"; when: !scanning
+			name: "default"; when: !running
 			PropertyChanges { target: trainingView; _startButtonTranslate: 0 }
 			PropertyChanges { target: trainingView; _cancelButtonTranslate: -tabWidget.topBar.height }
+			PropertyChanges { target: settingsGroup; height: settingsGroup.baseHeight; opacity: 1 }
 		},
 		State {
-			name: "scanning"; when: scanning
+			name: "running"; when: running && !training
 			PropertyChanges { target: trainingView; _startButtonTranslate: -tabWidget.topBar.height }
 			PropertyChanges { target: trainingView; _cancelButtonTranslate: 0 }
+		},
+		State {
+			name: "training"; when: running && training; extend: "running"
+			PropertyChanges { target: settingsGroup; height: 0; opacity: 0 }
 		}
 	]
 	transitions: [
 		Transition {
-			NumberAnimation { properties: "_startButtonTranslate, _cancelButtonTranslate"; duration: 250; easing.type: Easing.InOutQuad }
+			NumberAnimation { properties: "_startButtonTranslate, _cancelButtonTranslate,height,opacity"; duration: 250; easing.type: Easing.InOutQuad }
 		}
 	]
 }

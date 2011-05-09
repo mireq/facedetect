@@ -18,10 +18,13 @@ QmlQwtPlotWidget::QmlQwtPlotWidget(QGraphicsItem *parent):
 	QwtPlot *plot = new QwtPlot();
 	// Nastavenie priehľadnosti
 	plot->setAttribute(Qt::WA_TranslucentBackground);
+	/*
 	plot->canvas()->setFrameShape(QFrame::NoFrame);
 	plot->setCanvasBackground(Qt::transparent);
-	plot->canvas()->setPaintAttribute(QwtPlotCanvas::PaintCached, false);
+	plot->canvas()->setPaintAttribute(QwtPlotCanvas::BackingStore, false);
 	plot->canvas()->setAutoFillBackground(false);
+	*/
+	plot->setCanvasBackground(Qt::white);
 	setWidget(plot);
 }
 

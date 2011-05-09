@@ -31,6 +31,10 @@ public:
 	explicit TrainingDataReader(QObject *parent = 0);
 	virtual ~TrainingDataReader();
 /**
+ * Zamiešanie vstupných vzoriek.
+ */
+	virtual void shuffle() = 0;
+/**
  * Vráti veľkosť vstupného vektoru
  */
 	virtual int inputVectorSize() const = 0;

@@ -18,7 +18,8 @@ Item {
 	property alias titleLeft: titleLeftItem.children
 	property alias titleRight: titleRightItem.children
 	property bool closed: true
-	height: contentsItem.height + bgImage.border.top + bgImage.border.bottom
+	property int baseHeight: contentsItem.height + bgImage.border.top + bgImage.border.bottom
+	height: baseHeight
 	BorderImage {
 		id: bgImage
 		source: background

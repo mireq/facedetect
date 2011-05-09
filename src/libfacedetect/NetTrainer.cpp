@@ -40,9 +40,15 @@ NetTrainer::NetTrainer(QObject *parent):
 	m_trainingSetSize(0),
 	m_falsePositiveHandicap(50),
 	m_falseNegativeHandicap(1),
-	m_mseSampleCount(0)
+	m_mseSampleCount(0),
+	m_running(false),
+	m_epochProgress(0),
+	m_epochSteps(0)
 {
 	qRegisterMetaType<EpochStats>();
+	connect(this, SIGNAL(finished()), SLOT(onFinished()));
+	connect(this, SIGNAL(terminated()), SLOT(onFinished()));
+	connect(this, SIGNAL(started()), SLOT(onStarted()));
 }
 
 NetTrainer::~NetTrainer()
@@ -92,6 +98,21 @@ int NetTrainer::falseNegativeHandicap() const
 void NetTrainer::setFalseNegativeHandicap(int handicap)
 {
 	m_falseNegativeHandicap = handicap;
+}
+
+bool NetTrainer::isRunning() const
+{
+	return m_running;
+}
+
+double NetTrainer::epochProgress() const
+{
+	return m_epochProgress;
+}
+
+int NetTrainer::epoch() const
+{
+	return m_epoch;
 }
 
 /**
@@ -145,6 +166,29 @@ NetTrainer::EpochStats NetTrainer::bestEpochStats() const
 }
 
 /**
+ * Metóda sa zavolá po spustení tréningu. Vysiela signál runningChanged.
+ */
+void NetTrainer::onStarted()
+{
+	if (!m_running) {
+		m_running = true;
+		emit runningChanged(m_running);
+	}
+}
+
+/**
+ * Metóda sa zavolá pri ukončení tréninguj (vrátane prerušenia). Vysiela signál
+ * runningChanged.
+ */
+void NetTrainer::onFinished()
+{
+	if (m_running) {
+		m_running = false;
+		emit runningChanged(m_running);
+	}
+}
+
+/**
  * Spustenie tréningu. Pri tréningu sa dáta načítavajú pomocou objektu typu
  * TrainingDataReader.
  * \sa setTrainingDataReader, sampleFinished, epochFinished
@@ -154,6 +198,7 @@ void NetTrainer::run()
 	if (m_reader == 0) {
 		return;
 	}
+	m_reader->shuffle();
 	m_net->setInputVectorSize(m_reader->inputVectorSize());
 	m_net->setOutputVectorSize(m_reader->outputVectorSize());
 	{
@@ -185,26 +230,38 @@ void NetTrainer::run()
 	if (trainingSetSize > 4000) {
 		printEvery = trainingSetSize / 4000;
 	}
+	m_epochSteps = trainingSetSize * 2 + m_reader->trainingSetSize();
+	bool stop = false;
 	// V každej tréningovej epoche sa vyšle signál epochFinished
-	for (int epoch = 1; epoch <= m_numEpoch; ++epoch) {
+	for (m_epoch = 1; m_epoch <= m_numEpoch; ++m_epoch) {
+		m_epochProgress = 0;
+		emit epochProgressChanged(m_epochProgress);
+		emit epochChanged(m_epoch);
 		// Pre každú vzorku sa volá trainSample
 		for (std::size_t sample = 0; sample < trainingSetSize; ++sample) {
 			{
 				QMutexLocker lock(&m_stopMutex);
 				if (m_stop) {
-					m_stop = false;
-					return;
+					stop = true;
+					break;
 				}
 			}
 			m_net->trainSample(m_reader->inputVector(sample), m_reader->outputVector(sample));
 			// Každých niekoľko položiek sa vyšle signál sampleFinished
 			if (sample % printEvery == 0) {
-				emit sampleFinished(sample + 1, epoch);
+				emit sampleFinished(sample + 1, m_epoch);
+				m_epochProgress = static_cast<double>(sample * 2) / m_epochSteps;
+				emit epochProgressChanged(m_epochProgress);
 			}
 		}
-		emit sampleFinished(trainingSetSize, epoch);
-		calcMseForEpoch(epoch, bestNet, bestMse, bestEpoch);
+		if (stop) {
+			break;
+		}
+		emit sampleFinished(trainingSetSize, m_epoch);
+		calcMseForEpoch(bestNet, bestMse, bestEpoch);
 	}
+	m_epoch = 0;
+	emit epochChanged(m_epoch);
 	m_mseSampleCount = 0;
 	// Obnovenie najlepších nastavení
 	restoreNet(bestNet);
@@ -243,12 +300,17 @@ double NetTrainer::calcMse(std::size_t from, std::size_t to, bool binary, double
 		double diff = out - expected;
 		partErrorSum += diff * diff;
 		partSampleCount++;
-		if (partSampleCount % 256 == 0) {
+		if (partSampleCount % 128 == 0) {
 			exportMseStats(partSampleCount, partErrorSum);
 			errorSum += partErrorSum;
 			sampleCount += partSampleCount;
 			partErrorSum = 0;
 			partSampleCount = 0;
+
+			// Výpočet priebehu epochy
+			m_epochProgress = static_cast<double>(qMin(m_reader->trainingSetSize(), m_trainingSetSize) * 2 + m_mseSampleCount) / m_epochSteps;
+			emit epochProgressChanged(m_epochProgress);
+
 			QMutexLocker lock(&m_stopMutex);
 			if (m_stop) {
 				return 0;
@@ -340,7 +402,7 @@ double NetTrainer::calcMse(std::size_t from, std::size_t to, bool binary, double
 /**
  * Emitovanie signálov pri ukončení epochy a vrátenie doteraz najlepšej siete.
  */
-void NetTrainer::calcMseForEpoch(int epoch, std::string &bestNet, double &bestMse, EpochStats &bestEpoch)
+void NetTrainer::calcMseForEpoch(std::string &bestNet, double &bestMse, EpochStats &bestEpoch)
 {
 	m_mseSampleCount = 0;
 	long fNegA = 0;
@@ -375,7 +437,7 @@ void NetTrainer::calcMseForEpoch(int epoch, std::string &bestNet, double &bestMs
 
 	m_net->setBinaryThreshold(thresholde);
 	EpochStats stats = bestEpoch;
-	stats.epoch = epoch;
+	stats.epoch = m_epoch;
 	stats.mseA = msea;
 	stats.mseE = msee;
 	stats.mseBinA = msebina;

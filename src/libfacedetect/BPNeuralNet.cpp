@@ -17,7 +17,6 @@
 #include "TrainingDataReader.h"
 #include "BPNeuralNet.h"
 
-#include <QDebug>
 using std::istringstream;
 using std::ostringstream;
 
@@ -40,7 +39,6 @@ BPNeuralNet::~BPNeuralNet()
 
 LaVectorDouble BPNeuralNet::calcOutput(const LaVectorDouble &input)
 {
-	qDebug() << input.rows() << inputVectorSize();
 	// Násobenie matice a vektoru $\vect{u}^{stred} = \matr{W} \times \vect{x}$
 	Blas_Mat_Mat_Mult(m_w, input, m_uStred, false, false);
 	// Výpočet $o_j = \Psi(u_j^{stred})$
