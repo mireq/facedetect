@@ -50,17 +50,17 @@ bool FaceFileScanner::ImageInfo::isValid() const
 /**
  * Vráti URL obrázku.
  */
-QUrl FaceFileScanner::ImageInfo::url() const
+QString FaceFileScanner::ImageInfo::path() const
 {
-	return m_url;
+	return m_path;
 }
 
 /**
  * Vráti URL XML súboru s definovanými informáciami o obrázku.
  */
-QUrl FaceFileScanner::ImageInfo::definitionUrl() const
+QString FaceFileScanner::ImageInfo::definitionPath() const
 {
-	return m_definitionUrl;
+	return m_definitionPath;
 }
 
 /**
@@ -88,7 +88,7 @@ QImage FaceFileScanner::ImageInfo::getImage() const
 	// Formát obrázku, kotrý hľadáme je PNG
 	const char *format = "PNG";
 	QImage ret;
-	QString fileName = m_url.toLocalFile();
+	QString fileName = m_path;
 	QFileInfo fileInfo(fileName);
 
 	// Ak je prípona "png" priamo otvoríme obrázok.
@@ -160,23 +160,23 @@ QVector<FaceFileScanner::ImageInfo> FaceFileScanner::ImageInfo::splitFaces() con
 /**
  * Nastavenie URL súboru z obrázkom.
  */
-void FaceFileScanner::ImageInfo::setUrl(const QUrl &url)
+void FaceFileScanner::ImageInfo::setPath(const QString &path)
 {
-	if (m_url == url) {
+	if (m_path == path) {
 		return;
 	}
-	m_url = url;
+	m_path = path;
 	// Kontrola čitateľnosti súboru
-	QFileInfo fileInfo(m_url.toLocalFile());
+	QFileInfo fileInfo(m_path);
 	m_valid = fileInfo.isReadable();
 }
 
 /**
  * Nastavenie URL s definíciou informácii o fotografii.
  */
-void FaceFileScanner::ImageInfo::setDefinitionUrl(const QUrl &url)
+void FaceFileScanner::ImageInfo::setDefinitionPath(const QString &definitionPath)
 {
-	m_definitionUrl = url;
+	m_definitionPath = definitionPath;
 }
 
 /**
@@ -204,7 +204,7 @@ FaceFileScanner::~FaceFileScanner()
  * Vráti cestu k základnému adresáru.
  * \sa setBasePath()
  */
-QUrl FaceFileScanner::basePath() const
+QString FaceFileScanner::basePath() const
 {
 	return m_basePath;
 }
@@ -214,10 +214,10 @@ QUrl FaceFileScanner::basePath() const
  * definičné súbory sa hľadajú v podadresári "data/ground_truths/xml/".
  * \sa basePath()
  */
-void FaceFileScanner::setBasePath(const QUrl &url)
+void FaceFileScanner::setBasePath(const QString &basePath)
 {
-	m_basePath = url;
-	QStringList path = url.toLocalFile().split("/");
+	m_basePath = basePath;
+	QStringList path = m_basePath.split("/");
 	if (path.size() > 0 && path.last() == "") {
 		path.takeLast();
 	}
@@ -261,7 +261,7 @@ void FaceFileScanner::scanFile(const QString &fileName)
 FaceFileScanner::ImageInfo FaceFileScanner::readFile(const QString &fileName)
 {
 	ImageInfo ret;
-	ret.setDefinitionUrl(QUrl::fromLocalFile(fileName));
+	ret.setDefinitionPath(fileName);
 
 	QFile definitionFile(fileName);
 	QFileInfo definitionFileInfo(fileName);
@@ -312,12 +312,12 @@ FaceFileScanner::ImageInfo FaceFileScanner::readFile(const QString &fileName)
 							state = SubjectState;
 						}
 						if (definitionReader.attributes().hasAttribute("relative")) {
-							QFileInfo inf(basePath().toLocalFile() + "/" + definitionReader.attributes().value("relative").toString());
+							QFileInfo inf(basePath() + "/" + definitionReader.attributes().value("relative").toString());
 							if (inf.isReadable()) {
-								ret.setUrl(inf.absoluteFilePath());
+								ret.setPath(inf.absoluteFilePath());
 							}
 							inf.setFile(inf.absolutePath() + "/" + inf.baseName() + ".png");
-							ret.setUrl(inf.absoluteFilePath());
+							ret.setPath(inf.absoluteFilePath());
 						}
 						break;
 					case SubjectState:

@@ -22,6 +22,8 @@ GroupBox {
 	property variant sourceModel: null
 	property Item listView
 	signal changed()
+	property double _moreOpacity: 0
+	property int _moreHeight: 0
 
 	Component.onCompleted: {
 		lambdaValue.value = model.lambda;
@@ -67,7 +69,7 @@ GroupBox {
 		anchors { left: parent.left; right: parent.right }
 		Loader { sourceComponent: label; Component.onCompleted: item.text = qsTr("Lambda") }
 		Item {
-			width: Math.round(grid.width / 2 - grid.spacing); height: lineHeight
+			width: Math.round(grid.width / 2) - grid.spacing; height: lineHeight
 			SpinBox {
 				id: lambdaValue
 				anchors { verticalCenter: parent.verticalCenter; left: parent.left }
@@ -83,7 +85,7 @@ GroupBox {
 		}
 		Loader { sourceComponent: label; Component.onCompleted: item.text = qsTr("Theta") }
 		Item {
-			width: Math.round(grid.width / 2 - grid.spacing); height: lineHeight
+			width: Math.round(grid.width / 2) - grid.spacing; height: lineHeight
 			SpinBox {
 				id: thetaValue
 				anchors { verticalCenter: parent.verticalCenter; left: parent.left }
@@ -99,7 +101,7 @@ GroupBox {
 		id: gridMore
 		property bool more: moreButton.checked || lambdaValue.value != sigmaValue.value * 2.0
 		columns: 2; spacing: 5
-		height: childrenRect.height + 5
+		height: _moreHeight; opacity: _moreOpacity
 		anchors { left: parent.left; right: parent.right; top: grid.bottom }
 		Loader { sourceComponent: label; Component.onCompleted: item.text = qsTr("Psi") }
 		Item {
@@ -156,11 +158,11 @@ GroupBox {
 		states: [
 			State {
 				name: "open"; when: gridMore.more == true
-				PropertyChanges { target: gridMore; opacity: 1; height: gridMore.childrenRect.height + 5 }
+				PropertyChanges { target: gaborDelegate; _moreOpacity: 1; _moreHeight: gridMore.childrenRect.height + 5 }
 			},
 			State {
 				name: "closed"; when: gridMore.more == false
-				PropertyChanges { target: gridMore; opacity: 0; height: 0 }
+				PropertyChanges { target: gaborDelegate; _moreOpacity: 0; _moreHeight: 0 }
 			}
 		]
 		transitions: [
@@ -168,7 +170,7 @@ GroupBox {
 				SequentialAnimation {
 					PropertyAction { target: gridMore; property: "clip"; value: true }
 					ParallelAnimation {
-						NumberAnimation { properties: "height, opacity"; duration: 200 }
+						NumberAnimation { properties: "_moreHeight, _moreOpacity"; duration: 200 }
 					}
 					PropertyAction { target: gridMore; property: "clip"; value: false }
 				}

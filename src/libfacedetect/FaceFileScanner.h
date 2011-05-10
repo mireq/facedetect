@@ -14,7 +14,6 @@
 #include <QMetaType>
 #include <QPoint>
 #include <QVector>
-#include <QUrl>
 #include "FileScanner.h"
 
 namespace FaceDetect {
@@ -52,25 +51,25 @@ public:
 		ImageInfo();
 		~ImageInfo();
 		bool isValid() const;
-		QUrl url() const;
-		QUrl definitionUrl() const;
+		QString path() const;
+		QString definitionPath() const;
 		FaceDataIterator faceBegin() const;
 		FaceDataIterator faceEnd() const;
 		QImage getImage() const;
 		QVector<ImageInfo> splitFaces() const;
 
 	private:
-		void setUrl(const QUrl &url);
-		void setDefinitionUrl(const QUrl &url);
+		void setPath(const QString &path);
+		void setDefinitionPath(const QString &path);
 		void setFaceData(const QVector<FaceData> &faceData);
 
 	private:
 		/// Čitateľnosť súboru s fotografiou (ak je čitateľný má hodnotu \e true)
 		bool m_valid;
 		/// URL súboru s fotografiou
-		QUrl m_url;
+		QString m_path;
 		/// URL súboru s informácii o fotografii
-		QUrl m_definitionUrl;
+		QString m_definitionPath;
 		/// Dáta s informáciami o tvárach na fotografii
 		QVector<FaceData> m_faceData;
 		friend class FaceFileScanner;
@@ -78,8 +77,8 @@ public:
 
 	explicit FaceFileScanner(QObject *parent = 0);
 	~FaceFileScanner();
-	QUrl basePath() const;
-	void setBasePath(const QUrl &url);
+	QString basePath() const;
+	void setBasePath(const QString &basePath);
 	bool filterFrontal() const;
 	void setFilterFrontal(bool filter);
 	ImageInfo readFile(const QString &fileName);
@@ -108,7 +107,7 @@ private:
 		FaceState         /**< Čítanie dát tváre           */
 	};
 	/// URL základného adresára.
-	QUrl m_basePath;
+	QString m_basePath;
 	/// Filtrovanie fotografií zpredu.
 	bool m_filterFrontal;
 }; /* -----  end of class FaceFileScanner  ----- */

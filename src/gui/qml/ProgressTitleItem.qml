@@ -16,7 +16,14 @@ Item {
 	property string statusText: ""
 	property string statusExtendedText: ""
 	property string progressText: ""
-	property int progressMargin: (extendedStatus.visible && progressText.visible && extendedProgress.visible && progress.visible) ? Math.max(extendedStatus.paintedWidth, progressText.paintedWidth) : 0
+	property int progressMarginSize: 0
+	property bool progressMarginEnabled: statusExtendedText != "" && progressText != ""
+	property int progressMargin: progressMarginEnabled ? progressMarginSize : 0
+	onProgressMarginEnabledChanged: {
+		if (progressMarginEnabled) {
+			progressMarginSize = Math.max(extendedStatus.paintedWidth, progressText.paintedWidth);
+		}
+	}
 	width: 200; height: 50
 	BorderImage {
 		id: bg

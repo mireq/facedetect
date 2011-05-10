@@ -12,6 +12,7 @@ import "../"
 
 GraphicFilterSettings {
 	id: ilSettings
+	property int lineHeight: 32
 	onSettingsChanged: {
 		if (settings != undefined) {
 			if (settings.illuminationPlaneOnly != undefined) {
@@ -24,7 +25,6 @@ GraphicFilterSettings {
 	}
 	Grid {
 		id: grid
-		property int lineHeight: 32
 		property string textColor: "black"
 		y: 5; columns: 2; spacing: 5
 		anchors { left: parent.left; right: parent.right }
@@ -33,11 +33,11 @@ GraphicFilterSettings {
 			color: grid.textColor
 			text: qsTr("Illumination plane only")
 			elide: Text.ElideRight
-			width: grid.width / 2; height: grid.lineHeight
+			width: Math.round(grid.width / 2); height: lineHeight
 			verticalAlignment: Text.AlignVCenter; horizontalAlignment: Text.AlignRight
 		}
 		Item {
-			width: grid.width / 2 - grid.spacing; height: grid.lineHeight
+			width: Math.round(grid.width / 2) - grid.spacing; height: lineHeight
 			Switch {
 				id: illuminationPlaneSwitch
 				anchors { verticalCenter: parent.verticalCenter; left: parent.left }
@@ -53,11 +53,11 @@ GraphicFilterSettings {
 			color: grid.textColor
 			text: qsTr("Correct histogram")
 			elide: Text.ElideRight
-			width: grid.width / 2; height: grid.lineHeight
+			width: Math.round(grid.width / 2); height: lineHeight
 			verticalAlignment: Text.AlignVCenter; horizontalAlignment: Text.AlignRight
 		}
 		Item {
-			width: grid.width / 2 - grid.spacing; height: grid.lineHeight
+			width: Math.round(grid.width / 2) - grid.spacing; height: lineHeight
 			Switch {
 				id: correctHistogramSwitch
 				anchors { verticalCenter: parent.verticalCenter; left: parent.left }

@@ -12,14 +12,21 @@ import QtQuick 1.0
 Item {
 	id: checkSwitch
 	property bool on: false
+	property double switchPos: 0
 	width: offImage.width; height: offImage.height
+
+	function toggleSwitch() {
+		checkSwitch.on = !checkSwitch.on;
+	}
+
 	MouseArea {
 		anchors.fill: parent
 		onClicked: toggleSwitch()
 	}
+
 	Item {
 		id: offItem
-		width: offImage.width - onItem.width
+		width: checkSwitch.width - (checkSwitch.width * switchPos)
 		height: parent.height
 		anchors.right: parent.right
 		Image {
@@ -30,7 +37,7 @@ Item {
 	}
 	Item {
 		id: onItem
-		width: switchImage.x / (offImage.width - switchImage.width) * offImage.width
+		width: checkSwitch.width * switchPos
 		height: parent.height
 		anchors.left: parent.left
 		clip: true
@@ -43,6 +50,9 @@ Item {
 	Image {
 		id: switchImage
 		source: "img/switch.png"
+		onXChanged: {
+			switchPos = x / (checkSwitch.width - switchImage.sourceSize.width);
+		}
 		Text {
 			id: switchText
 			font.pixelSize: 17; font.bold: true
@@ -58,12 +68,8 @@ Item {
 		}
 	}
 
-	function toggleSwitch() {
-		checkSwitch.on = !checkSwitch.on;
-	}
-
 	function releaseSwitch() {
-		if (switchImage.x < (offImage.width - switchImage.width) / 2) {
+		if (switchPos < 0.5) {
 			checkSwitch.on = true;
 		}
 		else {

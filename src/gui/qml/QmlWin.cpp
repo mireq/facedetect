@@ -54,10 +54,12 @@ QmlWin::QmlWin(QWidget *parent):
 	plugin.registerTypes("org.facedetect");
 
 	// Nastavenie OpenGL
+	/*
 	setAttribute(Qt::WA_OpaquePaintEvent);
 	setAttribute(Qt::WA_NoSystemBackground);
 	setViewport(new QGLWidget());
 	setViewportUpdateMode(QGraphicsView::FullViewportUpdate);
+	*/
 	setResizeMode(QDeclarativeView::SizeRootObjectToView);
 
 	m_imageProvider = new FaceImageProvider;

@@ -15,7 +15,7 @@ Item {
 	property variant facesModel: model
 	width: size
 	height: size
-	state: faceImageWrapper.state
+	property alias state: faceImageWrapper.state
 
 	BorderImage {
 		id: imageBorder
@@ -63,7 +63,6 @@ Item {
 				}
 				else if (faceImage.status == Image.Ready) {
 					faceImageWrapper.state = "zoom";
-					main.state = "zoom"
 					controlPointsDisplay.leftEyeX = model.faceData[0].leftEyeX;
 					controlPointsDisplay.leftEyeY = model.faceData[0].leftEyeY;
 					controlPointsDisplay.rightEyeX = model.faceData[0].rightEyeX;

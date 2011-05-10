@@ -8,6 +8,7 @@
  */
 
 import QtQuick 1.0
+import org.facedetect 1.0
 
 CentralWindow {
 	id: trainingView
@@ -20,6 +21,9 @@ CentralWindow {
 	property Component scanningInfoComponent: Qt.createComponent("ScanningInfoWidget.qml")
 	property variant neuralNet: runtime.neuralNet
 	property int lineHeight: 32
+	property string epochText
+
+	CursorArea.cursor: training ? Qt.WaitCursor : (running ? Qt.BusyCursor : Qt.ArrowCursor)
 
 	Component {
 		id: trainingInfoComponent
@@ -201,6 +205,14 @@ CentralWindow {
 				}
 			}
 		}
+		Column {
+			anchors { left: parent.left; right: parent.right; top: settingsGroup.bottom; margins: 5 }
+			spacing: 5
+			PlotWidget {
+				anchors { left: parent.left; right: parent.right }
+				height: trainingView.height / 2 - 20
+			}
+		}
 	}
 
 	Connections {
@@ -209,8 +221,9 @@ CentralWindow {
 		onEpochProgressChanged: netTrainerConnections.updateProgress();
 		onEpochChanged: {
 			netTrainerConnections.updateProgress();
+			epochText = qsTr("Epoch") + " " + epoch;
 			if (centralTitleWidget != null) {
-				centralTitleWidget.statusExtendedText = qsTr("Epoch") + " " + epoch;
+				centralTitleWidget.statusExtendedText = epochText;
 			}
 		}
 		function updateProgress() {
@@ -254,7 +267,10 @@ CentralWindow {
 		if (training) {
 			centralTitleWidget.statusText = qsTr("Training");
 			centralTitleWidget.progressText = qsTr("Overall progress");
-			centralTitleWidget.statusExtendedText = "                "
+			if (epochText == "") {
+				epochText = "           ";
+			}
+			centralTitleWidget.statusExtendedText = epochText;
 			centralTitleWidget.extendedProgress = 0;
 		}
 		else if (faceScanning) {
@@ -264,6 +280,9 @@ CentralWindow {
 		else if (nonFaceScanning) {
 			centralTitleWidget.scanner = runtime.nonFaceFileScanner;
 			centralTitleWidget.statusText = qsTr("Scanning non faces");
+		}
+		if (!training) {
+			epochText = "";
 		}
 	}
 	function closeScanningWidget() {

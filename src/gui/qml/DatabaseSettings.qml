@@ -12,7 +12,9 @@ import org.facedetect 1.0
 
 CentralWindow {
 	id: settingsWindow
+	property int lineHeight: 32
 	anchors.margins: 10
+
 	ListView {
 		id: listView
 		anchors.fill: parent
@@ -32,8 +34,7 @@ CentralWindow {
 				height: childrenRect.height + 10
 				Grid {
 					id : pathSettingsGrid
-					property int lineHeight: 32
-					property string textColor: "black"
+					property color textColor: "black"
 					y: 5
 					columns: 2
 					spacing: 5
@@ -41,14 +42,14 @@ CentralWindow {
 						color: pathSettingsGrid.textColor
 						text: qsTr("Face database path")
 						elide: Text.ElideRight
-						width: pathSettings.width / 3 - pathSettingsGrid.spacing
-						height: pathSettingsGrid.lineHeight
+						width: Math.round(pathSettings.width / 3) - pathSettingsGrid.spacing
+						height: lineHeight
 						verticalAlignment: Text.AlignVCenter; horizontalAlignment: Text.AlignRight
 					}
 					FileSelector {
 						id: facesPathSelector
 						width: pathSettings.width / 3 * 2
-						height: pathSettingsGrid.lineHeight
+						height: lineHeight
 						color: pathSettingsGrid.textColor
 						fileMode: FileChooser.Directory;
 						chooserTitle: qsTr("Select face database path")
@@ -60,15 +61,14 @@ CentralWindow {
 					Text {
 						color: pathSettingsGrid.textColor
 						text: qsTr("Non face path")
-						elide: Text.ElideRight
-						width: pathSettings.width / 3 - pathSettingsGrid.spacing
-						height: pathSettingsGrid.lineHeight
+						width: Math.round(pathSettings.width / 3) - pathSettingsGrid.spacing
+						height: lineHeight
 						verticalAlignment: Text.AlignVCenter; horizontalAlignment: Text.AlignRight
 					}
 					FileSelector {
 						id: nonFacesPathSelector
 						width: pathSettings.width / 3 * 2
-						height: pathSettingsGrid.lineHeight
+						height: lineHeight
 						color: pathSettingsGrid.textColor
 						fileMode: FileChooser.Directory;
 						chooserTitle: qsTr("Select non face path")

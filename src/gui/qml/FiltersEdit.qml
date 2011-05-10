@@ -17,6 +17,7 @@ CentralWindow {
 	property string filterStr
 	property string previewFile
 	property int gaborCount: 1
+	property int previewHeight: (gaborCount == 0 || !gaborSettings.enabled ? 1 : gaborCount) * 255
 
 	ListView {
 		id: listView
@@ -31,6 +32,10 @@ CentralWindow {
 		width: 272
 		anchors { top: parent.top; bottom: parent.bottom; right: parent.right }
 		color: "#dedede"
+		BorderImage {
+			anchors { fill: parent }
+			source: "img/innerbg.sci"
+		}
 		Text {
 			id: previewTitle
 			anchors { left: parent.left; top: parent.top; right: parent.right; topMargin: 10 }
@@ -40,27 +45,28 @@ CentralWindow {
 		}
 		Flickable {
 			clip: true
-			contentWidth: previewBackground.width; contentHeight: previewBackground.height
+			contentWidth: previewBackground.width; contentHeight: previewHeight + 7
 			anchors { horizontalCenter: parent.horizontalCenter; top: previewTitle.bottom; bottom: parent.bottom}
 			width: 262
 			BorderImage {
 				id: previewBackground
-				width: 262; height: previewImage.height + 7
+				//width: 262; height: previewImage.height + 7
+				width: 262; height: previewHeight + 7
 				source: "img/photo_frame.png"
 				border { left: 3; top: 3; right: 4; bottom: 4 }
 				Image {
 					id: previewImage
-					width: 255; height: 255 * (gaborCount == 0 ? 1 : gaborCount)
+					width: 255; height: previewHeight
+					x: 3; y: 3
 					sourceSize.width: 255; sourceSize.height: height
-					anchors.centerIn: parent
 					source: "image://filter/" + filterStr + "|" + previewFile
 					asynchronous: true
 				}
 				Image {
 					id: loadingImage
 					source: "img/photo.png"
-					width: 255; height: previewImage.height
-					anchors.centerIn: parent
+					width: 255; height: previewHeight
+					x: 3; y: 3
 					visible: previewImage.status != Image.Ready
 				}
 				Column {
@@ -168,8 +174,8 @@ CentralWindow {
 					var s = filterSettings;
 					s.gabor = settings;
 					runtime.filterSettings = s;
-					updatePreview();
 					gaborCount = settings.filters.length;
+					updatePreview();
 				}
 			}
 		}

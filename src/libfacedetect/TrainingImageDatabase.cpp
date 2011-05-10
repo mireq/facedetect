@@ -185,7 +185,7 @@ inline void TrainingImageDatabase::calcVectors(std::size_t sample) const
 		QByteArray cacheFileName;
 		bool loaded = false;
 		if (!m_cacheDir.isEmpty()) {
-			cacheFileName = m_cacheDir.toUtf8() + "/" + QCryptographicHash::hash(imageInfo.url().toLocalFile().toAscii(), QCryptographicHash::Md4).toHex();
+			cacheFileName = m_cacheDir.toUtf8() + "/" + QCryptographicHash::hash(imageInfo.path().toAscii(), QCryptographicHash::Md4).toHex();
 			QImage loadedImg(cacheFileName.constData(), "PNG");
 			if (!loadedImg.isNull()) {
 				m_workingImage = loadedImg.convertToFormat(QImage::Format_ARGB32);

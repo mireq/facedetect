@@ -48,7 +48,7 @@ QVariant FaceBrowserModel::data(const QModelIndex &index, int role) const
 	FaceDetect::FaceFileScanner::ImageInfo img = m_files[index.row()];
 	switch (role) {
 		case ImageRole:
-			return QVariant(m_files[index.row()].definitionUrl().toLocalFile());
+			return QVariant(m_files[index.row()].definitionPath());
 		case FaceDataRole: {
 			QList<QVariant> ret;
 			for (auto face = img.faceBegin(); face != img.faceEnd(); ++face) {
@@ -66,7 +66,7 @@ QVariant FaceBrowserModel::data(const QModelIndex &index, int role) const
 			return QVariant(ret);
 		}
 		case DefinitionFileRole: {
-			QFile defFile(m_files[index.row()].definitionUrl().toLocalFile());
+			QFile defFile(m_files[index.row()].definitionPath());
 			defFile.open(QIODevice::ReadOnly);
 			return QString::fromUtf8(defFile.readAll());
 		}

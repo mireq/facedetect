@@ -19,6 +19,9 @@ Item {
 	property alias titleRight: titleRightItem.children
 	property bool closed: true
 	property int baseHeight: contentsItem.height + bgImage.border.top + bgImage.border.bottom
+	property int contentsHeight: contentsItem.childrenRect.height + contentsItem.childrenRect.y
+	property double _contentsOpacity: 0
+	property int _contentsHeight: 0
 	height: baseHeight
 	BorderImage {
 		id: bgImage
@@ -61,21 +64,22 @@ Item {
 		id: contentsItem
 		x: bgImage.border.left; y: bgImage.border.top
 		width: parent.width - bgImage.border.left - bgImage.border.right
-		height: 0; opacity: 0
+		height: _contentsHeight; opacity: _contentsOpacity
+		property int contentsHeight: childrenRect.height + childrenRect.y
 	}
 	states: [
 		State {
 			name: "closed"; when: groupContainer.closed == true
-			PropertyChanges { target: contentsItem; height: 0; opacity: 0 }
+			PropertyChanges { target: groupContainer; _contentsOpacity: 0.0; _contentsHeight: 0 }
 		},
 		State {
 			name: "open"; when: groupContainer.closed == false
-			PropertyChanges { target: contentsItem; height: contentsItem.childrenRect.height + contentsItem.childrenRect.y; opacity: 1 }
+			PropertyChanges { target: groupContainer; _contentsOpacity: 1.0; _contentsHeight: contentsHeight }
 		}
 	]
 	transitions: [
 		Transition {
-			NumberAnimation { properties: "x,y,width,height,opacity"; duration: 250; easing.type: Easing.InOutQuad }
+			NumberAnimation { properties: "x,y,width,height,_contentsOpacity,_contentsHeight"; duration: 250 }
 		}
 	]
 }
