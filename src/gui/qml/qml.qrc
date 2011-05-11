@@ -3,6 +3,7 @@
     <file>CentralWindow.qml</file>
     <file>ControlPointsDisplay.qml</file>
     <file>DatabaseSettings.qml</file>
+    <file>Detection.qml</file>
     <file>ExpandButton.qml</file>
     <file>FaceDatabaseView.qml</file>
     <file>FaceDelegate.qml</file>

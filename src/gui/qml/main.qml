@@ -35,6 +35,10 @@ Item {
 			title: qsTr("Training")
 			anchors.fill: parent
 		}
+		Detection {
+			title: qsTr("Detection")
+			anchors.fill: parent
+		}
 	}
 	Rectangle {
 		id: topBarItem
