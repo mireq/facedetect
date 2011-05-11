@@ -15,7 +15,9 @@ Item {
 	property variant facesModel: model
 	width: size
 	height: size
-	property alias state: faceImageWrapper.state
+	//property alias state: faceImageWrapper.state
+	//property string state: "grid"
+	state: "grid"
 
 	BorderImage {
 		id: imageBorder
@@ -30,7 +32,7 @@ Item {
 	}
 
 	function hide() {
-		faceImageWrapper.state = "grid";
+		state = "grid";
 	}
 
 	Item {
@@ -39,7 +41,6 @@ Item {
 		y: 10
 		width: faceDelegate.size - 20
 		height: faceDelegate.size - 20
-		state: "grid"
 		Item {
 			anchors.fill: parent
 			anchors.margins: 10
@@ -51,6 +52,12 @@ Item {
 				anchors.fill: parent
 			}
 		}
+		Item {
+			id: controlPointsWrapper
+			anchors.fill: parent
+			anchors.margins: 10
+			property alias sourceSize: faceImage.sourceSize
+		}
 		LoadingIndicator {
 			anchors.centerIn: parent
 			running: faceImage.status != Image.Ready
@@ -58,11 +65,11 @@ Item {
 		MouseArea {
 			anchors.fill: parent
 			onClicked: {
-				if (faceImageWrapper.state == "zoom") {
+				if (faceDelegate.state == "zoom") {
 					hide();
 				}
 				else if (faceImage.status == Image.Ready) {
-					faceImageWrapper.state = "zoom";
+					faceDelegate.state = "zoom";
 					controlPointsDisplay.leftEyeX = model.faceData[0].leftEyeX;
 					controlPointsDisplay.leftEyeY = model.faceData[0].leftEyeY;
 					controlPointsDisplay.rightEyeX = model.faceData[0].rightEyeX;
@@ -75,32 +82,32 @@ Item {
 				faceDelegate.GridView.view.currentIndex = index;
 			}
 		}
-		states: [
-			State {
-				name: "grid"; when: faceImageWrapper.state == "grid"
-				ParentChange { target: faceImageWrapper; parent: faceDelegate; x: 10; y: 10; width: faceDelegate.size - 20; height: faceDelegate.size - 20 }
-				ParentChange { target: controlPointsDisplay; parent: faceDetectorForeground }
-			},
-			State {
-				name: "zoom"; when: faceImageWrapper.state == "zoom"
-				ParentChange { target: faceImageWrapper; parent: faceDetectorForeground; x: 0; y: 0; width: faceDetectorForeground.width; height: faceDetectorForeground.height }
-				ParentChange { target: controlPointsDisplay; parent: faceImage }
-			}
-		]
-		transitions: [
-			Transition {
-				ParallelAnimation {
-					ParentAnimation {
-						target: controlPointsDisplay; via: faceImage
-						NumberAnimation { properties: "x,y, width, height"; duration: 250 }
-					}
-					ParentAnimation {
-						target: faceImageWrapper; via: faceDetectorForeground
-						NumberAnimation { properties: "x,y, width, height"; duration: 250 }
-					}
+	}
+	states: [
+		State {
+			name: "grid"; when: state == "grid"
+			ParentChange { target: faceImageWrapper; parent: faceDelegate; x: 10; y: 10; width: faceDelegate.size - 20; height: faceDelegate.size - 20 }
+			ParentChange { target: controlPointsDisplay; parent: faceDetectorForeground }
+		},
+		State {
+			name: "zoom"; when: state == "zoom"
+			ParentChange { target: faceImageWrapper; parent: faceDetectorForeground; x: 0; y: 0; width: faceDetectorForeground.width; height: faceDetectorForeground.height }
+			ParentChange { target: controlPointsDisplay; parent: controlPointsWrapper }
+		}
+	]
+	transitions: [
+		Transition {
+			ParallelAnimation {
+				ParentAnimation {
+					target: controlPointsDisplay; via: controlPointsWrapper
+					NumberAnimation { properties: "x,y, width, height"; duration: 250 }
+				}
+				ParentAnimation {
+					target: faceImageWrapper; via: faceDetectorForeground
+					NumberAnimation { properties: "x,y, width, height"; duration: 250 }
 				}
 			}
-		]
-	}
+		}
+	]
 }
 

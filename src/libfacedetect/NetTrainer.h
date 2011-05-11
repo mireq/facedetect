@@ -30,6 +30,10 @@ Q_OBJECT
  */
 Q_PROPERTY(int numEpoch READ numEpoch WRITE setNumEpoch NOTIFY numEpochChanged);
 /**
+ * Celkový počet vzoriek databázy vsorov.
+ */
+Q_PROPERTY(int sampleCount READ sampleCount NOTIFY sampleCountChanged);
+/**
  * Handicap pri nesprávnych pozitívnych výsledkoch.
  */
 Q_PROPERTY(int fapsePositiveHandicap READ falsePositiveHandicap WRITE setFalsePositiveHandicap);
@@ -87,6 +91,10 @@ public:
 	 * Nastavenie počtu epochu učenia na hodnotu \a numEpoch.
 	 */
 	void setNumEpoch(int numEpoch);
+	/**
+	 * Vráti celkovú veľkosť množiny zdrojov.
+	 */
+	std::size_t sampleCount() const;
 	/**
 	 * Vráti veľkosť tréningovej množiny.
 	 */
@@ -149,6 +157,10 @@ signals:
 	 * Signál sa vyšle pri zmene počtu tréningových epoch.
 	 */
 	void numEpochChanged(int numEpoch);
+	/**
+	 * Signál sa vyšle pri zmene počtu tréningových vzoriek.
+	 */
+	void sampleCountChanged(std::size_t sampleCount);
 	/**
 	 * Signál sa vyšle vtedy, keď sa zmení stav trénovania siete.
 	 */

@@ -70,6 +70,16 @@ void NetTrainer::setNumEpoch(int numEpoch)
 	}
 }
 
+std::size_t NetTrainer::sampleCount() const
+{
+	if (m_reader != 0) {
+		return m_reader->trainingSetSize();
+	}
+	else {
+		return 0;
+	}
+}
+
 std::size_t NetTrainer::trainingSetSize() const
 {
 	return m_trainingSetSize;
@@ -129,6 +139,7 @@ TrainingDataReader *NetTrainer::trainingDataReader() const
 void NetTrainer::setTrainingDataReader(TrainingDataReader *reader)
 {
 	m_reader = reader;
+	emit sampleCountChanged(sampleCount());
 }
 
 /**

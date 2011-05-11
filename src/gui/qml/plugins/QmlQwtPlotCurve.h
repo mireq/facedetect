@@ -42,6 +42,7 @@ signals:
 	void colorChanged(const QColor &color);
 	void xAxisChanged(QmlQwtPlotWidget::Axis axis);
 	void yAxisChanged(QmlQwtPlotWidget::Axis axis);
+	void dataChanged();
 
 private:
 	QSharedPointer<QwtPlotCurve> m_curve;

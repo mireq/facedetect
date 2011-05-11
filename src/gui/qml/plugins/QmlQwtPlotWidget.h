@@ -12,6 +12,7 @@
 
 #include <QDeclarativeListProperty>
 #include <QGraphicsProxyWidget>
+#include <QTimer>
 #include <qwt_plot.h>
 class QmlQwtPlotCurve;
 
@@ -45,9 +46,17 @@ public:
 signals:
 	void titleChanged(const QString &title);
 
+public slots:
+	void update();
+
+private slots:
+	void onUpdateTimeout();
+
 private:
 	QList<QmlQwtPlotCurve*> m_curves;
 	QwtPlot *m_plot;
+	QTimer *m_updateTimer;
+	bool m_updateRequired;
 }; /* -----  end of class QmlQwtPlotWidget  ----- */
 
 #endif /* end of include guard: QMLQWTPLOTWIDGET_G5DFJVX5 */

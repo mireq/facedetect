@@ -76,6 +76,7 @@ signals:
 	void trainingSetPercentChanged(int percent);
 	void learningSpeedChanged(double speed);
 	void epochFinished(int epoch, double mseA, double mseE, double mseBinA, double mseBinE, int sizeA, int sizeE);
+	void errorCalculated(int sample, double mse);
 
 private slots:
 	void imageScanned(const FaceDetect::FaceFileScanner::ImageInfo &img);
@@ -84,6 +85,7 @@ private slots:
 	void onImageScanned(const FaceDetect::FaceFileScanner::ImageInfo &image);
 	void onImageScanned(const LaVectorDouble &input, const LaVectorDouble &output);
 	void onEpochFinished(const FaceDetect::NetTrainer::EpochStats &stats);
+	void onErrorCalculated(std::size_t sample, std::size_t sampleCount, double errorSum);
 
 private:
 	bool containsStep(const QObject *object, const QByteArray &name) const;

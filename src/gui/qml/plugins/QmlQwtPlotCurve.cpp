@@ -32,6 +32,7 @@ void QmlQwtPlotCurve::setColor(const QColor &color)
 	if (m_curve->pen().color() != color) {
 		m_curve->setPen(color);
 		emit colorChanged(color);
+		emit dataChanged();
 	}
 }
 
@@ -45,6 +46,7 @@ void QmlQwtPlotCurve::setXAxis(QmlQwtPlotWidget::Axis axis)
 	if (xAxis() != axis) {
 		m_curve->setXAxis(QmlQwtPlotWidget::qmlAxisToPlot(axis));
 		emit xAxisChanged(axis);
+		emit dataChanged();
 	}
 }
 
@@ -58,6 +60,7 @@ void QmlQwtPlotCurve::setYAxis(QmlQwtPlotWidget::Axis axis)
 	if (yAxis() != axis) {
 		m_curve->setYAxis(QmlQwtPlotWidget::qmlAxisToPlot(axis));
 		emit yAxisChanged(axis);
+		emit dataChanged();
 	}
 }
 
@@ -70,11 +73,13 @@ void QmlQwtPlotCurve::addSample(float x, float y)
 {
 	m_data << QPointF(x, y);
 	m_curve->setSamples(m_data);
+	emit dataChanged();
 }
 
 void QmlQwtPlotCurve::clearSamples()
 {
 	m_data.clear();
 	m_curve->setSamples(m_data);
+	emit dataChanged();
 }
 

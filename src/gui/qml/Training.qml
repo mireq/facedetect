@@ -76,15 +76,22 @@ CentralWindow {
 			}
 		}
 	}
-	Flickable {
-		anchors { fill: parent; margins: 10 }
-		contentWidth: width; contentHeight: settingsGroup.height + graphs.height
+	ListView {
+		id: itemsView
+		anchors.fill: parent
+		model: itemsModel
+		spacing: 10
+		anchors.margins: 10
+		cacheBuffer: 1024
+	}
+	VisualItemModel {
+		id: itemsModel
 		GroupBox {
 			id: settingsGroup
+			width: ListView.view.width
 			clip: true
 			title: qsTr("Settings")
 			closed: false
-			anchors { left: parent.left; right: parent.right }
 			Column {
 				id: settingsColumn
 				height: childrenRect.height + 5; y: 5
@@ -205,24 +212,30 @@ CentralWindow {
 				}
 			}
 		}
-		Column {
-			id: graphs
-			anchors { left: parent.left; right: parent.right; top: settingsGroup.bottom; margins: 5 }
-			height: childrenRect.height
-			spacing: 5
-			Item {
-				anchors { left: parent.left; right: parent.right }
-				height: trainingView.height / 2
-				PlotWidget {
-					id: msePlot
-					title: qsTr("MSE")
-					anchors.fill: parent
-					curves: [
-						PlotCurve {
-							id: mseaCurve
-						}
-					]
-				}
+		Item {
+			width: ListView.view.width
+			height: trainingView.height / 2
+			PlotWidget {
+				id: msePlot
+				property PlotCurve currentEpochCurve: mseaEpochCurveA
+				title: qsTr("MSE")
+				anchors.fill: parent
+				curves: [
+					PlotCurve {
+						id: mseaCurve
+						color: "#ff00ff00"
+					},
+					PlotCurve {
+						id: mseaEpochCurveA
+						xAxis: PlotWidget.XTop
+						color: "#4000ff00"
+					},
+					PlotCurve {
+						id: mseaEpochCurveB
+						xAxis: PlotWidget.XTop
+						color: "#4000ff00"
+					}
+				]
 			}
 		}
 	}
@@ -253,6 +266,17 @@ CentralWindow {
 		target: runtime
 		onEpochFinished: {
 			mseaCurve.addSample(epoch, mseA);
+			if (epoch % 2 == 0) {
+				mseaEpochCurveB.clearSamples();
+				msePlot.currentEpochCurve = mseaEpochCurveB;
+			}
+			else {
+				mseaEpochCurveA.clearSamples();
+				msePlot.currentEpochCurve = mseaEpochCurveA;
+			}
+		}
+		onErrorCalculated: {
+			msePlot.currentEpochCurve.addSample(sample, mse);
 		}
 	}
 
@@ -321,9 +345,13 @@ CentralWindow {
 		}
 	}
 	onTrainingChanged: {
+		mseaEpochCurveA.clearSamples();
+		mseaEpochCurveB.clearSamples();
+		msePlot.currentEpochCurve = mseaEpochCurveB;
 		if (training) {
 			mseaCurve.clearSamples();
 			msePlot.setAxisScale(PlotWidget.XBottom, 0, runtime.netTrainer.numEpoch);
+			msePlot.setAxisScale(PlotWidget.XTop, 0, runtime.netTrainer.sampleCount);
 			openProgressWidget();
 		}
 	}

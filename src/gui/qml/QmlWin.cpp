@@ -264,6 +264,11 @@ void QmlWin::onEpochFinished(const FaceDetect::NetTrainer::EpochStats &stats)
 	emit epochFinished(stats.epoch, stats.mseA, stats.mseE, stats.mseBinA, stats.mseBinE, int(stats.sizeA), int(stats.sizeE));
 }
 
+void QmlWin::onErrorCalculated(std::size_t sample, std::size_t sampleCount, double errorSum)
+{
+	emit errorCalculated(int(sample), errorSum / static_cast<double>(sampleCount));
+}
+
 void QmlWin::onImageScanned(const LaVectorDouble &input, const LaVectorDouble &output)
 {
 	m_trainingDatabase->addImage(input, output);
@@ -355,6 +360,7 @@ void QmlWin::createNetTrainer()
 	m_trainer = QSharedPointer<FaceDetect::NetTrainer>(new FaceDetect::NetTrainer);
 	m_trainer->setNumEpoch(100);
 	connect(m_trainer.data(), SIGNAL(epochFinished(FaceDetect::NetTrainer::EpochStats)), this, SLOT(onEpochFinished(FaceDetect::NetTrainer::EpochStats)));
+	connect(m_trainer.data(), SIGNAL(errorCalculated(std::size_t,std::size_t,double)), this, SLOT(onErrorCalculated(std::size_t,std::size_t,double)));
 }
 
 void QmlWin::updateFilters()

@@ -13,10 +13,15 @@
 #include "QmlQwtPlotWidget.h"
 
 QmlQwtPlotWidget::QmlQwtPlotWidget(QGraphicsItem *parent):
-	QGraphicsProxyWidget(parent)
+	QGraphicsProxyWidget(parent),
+	m_updateRequired(false)
 {
 	m_plot = new QwtPlot();
-	m_plot->setAutoReplot(true);
+
+	m_updateTimer = new QTimer(this);
+	m_updateTimer->setSingleShot(true);
+	connect(m_updateTimer, SIGNAL(timeout()), SLOT(onUpdateTimeout()));
+
 	// Nastavenie priehľadnosti
 	m_plot->setAttribute(Qt::WA_TranslucentBackground);
 	/*
@@ -63,6 +68,7 @@ void QmlQwtPlotWidget::curveAppend(QDeclarativeListProperty<QmlQwtPlotCurve> *pr
 {
 	QmlQwtPlotWidget *w(static_cast<QmlQwtPlotWidget *>(property->object));
 	value->curve()->attach(w->m_plot);
+	connect(value, SIGNAL(dataChanged()), w, SLOT(update()));
 	w->m_curves.append(value);
 }
 
@@ -82,6 +88,7 @@ void QmlQwtPlotWidget::curveClear(QDeclarativeListProperty<QmlQwtPlotCurve> *pro
 {
 	QmlQwtPlotWidget *w(static_cast<QmlQwtPlotWidget *>(property->object));
 	foreach (QmlQwtPlotCurve *curve, w->m_curves) {
+		disconnect(curve, SIGNAL(dataChanged()), w, SLOT(update()));
 		curve->curve()->detach();
 	}
 	w->m_curves.clear();
@@ -116,6 +123,25 @@ QmlQwtPlotWidget::Axis QmlQwtPlotWidget::plotAxisToQml(QwtPlot::Axis axis)
 			return XTop;
 		default:
 			return YLeft;
+	}
+}
+
+void QmlQwtPlotWidget::update()
+{
+	if (m_updateTimer->isActive()) {
+		m_updateRequired = true;
+	}
+	else {
+		m_plot->replot();
+		m_updateTimer->start(100);
+	}
+}
+
+void QmlQwtPlotWidget::onUpdateTimeout()
+{
+	if (m_updateRequired) {
+		m_updateRequired = false;
+		m_plot->replot();
 	}
 }
 
