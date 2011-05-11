@@ -16,6 +16,7 @@
 #include <QGLWidget>
 #include <QKeySequence>
 #include <QMetaObject>
+#include <QPalette>
 #include <QSettings>
 #include <QUrl>
 #include "libfacedetect/BPNeuralNet.h"
@@ -37,6 +38,12 @@ QmlWin::QmlWin(QWidget *parent):
 	m_trainingSetPercent(80),
 	m_learningSpeed(1)
 {
+	QPalette pal = palette();
+	pal.setColor(QPalette::Window, Qt::white);
+	pal.setColor(QPalette::Base, Qt::white);
+	pal.setColor(QPalette::Text, Qt::black);
+	setPalette(pal);
+
 	qRegisterMetaType<std::size_t>("std::size_t");
 	qRegisterMetaType<LaVectorDouble>("LaVectorDouble");
 

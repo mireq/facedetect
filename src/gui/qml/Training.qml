@@ -218,24 +218,56 @@ CentralWindow {
 			PlotWidget {
 				id: msePlot
 				property PlotCurve currentEpochCurve: mseaEpochCurveA
+				property double minimum: 0.1
+				property double maximum: 1
 				title: qsTr("MSE")
 				anchors.fill: parent
 				curves: [
 					PlotCurve {
 						id: mseaCurve
-						color: "#ff00ff00"
+						color: "#cc008000"
+						title: qsTr("MSE<sub>A</sub>")
+						penStyle: Qt.DashLine
+					},
+					PlotCurve {
+						id: mseeCurve
+						color: "#ccaa0000"
+						title: qsTr("MSE<sub>E</sub>")
+						penStyle: Qt.DashLine
+					},
+					PlotCurve {
+						id: mseaBinCurve
+						color: "#ff008000"
+						title: qsTr("MSE<sub>A</sub><sup>bin</sup>")
+					},
+					PlotCurve {
+						id: mseeBinCurve
+						color: "#ffaa0000"
+						title: qsTr("MSE<sub>E</sub><sup>bin</sup>")
 					},
 					PlotCurve {
 						id: mseaEpochCurveA
 						xAxis: PlotWidget.XTop
 						color: "#4000ff00"
+						legendVisible: false
 					},
 					PlotCurve {
 						id: mseaEpochCurveB
 						xAxis: PlotWidget.XTop
 						color: "#4000ff00"
+						legendVisible: false
 					}
 				]
+				Component.onCompleted: {
+					setAxisScale(PlotWidget.YLeft, minimum, maximum);
+					msePlot.setAxisScaleEngine(PlotWidget.YLeft, PlotWidget.Log10ScaleEngine);
+				}
+				onMinimumChanged: {
+					setAxisScale(PlotWidget.YLeft, minimum, maximum);
+				}
+				onMaximumChanged: {
+					setAxisScale(PlotWidget.YLeft, minimum, maximum);
+				}
 			}
 		}
 	}
@@ -266,6 +298,20 @@ CentralWindow {
 		target: runtime
 		onEpochFinished: {
 			mseaCurve.addSample(epoch, mseA);
+			mseeCurve.addSample(epoch, mseE);
+			var plotMin = 0.00000001;
+			var binA = Math.max(mseBinA, plotMin);
+			var binE = Math.max(mseBinE, plotMin);
+			mseaBinCurve.addSample(epoch, binA);
+			mseeBinCurve.addSample(epoch, binE);
+			if (mseA < msePlot.minimum) msePlot.minimum = mseA;
+			if (mseA > msePlot.maximum) msePlot.maximum = mseA;
+			if (mseE < msePlot.minimum) msePlot.minimum = mseE;
+			if (mseE > msePlot.maximum) msePlot.maximum = mseE;
+			if (mseBinA < msePlot.minimum) msePlot.minimum = binA;
+			if (mseBinA > msePlot.maximum) msePlot.maximum = mseBinA;
+			if (mseBinE < msePlot.minimum) msePlot.minimum = binE;
+			if (mseBinE > msePlot.maximum) msePlot.maximum = mseBinE;
 			if (epoch % 2 == 0) {
 				mseaEpochCurveB.clearSamples();
 				msePlot.currentEpochCurve = mseaEpochCurveB;
@@ -276,6 +322,8 @@ CentralWindow {
 			}
 		}
 		onErrorCalculated: {
+			if (mse < msePlot.minimum) msePlot.minimum = mse
+			if (mse > msePlot.maximum) msePlot.maximum = mse
 			msePlot.currentEpochCurve.addSample(sample, mse);
 		}
 	}
@@ -349,7 +397,12 @@ CentralWindow {
 		mseaEpochCurveB.clearSamples();
 		msePlot.currentEpochCurve = mseaEpochCurveB;
 		if (training) {
+			msePlot.minimum = 0.1
+			msePlot.maximum = 1.0
 			mseaCurve.clearSamples();
+			mseeCurve.clearSamples();
+			mseaBinCurve.clearSamples();
+			mseeBinCurve.clearSamples();
 			msePlot.setAxisScale(PlotWidget.XBottom, 0, runtime.netTrainer.numEpoch);
 			msePlot.setAxisScale(PlotWidget.XTop, 0, runtime.netTrainer.sampleCount);
 			openProgressWidget();

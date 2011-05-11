@@ -7,8 +7,10 @@
  * =====================================================================
  */
 
+#include <qwt_legend.h>
 #include <qwt_plot_canvas.h>
 #include <qwt_plot_curve.h>
+#include <qwt_scale_engine.h>
 #include "QmlQwtPlotCurve.h"
 #include "QmlQwtPlotWidget.h"
 
@@ -16,16 +18,31 @@ QmlQwtPlotWidget::QmlQwtPlotWidget(QGraphicsItem *parent):
 	QGraphicsProxyWidget(parent),
 	m_updateRequired(false)
 {
+	m_scaleEngine.resize(4);
+	for (int scale = 0; scale < 4; ++scale) {
+		m_scaleEngine[scale] = LinearScaleEngine;
+	}
+
 	m_plot = new QwtPlot();
 
+	// Zmena palety
+	QPalette pal = m_plot->palette();
+	pal.setColor(QPalette::Window, Qt::white);
+	m_plot->setPalette(pal);
+
+	// Vytvorenie legendy
+	m_legend = new QwtLegend();
+	m_plot->insertLegend(m_legend, QwtPlot::RightLegend);
+
+	// Časovač aktualizácie
 	m_updateTimer = new QTimer(this);
 	m_updateTimer->setSingleShot(true);
 	connect(m_updateTimer, SIGNAL(timeout()), SLOT(onUpdateTimeout()));
 
 	// Nastavenie priehľadnosti
 	m_plot->setAttribute(Qt::WA_TranslucentBackground);
+	m_plot->canvas()->setFrameStyle(QFrame::Plain | QFrame::StyledPanel);
 	/*
-	plot->canvas()->setFrameShape(QFrame::NoFrame);
 	plot->setCanvasBackground(Qt::transparent);
 	plot->canvas()->setPaintAttribute(QwtPlotCanvas::BackingStore, false);
 	plot->canvas()->setAutoFillBackground(false);
@@ -54,6 +71,27 @@ void QmlQwtPlotWidget::setTitle(const QString &title)
 	}
 }
 
+QmlQwtPlotWidget::AxisScaleEngine QmlQwtPlotWidget::axisScaleEngine(QmlQwtPlotWidget::Axis axis) const
+{
+	return m_scaleEngine[axis];
+}
+
+void QmlQwtPlotWidget::setAxisScaleEngine(QmlQwtPlotWidget::Axis axis, QmlQwtPlotWidget::AxisScaleEngine newScaleEngine)
+{
+	if (axisScaleEngine(axis) != newScaleEngine) {
+		m_scaleEngine[axis] = newScaleEngine;
+		QwtPlot::Axis plotAxis = qmlAxisToPlot(axis);
+		switch (newScaleEngine) {
+			case LinearScaleEngine:
+				m_plot->setAxisScaleEngine(plotAxis, new QwtLinearScaleEngine());
+				break;
+			case Log10ScaleEngine:
+				m_plot->setAxisScaleEngine(plotAxis, new QwtLog10ScaleEngine());
+				break;
+		}
+	}
+}
+
 void QmlQwtPlotWidget::setAxisScale(Axis axis, double min, double max, double stepSize)
 {
 	m_plot->setAxisScale(qmlAxisToPlot(axis), min, max, stepSize);
@@ -68,8 +106,12 @@ void QmlQwtPlotWidget::curveAppend(QDeclarativeListProperty<QmlQwtPlotCurve> *pr
 {
 	QmlQwtPlotWidget *w(static_cast<QmlQwtPlotWidget *>(property->object));
 	value->curve()->attach(w->m_plot);
-	connect(value, SIGNAL(dataChanged()), w, SLOT(update()));
 	w->m_curves.append(value);
+	if (!value->legendVisible()) {
+		w->onLegendVisibleChanged();
+	}
+	connect(value, SIGNAL(dataChanged()), w, SLOT(update()));
+	connect(value, SIGNAL(legendVisibleChanged(bool)), w, SLOT(onLegendVisibleChanged()));
 }
 
 int QmlQwtPlotWidget::curveCount(QDeclarativeListProperty<QmlQwtPlotCurve> *property)
@@ -133,7 +175,7 @@ void QmlQwtPlotWidget::update()
 	}
 	else {
 		m_plot->replot();
-		m_updateTimer->start(100);
+		m_updateTimer->start(250);
 	}
 }
 
@@ -142,6 +184,14 @@ void QmlQwtPlotWidget::onUpdateTimeout()
 	if (m_updateRequired) {
 		m_updateRequired = false;
 		m_plot->replot();
+	}
+}
+
+void QmlQwtPlotWidget::onLegendVisibleChanged()
+{
+	foreach (QmlQwtPlotCurve *plotCurve, m_curves) {
+		QWidget *legendItem = m_legend->find(plotCurve->curve());
+		legendItem->setVisible(plotCurve->legendVisible());
 	}
 }
 
