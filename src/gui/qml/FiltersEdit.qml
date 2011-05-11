@@ -114,6 +114,7 @@ CentralWindow {
 	Component.onCompleted: {
 		reloadSettings();
 	}
+	onFilterSettingsChanged: reloadSettings();
 	function reloadSettings() {
 		grayscaleSettings.settings = runtime.filterSettings.grayscale;
 		illuminationSettings.settings = runtime.filterSettings.illumination;

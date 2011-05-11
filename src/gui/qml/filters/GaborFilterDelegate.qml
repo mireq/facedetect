@@ -89,7 +89,7 @@ GroupBox {
 			SpinBox {
 				id: thetaValue
 				anchors { verticalCenter: parent.verticalCenter; left: parent.left }
-				minValue: 0; maxValue: 360; step: 15
+				minValue: 0; maxValue: 360; step: 15; decimals: 5
 				onValueChanged: {
 					sourceModel.setProperty(index, "theta", value);
 					gaborDelegate.changed();

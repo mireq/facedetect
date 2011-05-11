@@ -85,6 +85,10 @@ public:
 		ar & boost::serialization::make_nvp("binaryThreshold", m_binaryThreshold);
 	};
 	static NeuralNet *create(const std::string &type, QObject *parent = 0);
+	/**
+	 * Vráti názov typu siete.
+	 */
+	virtual QString netType() const = 0;
 
 protected:
 	/**

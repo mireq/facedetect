@@ -45,6 +45,7 @@ public:
 	 * Nastavenie počtu neurónov v prvej skrytej vrstve.
 	 */
 	void setS1Neuronov(int neuronov);
+	virtual QString netType() const;
 
 signals:
 	void s1NeuronovChanged(int neuronov);

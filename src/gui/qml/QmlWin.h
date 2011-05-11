@@ -62,6 +62,8 @@ public:
 	Q_INVOKABLE QString encodeFilterString() const;
 	Q_INVOKABLE void startTraining();
 	Q_INVOKABLE void stop();
+	Q_INVOKABLE void saveNet(const QString &saveFileName);
+	Q_INVOKABLE void loadNet(const QString &loadFileName);
 
 signals:
 	void facesPathChanged(const QString &url);

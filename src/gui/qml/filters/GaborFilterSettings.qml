@@ -20,6 +20,17 @@ GraphicFilterSettings {
 		}
 		initialization = false;
 	}
+	onSettingsChanged: {
+		if (initialization) {
+			return;
+		}
+		initialization = true;
+		filtersModel.clear();
+		for (var filter = 0; filter < settings.filters.length; ++filter) {
+			filtersModel.append(settings.filters[filter]);
+		}
+		initialization = false;
+	}
 
 	Column {
 		id: gaborFiltersView
@@ -69,9 +80,11 @@ GraphicFilterSettings {
 					filterList[filter]["gamma"] = obj.gamma;
 					filterList[filter]["lum"] = obj.lum;
 				}
+				initialization = true;
 				var tmp = settings;
 				tmp.filters = filterList;
 				settings = tmp;
+				initialization = false;
 			}
 		}
 		/*move: Transition {

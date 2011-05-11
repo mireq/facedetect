@@ -169,6 +169,11 @@ void FaceStructuredNet::setS1Neuronov(int neuronov)
 	}
 }
 
+QString FaceStructuredNet::netType() const
+{
+	return "fs";
+}
+
 } /* end of namespace FaceDetectt */
 
 BOOST_CLASS_EXPORT_GUID(FaceDetect::FaceStructuredNet, "FaceDetect::FaceStructuredNet")

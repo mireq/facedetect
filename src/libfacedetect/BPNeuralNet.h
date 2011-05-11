@@ -42,6 +42,7 @@ public:
 	 * Nastavenie počtu neurónov v strednej vrstve.
 	 */
 	void setStredNeuronov(int neuronov);
+	virtual QString netType() const;
 
 signals:
 	void stredNeuronovChanged(int stredNeuronov);

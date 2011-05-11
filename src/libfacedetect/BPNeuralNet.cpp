@@ -103,6 +103,11 @@ void BPNeuralNet::setStredNeuronov(int neuronov)
 	}
 }
 
+QString BPNeuralNet::netType() const
+{
+	return "bp";
+}
+
 } /* end of namespace FaceDetect */
 
 BOOST_CLASS_EXPORT_GUID(FaceDetect::BPNeuralNet, "FaceDetect::BPNeuralNet")

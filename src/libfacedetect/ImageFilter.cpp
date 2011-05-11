@@ -333,7 +333,7 @@ QVariant ImageFilter::filterData() const
 		QVariantMap gaborVarParams;
 		FaceDetect::GaborFilter::GaborParameters gaborParams = filter.gaborParameters();
 		gaborVarParams["lambda"] = gaborParams.lambda;
-		gaborVarParams["theta"] = gaborParams.theta;
+		gaborVarParams["theta"] = qRound(gaborParams.theta * 180.0 / boost::math::constants::pi<double>() * 10.0) / 10.0;
 		gaborVarParams["psi"] = gaborParams.psi;
 		gaborVarParams["sigma"] = gaborParams.sigma;
 		gaborVarParams["gamma"] = gaborParams.gamma;

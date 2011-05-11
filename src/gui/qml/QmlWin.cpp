@@ -7,15 +7,22 @@
  * =====================================================================
  */
 
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/serialization/base_object.hpp>
+#include <boost/serialization/nvp.hpp>
+#include <fstream>
 #include <QAction>
 #include <QApplication>
 #include <QBuffer>
+#include <QByteArray>
 #include <QDataStream>
 #include <QDeclarativeContext>
 #include <QDeclarativeEngine>
 #include <QGLWidget>
 #include <QKeySequence>
 #include <QMetaObject>
+#include <QMessageBox>
 #include <QPalette>
 #include <QSettings>
 #include <QUrl>
@@ -244,6 +251,51 @@ void QmlWin::stop()
 	m_faceFileScanner->stop();
 	m_nonFaceFileScanner->stop();
 	m_trainer->stop();
+}
+
+void QmlWin::saveNet(const QString &saveFileName)
+{
+	stop();
+	QByteArray fileName = saveFileName.toUtf8();
+	std::ofstream ofs(fileName.constData());
+	if (ofs.is_open()) {
+		boost::archive::text_oarchive oa(ofs);
+		const FaceDetect::NeuralNet *net = m_neuralNet;
+		FaceDetect::ImageFilter filter = m_globalFilter;
+		filter.mergeLocalFilter(m_localFilter);
+		oa << boost::serialization::make_nvp("filter", filter);
+		oa << boost::serialization::make_nvp("net", net);
+	}
+}
+
+void QmlWin::loadNet(const QString &loadFileName)
+{
+	stop();
+	QByteArray fileName = loadFileName.toUtf8();
+	std::ifstream ifs(fileName.constData());
+	if (ifs.is_open()) {
+		try {
+			boost::archive::text_iarchive ia(ifs);
+			FaceDetect::NeuralNet *net = 0;
+			FaceDetect::ImageFilter filter;
+			ia >> boost::serialization::make_nvp("filter", filter);
+			ia >> boost::serialization::make_nvp("net", net);
+			m_globalFilter = filter.globalPart();
+			m_localFilter = filter.localPart();
+			m_neuralNet = net;
+			emit neuralNetChanged(net);
+			m_neuralNets[net->netType()] = QSharedPointer<FaceDetect::NeuralNet>(net);
+			m_netType = m_neuralNet->netType();
+			emit netTypeChanged(m_netType);
+			if (m_filterSettings != filter.filterData()) {
+				m_filterSettings = filter.filterData();
+				emit filterSettingsChanged(m_filterSettings);
+			}
+		}
+		catch(boost::archive::archive_exception&) {
+			QMessageBox::warning(this, tr("Bad format"), tr("Bad net format"));
+		}
+	}
 }
 
 void QmlWin::imageScanned(const FaceDetect::FaceFileScanner::ImageInfo &img)

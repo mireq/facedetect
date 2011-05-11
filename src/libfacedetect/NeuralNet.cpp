@@ -80,15 +80,14 @@ void NeuralNet::setOutputVectorSize(int size)
  */
 NeuralNet *NeuralNet::create(const std::string &type, QObject *parent)
 {
+	NeuralNet *net = 0;
 	if (type == "bp") {
-		return new BPNeuralNet(parent);
+		net = new BPNeuralNet(parent);
 	}
 	else if (type == "fs") {
-		return new FaceStructuredNet(parent);
+		net = new FaceStructuredNet(parent);
 	}
-	else {
-		return 0;
-	}
+	return net;
 }
 
 /**

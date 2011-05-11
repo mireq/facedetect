@@ -210,6 +210,40 @@ CentralWindow {
 						}
 					}
 				}
+				Row {
+					spacing: 5; height: childrenRect.height
+					Loader { sourceComponent: label; Component.onCompleted: item.text = qsTr("Manage") }
+					PushButton {
+						width: Math.round((settingsColumn.width / 2 - s1NeuronRow.spacing) / 2); height: lineHeight
+						text: qsTr("Load")
+						onClicked: {
+							if (loadFileChooser.selectFile()) {
+								runtime.stop();
+								runtime.loadNet(loadFileChooser.selectedFile);
+							}
+						}
+						FileChooser {
+							id: loadFileChooser
+							fileMode: FileChooser.ExistingFile
+							acceptMode: FileChooser.AcceptOpen
+						}
+					}
+					PushButton {
+						width: Math.round((settingsColumn.width / 2 - s1NeuronRow.spacing) / 2); height: lineHeight
+						text: qsTr("Save")
+						onClicked: {
+							if (saveFileChooser.selectFile()) {
+								runtime.stop();
+								runtime.saveNet(saveFileChooser.selectedFile);
+							}
+						}
+						FileChooser {
+							id: saveFileChooser
+							fileMode: FileChooser.AnyFile
+							acceptMode: FileChooser.AcceptSave
+						}
+					}
+				}
 			}
 		}
 		Item {
