@@ -21,7 +21,7 @@ endif(CMAKE_BUILD_TYPE MATCHES Debug)
 
 #configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/src/config.h)
 
-find_package(Qt4 4.5 COMPONENTS QtCore QtDeclarative QtGui QtOpengl QtSvg QtXml REQUIRED)
+find_package(Qt4 4.7 COMPONENTS QtCore QtDeclarative QtGui QtOpengl QtSvg QtXml QtXmlPatterns REQUIRED)
 find_package(BZip2 REQUIRED)
 find_package(PkgConfig REQUIRED)
 find_package(Boost 1.32.0 COMPONENTS serialization)
@@ -32,6 +32,7 @@ set(QT_USE_DECLARATIVE 1)
 set(QT_USE_SVG 1)
 set(QT_USE_OPENGL 1)
 set(QT_USE_XML 1)
+set(QT_USE_XMLPATTERNS 1)
 
 include(${QT_USE_FILE})
 
@@ -77,6 +78,7 @@ set(facedetect_SRCS
 	src/gui/qml/plugins/QmlFaceDetectPlugin.cpp
 	src/gui/qml/plugins/QmlFaceDetectPlugin.cpp
 	src/gui/qml/plugins/QmlFileChooser.cpp
+	src/gui/qml/plugins/QmlQwtPlotCurve.cpp
 	src/gui/qml/plugins/QmlQwtPlotWidget.cpp
 )
 
@@ -111,6 +113,7 @@ set(facedetect_MOC_HDRS
 	src/gui/qml/plugins/QmlCursorArea.h
 	src/gui/qml/plugins/QmlFaceDetectPlugin.h
 	src/gui/qml/plugins/QmlFileChooser.h
+	src/gui/qml/plugins/QmlQwtPlotCurve.h
 	src/gui/qml/plugins/QmlQwtPlotWidget.h
 	src/gui/qml/QmlWin.h
 )

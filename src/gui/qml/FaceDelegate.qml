@@ -72,7 +72,7 @@ Item {
 					controlPointsDisplay.mouthX = model.faceData[0].mouthX;
 					controlPointsDisplay.mouthY = model.faceData[0].mouthY;
 				}
-				GridView.view.currentIndex = index;
+				faceDelegate.GridView.view.currentIndex = index;
 			}
 		}
 		states: [

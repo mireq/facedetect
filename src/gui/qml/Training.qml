@@ -78,7 +78,7 @@ CentralWindow {
 	}
 	Flickable {
 		anchors { fill: parent; margins: 10 }
-		contentWidth: width; contentHeight: childrenRect.height
+		contentWidth: width; contentHeight: settingsGroup.height + graphs.height
 		GroupBox {
 			id: settingsGroup
 			clip: true
@@ -206,11 +206,23 @@ CentralWindow {
 			}
 		}
 		Column {
+			id: graphs
 			anchors { left: parent.left; right: parent.right; top: settingsGroup.bottom; margins: 5 }
+			height: childrenRect.height
 			spacing: 5
-			PlotWidget {
+			Item {
 				anchors { left: parent.left; right: parent.right }
-				height: trainingView.height / 2 - 20
+				height: trainingView.height / 2
+				PlotWidget {
+					id: msePlot
+					title: qsTr("MSE")
+					anchors.fill: parent
+					curves: [
+						PlotCurve {
+							id: mseaCurve
+						}
+					]
+				}
 			}
 		}
 	}
@@ -234,6 +246,13 @@ CentralWindow {
 					centralTitleWidget.progress = runtime.netTrainer.epochProgress * epochStep + (runtime.netTrainer.epoch - 1) * epochStep;
 				}
 			}
+		}
+	}
+	Connections {
+		id: runtimeConnections
+		target: runtime
+		onEpochFinished: {
+			mseaCurve.addSample(epoch, mseA);
 		}
 	}
 
@@ -303,6 +322,8 @@ CentralWindow {
 	}
 	onTrainingChanged: {
 		if (training) {
+			mseaCurve.clearSamples();
+			msePlot.setAxisScale(PlotWidget.XBottom, 0, runtime.netTrainer.numEpoch);
 			openProgressWidget();
 		}
 	}

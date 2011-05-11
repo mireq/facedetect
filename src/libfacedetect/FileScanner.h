@@ -167,13 +167,13 @@ private:
  * Položka zásobnika skenovania.
  */
 	struct ScanStackItem {
-		QString directory;
-		double progressMin;
-		double progressMax;
-		bool scanned;
-		int dirCount;
-		int fileCount;
-		QList<QFileInfo> files;
+		QString directory;      /**< Skenovaný adresár.                      */
+		double progressMin;     /**< Minimálna hodnota ukazovateľa priebeu.  */
+		double progressMax;     /**< Maximálna hodnota ukazovateľa priebehu. */
+		bool scanned;           /**< Indikáto ukončenia skenovania dresára.  */
+		int dirCount;           /**< Počet podadresárov v adresári.          */
+		int fileCount;          /**< Počet súborov v adresári.               */
+		QList<QFileInfo> files; /**< Zoznmám zostávajúcich súborov.          */
 	};
 /**
  * Spustenie skenovania.

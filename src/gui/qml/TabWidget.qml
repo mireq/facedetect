@@ -65,7 +65,7 @@ Item {
 			MouseArea {
 				anchors.fill: parent
 				onClicked: {
-					ListView.view.currentIndex = index;
+					tabDelegateItem.ListView.view.currentIndex = index;
 				}
 			}
 			states:
@@ -76,7 +76,7 @@ Item {
 			transitions:
 				Transition {
 					NumberAnimation { properties: "width"; duration: 150; easing.type: Easing.InQuad }
-				}
+			}
 		}
 	}
 
