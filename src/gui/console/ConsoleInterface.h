@@ -43,6 +43,7 @@ private slots:
 
 	void startTraining();
 	void detectFaces();
+	void saveNeuralNet();
 
 	void scanFaceDatabase();
 	void scanNonFaceDatabase();
@@ -70,7 +71,6 @@ private:
 	double getDoubleArgument(const QStringList &arguments, const QString &argumentName);
 	int getIntArgument(const QStringList &arguments, const QString &argumentName);
 	QStringList getArguments(const QStringList &arguments, const QString &argumentName);
-	void saveNeuralNet();
 	void scanImageFile(const QString &file);
 	void printFaceFeaturesData(const FaceDetect::FaceFileScanner::FaceData &data, const QTransform &transform = QTransform()) const;
 
@@ -86,6 +86,7 @@ private:
 	bool m_colorizeOut;
 	bool m_svgOut;
 	bool m_outImgValues;
+	bool m_oldNetFormat;
 	double m_learningSpeed;
 	int m_falsePositiveHandicap;
 	int m_falseNegativeHandicap;

@@ -11,6 +11,9 @@
 #define ILLUMINATIONFILTER_9VZQ0NP9
 
 #include <lapackpp/lavd.h>
+#include <boost/serialization/access.hpp>
+#include <boost/serialization/nvp.hpp>
+#include "utils/QtSerialization.h"
 #include "ImageFilterBase.h"
 
 namespace FaceDetect {
@@ -31,6 +34,15 @@ public:
 	void setIlluminationCorrectHistogram(bool correctHistogram);
 
 private:
+	/**
+	 * Serializácia filtra pre korekciu osvetlenia.
+	 */
+	template<class Archive> void serialize(Archive &ar, const unsigned int version) {
+		Q_UNUSED(version);
+		ar & boost::serialization::make_nvp("ipOnly", m_illuminationPlaneOnly);
+		ar & boost::serialization::make_nvp("histogram", m_illuminationCorrectHistogram);
+	};
+
 	void equalizeHistogram(QImage &sourceImage) const;
 
 	/// Zobrazenie korekčnej iluminačnej plochy.
@@ -43,6 +55,8 @@ private:
 	mutable LaGenMatDouble m_imageCoordinateMatrix;
 	/// Spracovaná matica pre výpočet svetelnej korekcie
 	mutable LaGenMatDouble m_ilCorrectionMatrix;
+
+friend class boost::serialization::access;
 }; /* -----  end of class IlluminationFilter  ----- */
 
 } /* end of namespace FaceDetect */

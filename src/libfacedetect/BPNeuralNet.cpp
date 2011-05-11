@@ -99,6 +99,7 @@ void BPNeuralNet::setStredNeuronov(int neuronov)
 		m_stred = LaGenMatDouble(m_stredNeuronov, 1);
 		m_uStred = LaGenMatDouble(m_stredNeuronov, 1);
 		m_delta = LaGenMatDouble(m_stredNeuronov, 1);
+		stredNeuronovChanged(m_stredNeuronov);
 	}
 }
 

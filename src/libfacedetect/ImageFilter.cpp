@@ -117,6 +117,54 @@ void ImageFilter::disableGaborFilter()
 }
 
 /**
+ * Pridanie lokálnych filtrov k aktuálnemu filtru.
+ */
+void ImageFilter::mergeLocalFilter(const ImageFilter &filter)
+{
+	m_illuminationFilter = filter.m_illuminationFilter;
+	Filters filterFlag = ImageFilter::IlluminationFilter;
+	m_filters = ((~filterFlag) & m_filters) | (filterFlag & filter.m_filters);
+}
+
+/**
+ * Pridanie globálnych filtrov k aktuálnemu filtru
+ */
+void ImageFilter::mergeGlobalFilter(const ImageFilter &filter)
+{
+	m_grayscaleFilter = filter.m_grayscaleFilter;
+	m_sobelFilter = filter.m_sobelFilter;
+	m_gaborFilters = filter.m_gaborFilters;
+	Filters filterFlag = ImageFilter::GrayscaleFilter | ImageFilter::SobelFilter | ImageFilter::GaborFilter;
+	m_filters = ((~filterFlag) & m_filters) | (filterFlag & filter.m_filters);
+}
+
+/**
+ * Vráti lokálnu časť filtra.
+ */
+ImageFilter ImageFilter::localPart() const
+{
+	ImageFilter filter;
+	filter.m_illuminationFilter = m_illuminationFilter;
+	Filters filterFlag = ImageFilter::IlluminationFilter;
+	filter.m_filters = m_filters & filterFlag;
+	return filter;
+}
+
+/**
+ * Vráti globálnu časť filtra.
+ */
+ImageFilter ImageFilter::globalPart() const
+{
+	ImageFilter filter;
+	filter.m_grayscaleFilter = m_grayscaleFilter;
+	filter.m_sobelFilter = m_sobelFilter;
+	filter.m_gaborFilters = m_gaborFilters;
+	Filters filterFlag = ImageFilter::GrayscaleFilter | ImageFilter::SobelFilter | ImageFilter::GaborFilter;
+	filter.m_filters = m_filters & filterFlag;
+	return filter;
+}
+
+/**
  * Použitie aktivovaných filtrov na obrázkok \a sourceImage. Výsledkom použitia
  * filtrov je návratová hodnota
  */

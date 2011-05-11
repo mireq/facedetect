@@ -9,6 +9,10 @@
 
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
+//#include <boost/archive/xml_iarchive.hpp>
+//#include <boost/archive/xml_oarchive.hpp>
+#include <boost/serialization/base_object.hpp>
+#include <boost/serialization/nvp.hpp>
 #include <cstdio>
 #include <fstream>
 #include <QApplication>
@@ -36,6 +40,7 @@ ConsoleInterface::ConsoleInterface(QObject *parent):
 	m_colorizeOut(false),
 	m_svgOut(false),
 	m_outImgValues(false),
+	m_oldNetFormat(false),
 	m_learningSpeed(0.01),
 	m_falsePositiveHandicap(-1),
 	m_falseNegativeHandicap(-1),
@@ -82,6 +87,7 @@ void ConsoleInterface::run()
 		m_steps.append(ProcessStep(this, "printAlign"));
 	}
 	m_steps.append(ProcessStep(this, "startTraining"));
+	m_steps.append(ProcessStep(this, "saveNeuralNet"));
 	m_steps.append(ProcessStep(this, "detectFaces"));
 	m_steps.append(ProcessStep{qApp, "quit"});
 	startNextStep();
@@ -160,9 +166,23 @@ void ConsoleInterface::startTraining()
 		QByteArray fileName = m_loadNetFile.toUtf8();
 		std::ifstream ifs(fileName.constData());
 		if (ifs.is_open()) {
-			boost::archive::text_iarchive ia(ifs);
-			ia >> net;
-			unserialized = true;
+			try {
+				boost::archive::text_iarchive ia(ifs);
+				if (m_oldNetFormat) {
+					ia >> net;
+				}
+				else {
+					FaceDetect::ImageFilter filter;
+					ia >> boost::serialization::make_nvp("filter", filter);
+					ia >> boost::serialization::make_nvp("net", net);
+					m_globalFilter = filter.globalPart();
+					m_localFilter = filter.localPart();
+				}
+				unserialized = true;
+			}
+			catch(boost::archive::archive_exception&) {
+				qWarning() << "Bad net format";
+			}
 		}
 	}
 	if (net == 0) {
@@ -191,6 +211,25 @@ void ConsoleInterface::detectFaces()
 {
 	foreach (const QString &file, m_detectFiles) {
 		scanImageFile(file);
+	}
+	startNextStep();
+}
+
+void ConsoleInterface::saveNeuralNet()
+{
+	if (m_saveNetFile.isEmpty()) {
+		startNextStep();
+		return;
+	}
+	QByteArray fileName = m_saveNetFile.toUtf8();
+	std::ofstream ofs(fileName.constData());
+	if (ofs.is_open()) {
+		boost::archive::text_oarchive oa(ofs);
+		const FaceDetect::NeuralNet *net = m_neuralNet.data();
+		FaceDetect::ImageFilter filter = m_globalFilter;
+		filter.mergeLocalFilter(m_localFilter);
+		oa << boost::serialization::make_nvp("filter", filter);
+		oa << boost::serialization::make_nvp("net", net);
 	}
 	startNextStep();
 }
@@ -286,7 +325,6 @@ void ConsoleInterface::trainNet()
 
 void ConsoleInterface::onTrainingFinished()
 {
-	saveNeuralNet();
 	FaceDetect::NetTrainer::EpochStats stats = m_trainer->bestEpochStats();
 	m_trainer = QSharedPointer<FaceDetect::NetTrainer>(0);
 
@@ -447,6 +485,7 @@ void ConsoleInterface::parseCommandline()
 
 	m_loadNetFile = getArgument(arguments, "--loadNet");
 	m_saveNetFile = getArgument(arguments, "--saveNet");
+	m_oldNetFormat = getBoolArgument(arguments, "--oldNetFormat");
 	m_detectFiles = getArguments(arguments, "--detect");
 	if (getBoolArgument(arguments, "--faces")) {
 		m_facesPath = getArgument(arguments, "--faces");
@@ -576,20 +615,6 @@ QStringList ConsoleInterface::getArguments(const QStringList &arguments, const Q
 		ret << arguments.at(argumentIdx + 1);
 	}
 	return ret;
-}
-
-void ConsoleInterface::saveNeuralNet()
-{
-	if (m_saveNetFile.isEmpty()) {
-		return;
-	}
-	QByteArray fileName = m_saveNetFile.toUtf8();
-	std::ofstream ofs(fileName.constData());
-	if (ofs.is_open()) {
-		boost::archive::text_oarchive oa(ofs);
-		const FaceDetect::NeuralNet *net = m_neuralNet.data();
-		oa << net;
-	}
 }
 
 void ConsoleInterface::scanImageFile(const QString &file)

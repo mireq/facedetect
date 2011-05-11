@@ -94,6 +94,7 @@ set(facedetect_HDRS
 	src/libfacedetect/SobelFilter.h
 	src/libfacedetect/utils/LapackSerialization.h
 	src/libfacedetect/utils/PolygonRasterizer.h
+	src/libfacedetect/utils/QtSerialization.h
 )
 
 set(facedetect_MOC_HDRS

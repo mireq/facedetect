@@ -13,6 +13,7 @@
 #include <QObject>
 #include <string>
 #include <boost/serialization/access.hpp>
+#include <boost/serialization/nvp.hpp>
 #include <cmath>
 #include <lapackpp/gmd.h>
 #include <lapackpp/lavd.h>
@@ -78,10 +79,10 @@ public:
 	 */
 	template<class Archive> void serialize(Archive &ar, const unsigned int version) {
 		Q_UNUSED(version);
-		ar & m_learningSpeed;
-		ar & m_inputVectorSize;
-		ar & m_outputVectorSize;
-		ar & m_binaryThreshold;
+		ar & boost::serialization::make_nvp("learningSpeed", m_learningSpeed);
+		ar & boost::serialization::make_nvp("inputVectorSize", m_inputVectorSize);
+		ar & boost::serialization::make_nvp("outputVectorSize", m_outputVectorSize);
+		ar & boost::serialization::make_nvp("binaryThreshold", m_binaryThreshold);
 	};
 	static NeuralNet *create(const std::string &type, QObject *parent = 0);
 

@@ -12,12 +12,16 @@
 
 #include <QList>
 #include <QVariant>
+#include <boost/serialization/access.hpp>
+#include <boost/serialization/nvp.hpp>
+#include "utils/QtSerialization.h"
 #include "GrayscaleFilter.h"
 #include "IlluminationFilter.h"
 #include "SobelFilter.h"
 #include "GaborFilter.h"
 #include "ImageFilterBase.h"
 
+#include <QDebug>
 namespace FaceDetect {
 
 /**
@@ -52,6 +56,10 @@ public:
 	void disableSobelFilter();
 	void enableGaborFilter();
 	void disableGaborFilter();
+	void mergeLocalFilter(const ImageFilter &filter);
+	void mergeGlobalFilter(const ImageFilter &filter);
+	ImageFilter localPart() const;
+	ImageFilter globalPart() const;
 
 	QImage filterImage(const QImage &sourceImage) const;
 	LaVectorDouble filterVector(const QImage &sourceImage) const;
@@ -71,6 +79,17 @@ public:
 	int subImageCount() const;
 
 private:
+	/**
+	 * Serializácia filtrov.
+	 */
+	template<class Archive> void serialize(Archive &ar, const unsigned int version) {
+		Q_UNUSED(version);
+		ar & boost::serialization::make_nvp("filters", m_filters);
+		ar & boost::serialization::make_nvp("grayscale", m_grayscaleFilter);
+		ar & boost::serialization::make_nvp("illumination", m_illuminationFilter);
+		ar & boost::serialization::make_nvp("gabor", m_gaborFilters);
+		ar & boost::serialization::make_nvp("gaborWavelet", m_onlyGaborWavelet);
+	};
 	void normalizeImage(QImage &sourceImage) const;
 
 private:
@@ -86,6 +105,8 @@ private:
 	QVector<FaceDetect::GaborFilter> m_gaborFilters;
 	/// Vykreslenie len gaborovej vlnkovej funkcie
 	bool m_onlyGaborWavelet;
+
+friend class boost::serialization::access;
 }; /* -----  end of class ImageFilter  ----- */
 
 } /* end of namespace FaceDetect */

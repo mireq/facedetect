@@ -11,6 +11,9 @@
 #define GABORFILTER_SCVINMZ1
 
 #include <valarray>
+#include <boost/serialization/access.hpp>
+#include <boost/serialization/nvp.hpp>
+#include "utils/QtSerialization.h"
 #include "ImageFilterBase.h"
 
 namespace FaceDetect {
@@ -50,6 +53,19 @@ public:
 private:
 	void calcGaborConvolution(QImage *sourceImage = 0) const;
 	void applyConvolution(QImage &sourceImage, const std::valarray<double> &convolX, const std::valarray<double> &convolY, int matrixSizeX, int matrixSizeY, double luminanceCorrection) const;
+	/**
+	 * Serializácia gaborovho filtra.
+	 */
+	template<class Archive> void serialize(Archive &ar, const unsigned int version) {
+		Q_UNUSED(version);
+		ar & boost::serialization::make_nvp("onlyGaborWavelet", m_onlyGaborWavelet);
+		ar & boost::serialization::make_nvp("lambda", m_gaborParameters.lambda);
+		ar & boost::serialization::make_nvp("theta", m_gaborParameters.theta);
+		ar & boost::serialization::make_nvp("psi", m_gaborParameters.psi);
+		ar & boost::serialization::make_nvp("sigma", m_gaborParameters.sigma);
+		ar & boost::serialization::make_nvp("gamma", m_gaborParameters.gamma);
+		ar & boost::serialization::make_nvp("lum", m_gaborParameters.lum);
+	};
 
 private:
 	/// Vrátenie len gaborovej vlnkovej funkcie.
@@ -65,6 +81,7 @@ private:
 	/// Veľkosť konvolučnej matice pre gabor filter.
 	mutable QSize m_gaborConvolutionSize;
 
+friend class boost::serialization::access;
 }; /* -----  end of class GaborFilter  ----- */
 
 } /* end of namespace FaceDetect */

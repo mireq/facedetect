@@ -13,9 +13,9 @@
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/serialization/split_free.hpp>
+#include <boost/serialization/nvp.hpp>
 #include <lapackpp/gmd.h>
 #include <lapackpp/lavd.h>
-#include <QVector>
 
 /**
  * \file
@@ -28,15 +28,15 @@ namespace serialization {
 /**
  * Serializácia generickej matice.
  */
-template <class Archive> void save(Archive &ar, const LaGenMatDouble &data, const uint /* version */)
+template <class Archive> void save(Archive &ar, const LaGenMatDouble &data, const unsigned int /* version */)
 {
 	int cols = data.cols();
 	int rows = data.rows();
-	ar << cols;
-	ar << rows;
+	ar << BOOST_SERIALIZATION_NVP(cols);
+	ar << BOOST_SERIALIZATION_NVP(rows);
 	for (int i = 0; i < data.rows(); ++i) {
 		for (int j = 0; j < data.cols(); ++j) {
-			ar << data(i, j);
+			ar << boost::serialization::make_nvp("i", data(i, j));
 		}
 	}
 }
@@ -44,17 +44,17 @@ template <class Archive> void save(Archive &ar, const LaGenMatDouble &data, cons
 /**
  * Deserializácia generickej matice.
  */
-template <class Archive> void load(Archive &ar, LaGenMatDouble &data, const uint /* version */)
+template <class Archive> void load(Archive &ar, LaGenMatDouble &data, const unsigned int /* version */)
 {
 	int cols;
 	int rows;
-	ar >> cols;
-	ar >> rows;
+	ar >> BOOST_SERIALIZATION_NVP(cols);
+	ar >> BOOST_SERIALIZATION_NVP(rows);
 	data.resize(rows, cols);
 	double item;
 	for (int i = 0; i < data.rows(); ++i) {
 		for (int j = 0; j < data.cols(); ++j) {
-			ar >> item;
+			ar >> boost::serialization::make_nvp("i", item);
 			data(i, j) = item;
 		}
 	}
@@ -63,7 +63,7 @@ template <class Archive> void load(Archive &ar, LaGenMatDouble &data, const uint
 /**
  * Serializácia a deserializácia generickej matice.
  */
-template <class Archive> void serialize(Archive &ar, LaGenMatDouble &data, const uint version)
+template <class Archive> void serialize(Archive &ar, LaGenMatDouble &data, const unsigned int version)
 {
 	split_free(ar, data, version);
 }
@@ -71,9 +71,9 @@ template <class Archive> void serialize(Archive &ar, LaGenMatDouble &data, const
 /**
  * Serializácia a deserializácia vektoru.
  */
-template <class Archive> void serialize(Archive &ar, LaVectorDouble &data, const uint /*version*/)
+template <class Archive> void serialize(Archive &ar, LaVectorDouble &data, const unsigned int /*version*/)
 {
-	ar & boost::serialization::base_object<LaGenMatDouble>(data);
+	ar & boost::serialization::make_nvp("base", boost::serialization::base_object<LaGenMatDouble>(data));
 }
 
 } /* end of namespace serialization */

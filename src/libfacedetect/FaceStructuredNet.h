@@ -15,6 +15,7 @@
 #include <lapackpp/gmd.h>
 #include <boost/serialization/access.hpp>
 #include <boost/serialization/base_object.hpp>
+#include <boost/serialization/nvp.hpp>
 #include <boost/serialization/vector.hpp>
 #include "NeuralNet.h"
 
@@ -29,7 +30,7 @@ Q_OBJECT
 /**
  * Počet neurónov v prvej skrytej vrstve.
  */
-Q_PROPERTY(int s1Neuronov READ s1Neuronov WRITE setS1Neuronov);
+Q_PROPERTY(int s1Neuronov READ s1Neuronov WRITE setS1Neuronov NOTIFY s1NeuronovChanged);
 public:
 	FaceStructuredNet(QObject *parent = 0);
 	~FaceStructuredNet();
@@ -45,15 +46,18 @@ public:
 	 */
 	void setS1Neuronov(int neuronov);
 
+signals:
+	void s1NeuronovChanged(int neuronov);
+
 private:
 	template<class Archive> void serialize(Archive &ar, const unsigned int version) {
 		Q_UNUSED(version);
-		ar & boost::serialization::base_object<NeuralNet>(*this);
-		ar & m_w1;
-		ar & m_w2;
-		ar & m_w3;
+		ar & boost::serialization::make_nvp("base", boost::serialization::base_object<NeuralNet>(*this));
+		ar & boost::serialization::make_nvp("w1", m_w1);
+		ar & boost::serialization::make_nvp("w2", m_w2);
+		ar & boost::serialization::make_nvp("w3", m_w3);
 		int neuronov = m_1Neuronov;
-		ar & neuronov;
+		ar & boost::serialization::make_nvp("neuronov", neuronov);
 		setS1Neuronov(neuronov);
 	};
 	/// Počet neurónov prvej vrstvy

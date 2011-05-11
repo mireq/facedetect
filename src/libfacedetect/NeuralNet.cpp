@@ -7,6 +7,7 @@
  * =====================================================================
  */
 
+#include <boost/serialization/export.hpp>
 #include "BPNeuralNet.h"
 #include "FaceStructuredNet.h"
 #include "NeuralNet.h"
@@ -103,4 +104,6 @@ void NeuralNet::initializeMatrix(LaGenMatDouble &matrix, double min, double max)
 }
 
 } /* end of namespace FaceDetect */
+
+BOOST_CLASS_EXPORT_GUID(FaceDetect::NeuralNet, "FaceDetect::NeuralNet")
 

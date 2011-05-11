@@ -165,6 +165,7 @@ void FaceStructuredNet::setS1Neuronov(int neuronov)
 		m_stred2 = LaVectorDouble(PartCount);
 		m_uStred2 = LaVectorDouble(PartCount);
 		m_delta2 = LaVectorDouble(PartCount);
+		emit s1NeuronovChanged(m_1Neuronov);
 	}
 }
 

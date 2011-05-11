@@ -12,6 +12,7 @@
 
 #include <boost/serialization/access.hpp>
 #include <boost/serialization/base_object.hpp>
+#include <boost/serialization/nvp.hpp>
 #include "utils/LapackSerialization.h"
 #include "NeuralNet.h"
 
@@ -26,7 +27,7 @@ Q_OBJECT
 /**
  * Počet neurónov skrytej vrstvy.
  */
-Q_PROPERTY(int stredNeuronov READ stredNeuronov WRITE setStredNeuronov);
+Q_PROPERTY(int stredNeuronov READ stredNeuronov WRITE setStredNeuronov NOTIFY stredNeuronovChanged);
 public:
 	BPNeuralNet(QObject *parent = 0);
 	~BPNeuralNet();
@@ -42,15 +43,18 @@ public:
 	 */
 	void setStredNeuronov(int neuronov);
 
+signals:
+	void stredNeuronovChanged(int stredNeuronov);
+
 private:
 	/**
 	 * Serializácia a deserializácia siete.
 	 */
 	template<class Archive> void serialize(Archive &ar, const unsigned int version) {
 		Q_UNUSED(version);
-		ar & boost::serialization::base_object<NeuralNet>(*this);
-		ar & m_w;
-		ar & m_v;
+		ar & boost::serialization::make_nvp("base", boost::serialization::base_object<NeuralNet>(*this));
+		ar & boost::serialization::make_nvp("w", m_w);
+		ar & boost::serialization::make_nvp("v", m_v);
 		int neur = m_stredNeuronov;
 		ar & neur;
 		setStredNeuronov(neur);
