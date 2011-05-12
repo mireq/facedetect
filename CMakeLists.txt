@@ -51,6 +51,7 @@ include_directories(
 
 set(facedetect_SRCS
 	src/main.cpp
+	src/core/DetectorImageProvider.cpp
 	src/core/FaceBrowserModel.cpp
 	src/core/FaceImageProvider.cpp
 	src/core/FilterImageProvider.cpp
@@ -83,6 +84,7 @@ set(facedetect_SRCS
 )
 
 set(facedetect_HDRS
+	src/core/DetectorImageProvider.h
 	src/core/FaceImageProvider.h
 	src/core/FilterImageProvider.h
 	src/libfacedetect/GaborFilter.h

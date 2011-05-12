@@ -19,7 +19,8 @@ namespace FaceDetect {
  */
 NeuralNet::NeuralNet(QObject *parent):
 	QObject(parent),
-	m_binaryThreshold(0.5)
+	m_binaryThreshold(0.5),
+	m_initialized(false)
 {
 }
 
@@ -47,6 +48,11 @@ void NeuralNet::setBinaryThreshold(double threshold)
 	m_binaryThreshold = threshold;
 }
 
+bool NeuralNet::isInitialized() const
+{
+	return m_initialized;
+}
+
 bool NeuralNet::calcBinaryOutput(const LaVectorDouble &input)
 {
 	LaVectorDouble out = calcOutput(input);
@@ -63,7 +69,10 @@ bool NeuralNet::calcBinaryOutput(const LaVectorDouble &input)
  */
 void NeuralNet::setInputVectorSize(int size)
 {
-	m_inputVectorSize = size;
+	if (m_inputVectorSize != size) {
+		m_inputVectorSize = size;
+		setInitialized(false);
+	}
 }
 
 /**
@@ -71,7 +80,10 @@ void NeuralNet::setInputVectorSize(int size)
  */
 void NeuralNet::setOutputVectorSize(int size)
 {
-	m_outputVectorSize = size;
+	if (m_inputVectorSize != size) {
+		m_outputVectorSize = size;
+		setInitialized(false);
+	}
 }
 
 /**
@@ -99,6 +111,14 @@ void NeuralNet::initializeMatrix(LaGenMatDouble &matrix, double min, double max)
 		for (int row = 0; row < matrix.rows(); ++row) {
 			matrix(row, col) = (static_cast<double>(rand()) / RAND_MAX) * (max - min) + min;
 		}
+	}
+}
+
+void NeuralNet::setInitialized(bool initialized)
+{
+	if (m_initialized != initialized) {
+		m_initialized = initialized;
+		emit initializedChanged(m_initialized);
 	}
 }
 

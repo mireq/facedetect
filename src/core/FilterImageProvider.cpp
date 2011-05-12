@@ -13,8 +13,6 @@
 #include <QPoint>
 #include "FilterImageProvider.h"
 
-#include <QDebug>
-#include <stdlib.h>
 FilterImageProvider::FilterImageProvider():
 	QDeclarativeImageProvider(QDeclarativeImageProvider::Image)
 {

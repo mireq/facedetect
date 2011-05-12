@@ -60,6 +60,7 @@ private:
 		int neuronov = m_1Neuronov;
 		ar & boost::serialization::make_nvp("neuronov", neuronov);
 		setS1Neuronov(neuronov);
+		setInitialized(true);
 	};
 	/// Počet neurónov prvej vrstvy
 	int m_1Neuronov;

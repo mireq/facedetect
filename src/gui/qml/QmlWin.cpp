@@ -29,11 +29,13 @@
 #include "libfacedetect/BPNeuralNet.h"
 #include "libfacedetect/FaceStructuredNet.h"
 #include "libfacedetect/FaceFileScanner.h"
+#include "core/DetectorImageProvider.h"
 #include "core/FaceImageProvider.h"
 #include "core/FilterImageProvider.h"
 #include "plugins/QmlFaceDetectPlugin.h"
 #include "QmlWin.h"
 
+#include <QDebug>
 using FaceDetect::Align;
 using FaceDetect::FaceFileScanner;
 using FaceDetect::ImageFileScanner;
@@ -74,6 +76,8 @@ QmlWin::QmlWin(QWidget *parent):
 	setViewportUpdateMode(QGraphicsView::FullViewportUpdate);
 	setResizeMode(QDeclarativeView::SizeRootObjectToView);
 
+	m_detectorImageProvider = new DetectorImageProvider(this);
+	engine()->addImageProvider(QLatin1String("detector"), m_detectorImageProvider);
 	m_imageProvider = new FaceImageProvider;
 	engine()->addImageProvider(QLatin1String("faceimage"), m_imageProvider);
 	m_filterImageProvider = new FilterImageProvider;
@@ -182,9 +186,12 @@ void QmlWin::setNetType(const QString &netType)
 		stop();
 		if (!m_neuralNets.contains(netType)) {
 			m_neuralNets[netType] = QSharedPointer<FaceDetect::NeuralNet>(FaceDetect::NeuralNet::create(netType.toLatin1().constData()));
+			connect(m_neuralNets[netType].data(), SIGNAL(initializedChanged(bool)), SLOT(onNetInitializedChanged()));
 		}
 		m_netType = netType;
 		m_neuralNet = m_neuralNets[netType].data();
+		m_neuralNet->setInputVectorSize(m_trainingDatabase->inputVectorSize());
+		m_neuralNet->setOutputVectorSize(m_trainingDatabase->outputVectorSize());
 		emit netTypeChanged(m_netType);
 		emit neuralNetChanged(m_neuralNet);
 	}
@@ -218,6 +225,16 @@ void QmlWin::setLearningSpeed(double speed)
 	}
 }
 
+FaceDetect::FaceDetector *QmlWin::faceDetector() const
+{
+	return m_faceDetector.data();
+}
+
+QPoint QmlWin::detectCenter() const
+{
+	return m_detectCenter;
+}
+
 QString QmlWin::encodeFilterString() const
 {
 	QBuffer buffer;
@@ -231,6 +248,7 @@ QString QmlWin::encodeFilterString() const
 
 void QmlWin::startTraining()
 {
+	stopFaceDetector();
 	if (!containsStep(this, "scanFaces")) {
 		m_steps.append(ProcessStep(this, "scanFaces"));
 	}
@@ -251,6 +269,7 @@ void QmlWin::stop()
 	m_faceFileScanner->stop();
 	m_nonFaceFileScanner->stop();
 	m_trainer->stop();
+	stopFaceDetector();
 }
 
 void QmlWin::saveNet(const QString &saveFileName)
@@ -283,6 +302,7 @@ void QmlWin::loadNet(const QString &loadFileName)
 			m_globalFilter = filter.globalPart();
 			m_localFilter = filter.localPart();
 			m_neuralNet = net;
+			connect(net, SIGNAL(initializedChanged(bool)), SLOT(onNetInitializedChanged()));
 			emit neuralNetChanged(net);
 			m_neuralNets[net->netType()] = QSharedPointer<FaceDetect::NeuralNet>(net);
 			m_netType = m_neuralNet->netType();
@@ -295,6 +315,49 @@ void QmlWin::loadNet(const QString &loadFileName)
 		catch(boost::archive::archive_exception&) {
 			QMessageBox::warning(this, tr("Bad format"), tr("Bad net format"));
 		}
+	}
+}
+
+void QmlWin::detect(const QString &fileName)
+{
+	QImage image(fileName);
+	if (!image.isNull()) {
+		detect(image);
+	}
+}
+
+void QmlWin::detect(const QImage &image)
+{
+	if (!m_neuralNet->isInitialized()) {
+		return;
+	}
+	stop();
+	if (!m_faceDetector.isNull()) {
+		m_faceDetector->stop();
+	}
+	auto faceDetectorTmp = m_faceDetector;
+	m_faceDetector = QSharedPointer<FaceDetect::FaceDetector>(new FaceDetect::FaceDetector(m_neuralNet));
+	m_faceDetector->setImage(image);
+	FaceDetect::ImageSegmenter::Settings settings;
+	settings.xStep = 1;
+	settings.yStep = 1;
+	settings.segmentSize = QSize(20, 20);
+	m_faceDetector->setLocalFilter(m_localFilter);
+	m_faceDetector->setGlobalFilter(m_globalFilter);
+	m_faceDetector->setupSegmenter(settings);
+	emit faceDetectorChanged(m_faceDetector.data());
+	connect(m_faceDetector.data(), SIGNAL(scanResultReturned(FaceDetect::FaceDetector::DetectionWindow)), SLOT(onScanResultReturned(FaceDetect::FaceDetector::DetectionWindow)));
+	connect(m_faceDetector.data(), SIGNAL(progressChanged(double,QPolygon)), SLOT(onDetectorProgressChanged(double,QPolygon)));
+	m_faceDetector->start();
+}
+
+void QmlWin::stopFaceDetector()
+{
+	if (!m_faceDetector.isNull()) {
+		m_faceDetector->stop();
+		auto detector = m_faceDetector;
+		m_faceDetector.clear();
+		emit faceDetectorChanged(m_faceDetector.data());
 	}
 }
 
@@ -326,6 +389,28 @@ void QmlWin::onEpochFinished(const FaceDetect::NetTrainer::EpochStats &stats)
 void QmlWin::onErrorCalculated(std::size_t sample, std::size_t sampleCount, double errorSum)
 {
 	emit errorCalculated(int(sample), errorSum / static_cast<double>(sampleCount));
+}
+
+void QmlWin::onScanResultReturned(const FaceDetect::FaceDetector::DetectionWindow &window)
+{
+	QVariantMap result;
+	result["value"] = window.value;
+	result["rect"] = window.polygon.boundingRect();
+	emit scanResultReturned(result);
+}
+
+void QmlWin::onNetInitializedChanged()
+{
+	if (!m_neuralNet->isInitialized()) {
+		stopFaceDetector();
+	}
+}
+
+void QmlWin::onDetectorProgressChanged(double progress, const QPolygon &rect)
+{
+	Q_UNUSED(progress);
+	m_detectCenter = rect.boundingRect().center();
+	emit detectCenterChanged(m_detectCenter);
 }
 
 void QmlWin::onImageScanned(const LaVectorDouble &input, const LaVectorDouble &output)
@@ -411,6 +496,7 @@ void QmlWin::createNeuralNet()
 {
 	m_neuralNets["bp"] = QSharedPointer<FaceDetect::NeuralNet>(new FaceDetect::BPNeuralNet());
 	m_neuralNet = m_neuralNets["bp"].data();
+	connect(m_neuralNet, SIGNAL(initializedChanged(bool)), SLOT(onNetInitializedChanged()));
 	m_netType = "bp";
 }
 

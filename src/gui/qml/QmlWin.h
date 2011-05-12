@@ -11,10 +11,12 @@
 #define QMLWIN_R54R5F4S
 
 #include <QDeclarativeView>
+#include <QPolygon>
 #include <QSettings>
 #include <QSharedPointer>
 #include "core/FaceBrowserModel.h"
 #include "libfacedetect/Align.h"
+#include "libfacedetect/FaceDetector.h"
 #include "libfacedetect/FaceFileScanner.h"
 #include "libfacedetect/ImageFileScanner.h"
 #include "libfacedetect/ImageFilter.h"
@@ -22,6 +24,7 @@
 #include "libfacedetect/NeuralNet.h"
 #include "libfacedetect/TrainingImageDatabase.h"
 
+class DetectorImageProvider;
 class FaceImageProvider;
 class FilterImageProvider;
 
@@ -39,6 +42,8 @@ Q_PROPERTY(QVariant filterSettings READ filterSettings WRITE setFilterSettings N
 Q_PROPERTY(QString netType READ netType WRITE setNetType NOTIFY netTypeChanged);
 Q_PROPERTY(int trainingSetPercent READ trainingSetPercent WRITE setTrainingSetPercent NOTIFY trainingSetPercentChanged);
 Q_PROPERTY(double learningSpeed READ learningSpeed WRITE setLearningSpeed NOTIFY learningSpeedChanged);
+Q_PROPERTY(QObject *faceDetector READ faceDetector NOTIFY faceDetectorChanged);
+Q_PROPERTY(QPoint detectCenter READ detectCenter NOTIFY detectCenterChanged);
 public:
 	QmlWin(QWidget *parent = 0);
 	~QmlWin();
@@ -59,11 +64,16 @@ public:
 	void setTrainingSetPercent(int percent);
 	double learningSpeed() const;
 	void setLearningSpeed(double speed);
+	FaceDetect::FaceDetector *faceDetector() const;
+	QPoint detectCenter() const;
 	Q_INVOKABLE QString encodeFilterString() const;
 	Q_INVOKABLE void startTraining();
 	Q_INVOKABLE void stop();
 	Q_INVOKABLE void saveNet(const QString &saveFileName);
 	Q_INVOKABLE void loadNet(const QString &loadFileName);
+	Q_INVOKABLE void detect(const QString &fileName);
+	Q_INVOKABLE void detect(const QImage &image);
+	Q_INVOKABLE void stopFaceDetector();
 
 signals:
 	void facesPathChanged(const QString &url);
@@ -77,8 +87,11 @@ signals:
 	void netTypeChanged(const QString &netType);
 	void trainingSetPercentChanged(int percent);
 	void learningSpeedChanged(double speed);
+	void faceDetectorChanged(FaceDetect::FaceDetector *detector);
+	void detectCenterChanged(const QPoint &detectCenter);
 	void epochFinished(int epoch, double mseA, double mseE, double mseBinA, double mseBinE, int sizeA, int sizeE);
 	void errorCalculated(int sample, double mse);
+	void scanResultReturned(const QVariant &result);
 
 private slots:
 	void imageScanned(const FaceDetect::FaceFileScanner::ImageInfo &img);
@@ -88,6 +101,9 @@ private slots:
 	void onImageScanned(const LaVectorDouble &input, const LaVectorDouble &output);
 	void onEpochFinished(const FaceDetect::NetTrainer::EpochStats &stats);
 	void onErrorCalculated(std::size_t sample, std::size_t sampleCount, double errorSum);
+	void onScanResultReturned(const FaceDetect::FaceDetector::DetectionWindow &window);
+	void onNetInitializedChanged();
+	void onDetectorProgressChanged(double progress, const QPolygon &rect);
 
 private:
 	bool containsStep(const QObject *object, const QByteArray &name) const;
@@ -115,9 +131,11 @@ private:
 	QSharedPointer<FaceDetect::FaceFileScanner> m_faceFileScanner;
 	QSharedPointer<FaceDetect::ImageFileScanner> m_nonFaceFileScanner;
 	QSharedPointer<FaceDetect::NetTrainer> m_trainer;
+	QSharedPointer<FaceDetect::FaceDetector> m_faceDetector;
 	FaceDetect::NeuralNet *m_neuralNet;
 	QMap<QString,QSharedPointer<FaceDetect::NeuralNet>> m_neuralNets;
 	FaceDetect::TrainingImageDatabase *m_trainingDatabase;
+	DetectorImageProvider *m_detectorImageProvider;
 	FaceImageProvider *m_imageProvider;
 	FilterImageProvider *m_filterImageProvider;
 	FaceDetect::ImageFilter m_filter;
@@ -131,6 +149,7 @@ private:
 	QString m_netType;
 	int m_trainingSetPercent;
 	double m_learningSpeed;
+	QPoint m_detectCenter;
 }; /* -----  end of class QmlWin  ----- */
 
 #endif /* end of include guard: QMLWIN_R54R5F4S */

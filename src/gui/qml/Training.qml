@@ -231,6 +231,7 @@ CentralWindow {
 					PushButton {
 						width: Math.round((settingsColumn.width / 2 - s1NeuronRow.spacing) / 2); height: lineHeight
 						text: qsTr("Save")
+						enabled: runtime.neuralNet.initialized
 						onClicked: {
 							if (saveFileChooser.selectFile()) {
 								runtime.stop();

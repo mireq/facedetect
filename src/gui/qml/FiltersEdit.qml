@@ -50,7 +50,6 @@ CentralWindow {
 			width: 262
 			BorderImage {
 				id: previewBackground
-				//width: 262; height: previewImage.height + 7
 				width: 262; height: previewHeight + 7
 				source: "img/photo_frame.png"
 				border { left: 3; top: 3; right: 4; bottom: 4 }

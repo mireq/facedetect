@@ -85,6 +85,7 @@ void BPNeuralNet::initializeTraining()
 	m_v = LaGenMatDouble(m_stredNeuronov, 1);
 	initializeMatrix(m_w, -0.5, 0.5);
 	initializeMatrix(m_v, -0.5, 0.5);
+	setInitialized(true);
 }
 
 int BPNeuralNet::stredNeuronov() const
@@ -95,6 +96,7 @@ int BPNeuralNet::stredNeuronov() const
 void BPNeuralNet::setStredNeuronov(int neuronov)
 {
 	if (neuronov != m_stredNeuronov) {
+		setInitialized(false);
 		m_stredNeuronov = neuronov;
 		m_stred = LaGenMatDouble(m_stredNeuronov, 1);
 		m_uStred = LaGenMatDouble(m_stredNeuronov, 1);

@@ -637,6 +637,7 @@ void ConsoleInterface::scanImageFile(const QString &file)
 	detector.setLocalFilter(m_localFilter);
 	detector.setGlobalFilter(m_globalFilter);
 	detector.setupSegmenter(settings);
+	detector.setScanImageEnabled(true);
 	detector.scanImage();
 
 	if (m_svgOut || m_outImgValues) {

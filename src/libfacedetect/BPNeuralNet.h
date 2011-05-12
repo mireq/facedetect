@@ -59,6 +59,7 @@ private:
 		int neur = m_stredNeuronov;
 		ar & neur;
 		setStredNeuronov(neur);
+		setInitialized(true);
 	};
 
 	/// Počet stredných neurónov

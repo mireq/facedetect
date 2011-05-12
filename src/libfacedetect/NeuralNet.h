@@ -37,6 +37,12 @@ Q_PROPERTY(double learningSpeed READ learningSpeed WRITE setLearningSpeed);
  * vráti \e true. V prípade rovnosti vráti tiež \e true.
  */
 Q_PROPERTY(double binaryThreshold READ binaryThreshold WRITE setBinaryThreshold);
+/**
+ * Mu hodnotu \e true, ak je sieť inicializovaná.
+ * \warning Akékoľvek výpočty na neinicializovanej sieti môžu spôsobiť pád
+ * aplikácie.
+ */
+Q_PROPERTY(bool initialized READ isInitialized NOTIFY initializedChanged);
 public:
 	explicit NeuralNet(QObject *parent = 0);
 	virtual ~NeuralNet();
@@ -56,6 +62,10 @@ public:
 	 * Nastavenie hranice pre binárny výstup.
 	 */
 	void setBinaryThreshold(double threshold);
+	/**
+	 * Vráti \e true, ak bola sieť inicializovaná.
+	 */
+	bool isInitialized() const;
 	/**
 	 * Výpočet výstupu pre vstup \a input. Výstup je návratovou hodnotou.
 	 */
@@ -90,6 +100,12 @@ public:
 	 */
 	virtual QString netType() const = 0;
 
+signals:
+	/**
+	 * Signál sa vyšle pri zmene stavu inicializácie siete.
+	 */
+	void initializedChanged(bool initialized);
+
 protected:
 	/**
 	 * Tréning pre vzorku so vstupom \a input a očakávaným výstupom \a
@@ -114,6 +130,10 @@ protected:
 		double pom1 = 1.0 + pom;
 		return pom/(pom1 * pom1);
 	};
+	/**
+	 * Nastavenie stavu inicializácie siete.
+	 */
+	void setInitialized(bool initialized);
 
 private:
 	/// Rýchlosť učenia neurónovej siete - eta.
@@ -124,6 +144,8 @@ private:
 	int m_outputVectorSize;
 	/// Hranica pre prevod do binárnych hodnôt.
 	double m_binaryThreshold;
+	/// Stav inicializácie siete.
+	bool m_initialized;
 
 friend class boost::serialization::access;
 friend class FaceDetect::NetTrainer;

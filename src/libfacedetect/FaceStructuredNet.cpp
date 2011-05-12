@@ -117,6 +117,7 @@ void FaceStructuredNet::trainSample(const LaVectorDouble &input, const LaVectorD
 	for (int part = 0; part < PartCount; ++part) {
 		Blas_Mat_Mat_Mult(m_delta1[part], m_inputs[part], m_w1[part], false, true, n, 1.0);
 	}
+	setInitialized(true);
 }
 
 void FaceStructuredNet::initializeTraining()
@@ -152,6 +153,7 @@ int FaceStructuredNet::s1Neuronov() const
 void FaceStructuredNet::setS1Neuronov(int neuronov)
 {
 	if (m_1Neuronov != neuronov) {
+		setInitialized(false);
 		m_1Neuronov = neuronov;
 		// Inicializácia výstupov stredných neurónov
 		m_stred1.resize(PartCount);
