@@ -161,7 +161,7 @@ CentralWindow {
 				}
 				FileChooser {
 					id: detectFileChooser
-					windowTitle: qsTr("Select preview image")
+					windowTitle: qsTr("Select image")
 					acceptMode: FileChooser.AcceptOpen
 					fileMode: FileChooser.ExistingFile
 				}

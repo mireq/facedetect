@@ -39,6 +39,9 @@ Item {
 	}
 
 	function setValue(nVal) {
+		if (nVal == "") {
+			nVal = "0";
+		}
 		var newValue = parseFloat(nVal);
 		if (newValue > maxValue) {
 			newValue = maxValue;

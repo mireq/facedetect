@@ -26,7 +26,7 @@ int main(int argc, char *argv[])
 	QApplication::setOrganizationDomain("linuxos.sk");
 	QApplication::setOrganizationName("LinuxOS.sk");
 
-	QString interface = "console";
+	QString interface = "touch";
 	{
 		QApplication app(argc, argv);
 		QStringList arguments = app.arguments();
